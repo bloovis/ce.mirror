@@ -1,0 +1,17 @@
+name: ce
+version: 0.1.0
+
+authors:
+  - Mark Alexander <marka@pobox.com>
+
+targets:
+  ce:
+    main: src/ce.cr
+
+dependencies:
+  ncurses:
+    github: SamualLB/ncurses
+
+crystal: '>= 1.18.2'
+
+license: MIT
