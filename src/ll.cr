@@ -118,7 +118,7 @@ struct LinkedList(T)
   ### Methods I added start here.
   ###
 
-  # Find a node.
+  # Finds the first node for which the block returns true.
   def find(&) : Pointer(T) | Nil
     return nil if empty?
 
@@ -131,14 +131,18 @@ struct LinkedList(T)
     end
   end
 
-  # Insert line _new after line _prev.
+  # Inserts line `_new` after line `_prev`.
   def insert_after(_prev : Pointer(T), _new : Pointer(T)) : Nil
     typeof(self).insert_impl(_new, _prev, _prev.value.next)
   end
 
-  # Insert line _new before line _next.
+  # Inserts line `_new` before line `_next`.
   def insert_before(_next : Pointer(T), _new : Pointer(T)) : Nil
     typeof(self).insert_impl(_new, _next.value.previous, _next)
   end
 
+  # Clears the list.
+  def clear
+    @head = Pointer(T).null
+  end
 end
