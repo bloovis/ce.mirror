@@ -12,7 +12,7 @@ def initial_setup(b : Buffer)
 end
 
 describe Buffer do
-  b = Buffer.new
+  b = Buffer.new("dummy")
 
   it "Creates an initial buffer" do
     initial_setup(b)
@@ -29,6 +29,7 @@ describe Buffer do
       end
       lineno += 1
     end
+    b.size.should eq(3)
   end
 
   line3p = nil
@@ -43,6 +44,19 @@ describe Buffer do
       f = b.find {|l| lnno += 1; l == line3p}
       lnno.should eq 3
     end
+  end
+
+  it "Determines zero-based line number for line 3 using lineno" do
+    if line3p
+      lnno = b.lineno(line3p)
+      lnno.should eq(2)
+    end
+  end
+
+  it "Determines line number for line not in buffer" do
+    badline = Line.alloc("blorch")
+    lnno = b.lineno(badline)
+    lnno.should eq(b.size)
   end
 
   it "Searches for non-existent string 'four'" do
@@ -61,9 +75,23 @@ describe Buffer do
     end
   end
 
+  it "Uses [] to seek to line number 2" do
+    f = b[1]
+    f.nil?.should eq(false)
+    if f
+      f.text.should eq "This is line two."
+    end
+  end
+
   it "Seeks to non-existent line number 4" do
     lnno = 0
     f = b.find {|l| lnno += 1; lnno == 4}
+    f.nil?.should eq(true)
+  end
+
+  it "Uses [] to seek to non-existent line number 4" do
+    lnno = 0
+    f = b[3]
     f.nil?.should eq(true)
   end
 
@@ -85,6 +113,7 @@ describe Buffer do
       end
       lineno += 1
     end
+    b.size.should eq(4)
   end
 
   it "Inserts a new line1.5 before line 2" do
@@ -106,6 +135,7 @@ describe Buffer do
       end
       lineno += 1
     end
+    b.size.should eq(5)
   end
 
   it "Deletes line2" do
@@ -124,6 +154,7 @@ describe Buffer do
       end
       lineno += 1
     end
+    b.size.should eq(4)
   end
 
   it "Modifies line 2.5 text" do
@@ -142,6 +173,7 @@ describe Buffer do
       end
       lineno += 1
     end
+    b.size.should eq(4)
   end
 
   it "Inserts a line at the beginning" do
@@ -165,6 +197,7 @@ describe Buffer do
       end
       lineno += 1
     end
+    b.size.should eq(5)
   end
 
   it "Test buffer flags" do

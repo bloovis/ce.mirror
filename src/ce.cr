@@ -11,7 +11,7 @@ module E
   def main
     ARGV.each do |arg|
       filename = arg
-      b = Buffer.new
+      b = Buffer.new(filename)
       @@buffers << b
       if b.readfile(filename)
 	puts "Successfully read #{filename}:"
