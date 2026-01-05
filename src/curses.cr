@@ -6,6 +6,9 @@ lib LibNCurses
   alias Wint_t = Int32
   type Window = Void*
 
+  # (w)get_wch error value.
+  ERR = -1
+
   # Background values
   enum Background : LibC::UInt
     Reverse = 0x40000
