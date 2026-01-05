@@ -76,6 +76,22 @@ class Buffer
     @list.find {|l| lnno += 1; lnno == n}
   end
 
+  # Iterates over each line in the line number range `first` to
+  # `last`, inclusive, yielding both the line number and the line itself.
+  # Aborts the iteration if the block returns false.  Line numbers
+  # are zero-based.
+  def each_in_range(first : Int32, last : Int32)
+    last = [last, size - 1].min
+    first = [first, last].min
+    lp = self[first]
+    if lp
+      (first..last).each do |i|
+	return if !yield i, lp
+	lp = lp.next
+      end
+    end
+  end
+
   # Allow buffer to have the same methods as the linked list.
   forward_missing_to @list
 end

@@ -32,6 +32,28 @@ describe Buffer do
     b.size.should eq(3)
   end
 
+  it "Iterates over three lines in a range" do
+    count = 0
+    seen = [] of Int32
+    b.each_in_range(0,2) do |lineno, s|
+      count += 1
+      seen.push(lineno)
+      case lineno
+      when 0
+        s.text.should eq "This is line one."
+      when 1
+        s.text.should eq "This is line two."
+      when 2
+	s.text.should eq "This is line three."
+      end
+      true	# tell each_in_range to continue
+    end
+    count.should eq(3)
+    seen[0].should eq(0)
+    seen[1].should eq(1)
+    seen[2].should eq(2)
+  end
+
   line3p = nil
   it "Finds 'three'" do
     line3p = b.find {|l| l.text.includes?("three") }
