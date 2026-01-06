@@ -88,3 +88,14 @@ lib LibNCurses
   fun nl : LibC::Int
   fun nonl : LibC::Int
 end
+
+# We have to set the locale so that Ncurses will work correctly
+# with UTF-8 string.
+
+lib Locale
+  # LC_CTYPE is probably 0 (at least in glibc)
+  LC_CTYPE = 0
+  fun setlocale(category : Int32, locale : LibC::Char*) : LibC::Char*
+end
+
+Locale.setlocale(Locale::LC_CTYPE, "")
