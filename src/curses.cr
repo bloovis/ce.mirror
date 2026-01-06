@@ -10,11 +10,10 @@ lib LibNCurses
   ERR = -1
 
   # Background values
-  enum Background : LibC::UInt
-    Reverse = 0x40000
-    Normal  = 0
-  end
+  A_NORMAL = 0x0
+  A_REVERSE = 0x40000
 
+  # Keys
   KEY_CANCEL = 0x163
   KEY_CODE_YES = 0x100
   KEY_MOUSE = 0x199

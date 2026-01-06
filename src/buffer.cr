@@ -1,4 +1,5 @@
 require "./ll"
+require "./line"
 
 @[Flags]
 enum Bflags
@@ -50,6 +51,11 @@ class Buffer
     n = 0
     @list.each {|l| n += 1}
     return n
+  end
+
+  # Same as `size`, for Ruby compatibility.
+  def length : Int32
+    size
   end
 
   # Returns the zero-based line number of line `lp` .  If the line

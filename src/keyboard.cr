@@ -128,7 +128,7 @@ class Kbd
       k &= ~(CTLX | META)
 
       # Is the keycode in the special keys table?
-      n = @@keynames[k]
+      n = @@keynames[k]?
       if n
 	# Output the special key name.
 	s << n
@@ -137,7 +137,7 @@ class Kbd
 	s << "C-" if (k & CTRL) == CTRL
 
 	# Look it up again in the table, but this time without CTRL.
-	n = @@keynames[k & KEYMASK]
+	n = @@keynames[k & KEYMASK]?
 	if n
 	  s << n
 	else

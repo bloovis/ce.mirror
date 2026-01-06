@@ -141,7 +141,7 @@ class Terminal
   # Read a character from the keyboard with little processing,
   # besides converting special functions keys to our own representation.
   # The Kbd module cooks the characters more by handling prefixes.
-  def getc
+  def getc : Int32
     while LibNCurses.wget_wch(@scr, out c) == LibNCurses::ERR
     end
 
@@ -156,7 +156,7 @@ class Terminal
       # Treat window resize as Ctrl-L, which will force a screen redraw.
       return ctrl('l')
     when LibNCurses::KEY_MOUSE
-      return 'x'		# horrible testing hack!!!
+      return 'x'.ord		# horrible testing hack!!!
     else
       # Try special key map key.
       @@keymap[c] || Kbd::RANDOM

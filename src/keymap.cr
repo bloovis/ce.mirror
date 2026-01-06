@@ -4,6 +4,13 @@ enum Result
   Abort
 end
 
+
+# Converts the name of a command method to a Proc object.
+macro cmdptr(name)
+  ->{{name}}(Bool, Int32, Int32)
+end
+
+# `KeyMap` implements a hash associating keystrokes with command methods.
 class KeyMap
   alias CmdProc = Proc(Bool, Int32, Int32, Result)	# cmd(f, n, k) returns Result
   property k2p = {} of Int32  => CmdProc

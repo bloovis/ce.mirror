@@ -26,10 +26,6 @@ def pageup(f : Bool, n : Int32, k : Int32) : Result
   return Result::False
 end
 
-macro cmdptr(name)
-  ->{{name}}(Bool, Int32, Int32)
-end
-
 describe KeyMap do
   k = KeyMap.new
 
