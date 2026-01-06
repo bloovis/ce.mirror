@@ -7,22 +7,40 @@ require "./terminal"
 require "./keymap"
 require "./display"
 
-class Editor
-  @@buffers = [] of Buffer
+def back_page(f : Bool, n : Int32, k : Int32) : Result
+  E.curw.line -= E.curw.nrows
+  E.curw.line = 0 if E.curw.line < 0
+  return Result::True
+end
 
+def forw_page(f : Bool, n : Int32, k : Int32) : Result
+  E.curw.line += E.curw.nrows
+  return Result::True
+end
+
+# `E` a singleton class that implements the top-level editor code,
+# including the initialization and event loop.  It also provides
+# access to "global" variable such as curw (the current window).
+class E
+  @@instance : E?
+
+  property buffers = [] of Buffer
   property tty : Terminal
-  property w : Window
-  property k : KeyMap
+  property curw : Window
+  property keymap : KeyMap
 
-  def back_page(f : Bool, n : Int32, k : Int32) : Result
-    @w.line -= @w.nrows
-    @w.line = 0 if @w.line < 0
-    return Result::True
+  def self.instance : E
+    inst = @@instance
+    if inst
+      return inst
+    else
+      raise "E not instantiated!"
+    end
   end
 
-  def forw_page(f : Bool, n : Int32, k : Int32) : Result
-    @w.line += @w.nrows
-    return Result::True
+  # Returns the current window.
+  def self.curw
+    self.instance.curw
   end
 
   def initialize
@@ -36,7 +54,7 @@ class Editor
     @tty.color(Terminal::CTEXT)
 
     # Create a keyboard object.
-    @kbd = Kbd.new(@tty)
+    @keymapbd = Kbd.new(@tty)
 
     # Create a buffer and read the file "junk" into it.
     @b = Buffer.new("junk")
@@ -44,37 +62,40 @@ class Editor
     #puts "There are #{@b.length} lines in the buffer"
 
     # Create a window on the buffer that fills the screen.
-    @w = Window.new(@b)
-    @w.toprow = 0
-    @w.nrows = @tty.nrow - 2
+    @curw = Window.new(@b)
+    @curw.toprow = 0
+    @curw.nrows = @tty.nrow - 2
 
     # Update the display.
     @disp = Display.new(@tty)
 
     # Creating some key bindings.
-    @k = KeyMap.new
-    @k.add(Kbd::PGDN, cmdptr(forw_page), "down-page")
-    @k.add(Kbd::PGUP, cmdptr(back_page), "up-page")
+    @keymap = KeyMap.new
+    @keymap.add(Kbd::PGDN, cmdptr(forw_page), "down-page")
+    @keymap.add(Kbd::PGUP, cmdptr(back_page), "up-page")
 
+    # Set the instance to make this a pseudo-singleton class.
+    @@instance = self
+  end
+
+  def event_loop
     # Repeatedly get keys, perform some actions.
     # Most keys skip to the next page, PGUP skips
     # the previous page, q quits.
-    @keys = [] of Int32
     c = 'x'.ord
     done = false
     while !done
       @disp.update
-      c = @kbd.getkey
-      @keys << c
-
       @tty.move(@tty.nrow-1, 0)
-      if @k.key_bound?(c)
+      c = @keymapbd.getkey
+
+      if @keymap.key_bound?(c)
         @tty.puts(sprintf("last key hit: %#x (%s), at line %d: Hit any key:",
-		  [c, @kbd.keyname(c), @w.line]))
-        @k.call_by_key(c, false, 42)
+		  [c, @keymapbd.keyname(c), @curw.line]))
+        @keymap.call_by_key(c, false, 42)
       else
         @tty.puts(sprintf("last key hit: %#x (%s)(undef), at line %d: Hit any key:",
-		  [c, @kbd.keyname(c), @w.line]))
+		  [c, @keymapbd.keyname(c), @curw.line]))
       end
       @tty.eeol
 
@@ -82,13 +103,13 @@ class Editor
       when Kbd.ctrl('c'), 'Q'.ord, 'q'.ord
 	done = true
 #      when Kbd::PGUP
-#	@w.line -= @w.nrows
-#	@w.line = 0 if @w.line < 0
+#	@curw.line -= @curw.nrows
+#	@curw.line = 0 if @curw.line < 0
 #      else
-#	@w.line += @w.nrows
+#	@curw.line += @curw.nrows
       end
 
-      if @w.line >= @b.length
+      if @curw.line >= @b.length
 	done = true
       end
     end
@@ -117,5 +138,6 @@ class Editor
 
 end
 
-e = Editor.new
+e = E.new
+e.event_loop
 #E.main

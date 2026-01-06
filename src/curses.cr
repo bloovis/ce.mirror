@@ -64,6 +64,7 @@ lib LibNCurses
   fun wclrtobot(window : Window) : LibC::Int
 
   # Input option functions
+  fun cbreak : LibC::Int
   fun nocbreak : LibC::Int
   fun echo : LibC::Int
   fun noecho : LibC::Int
