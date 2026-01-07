@@ -23,6 +23,11 @@ def change(f : Bool, n : Int32, k : Int32) : Result
   return Result::True
 end
 
+def exception(f : Bool, n : Int32, k : Int32) : Result
+  raise "Exception command executed!"
+  return Result::True
+end
+
 def quit(f : Bool, n : Int32, k : Int32) : Result
   E.tty.close
   puts "Goodbye!"
@@ -101,6 +106,7 @@ class E
     @keymap.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
     @keymap.add_dup('q', "quit")
     @keymap.add('c', cmdptr(change), "toggle-changed-flag")
+    @keymap.add('e', cmdptr(exception), "raise-exception")
 
     # Create a display object.
     @disp = Display.new(@tty)
@@ -164,6 +170,19 @@ class E
 
 end
 
-e = E.new
-e.process_command_line
-e.event_loop
+# Here we capture any unhandled exceptions, and print
+# the exception information along with a backtrace before exiting.
+begin
+  e = E.new
+  e.process_command_line
+  e.event_loop
+rescue ex
+  LibNCurses.echo
+  LibNCurses.nocbreak
+  LibNCurses.nl
+  LibNCurses.endwin
+
+  puts "Oh crap!  An exception occurred!"
+  puts ex.inspect_with_backtrace
+  exit 1
+end
