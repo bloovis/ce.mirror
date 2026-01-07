@@ -1,5 +1,6 @@
 require "./ll"
 require "./line"
+require "./ce"
 
 @[Flags]
 enum Bflags
@@ -15,19 +16,27 @@ class Buffer
   property filename : String
   property nwind : Int32
 
+  @@list = [] of Buffer
+
   def initialize(@name)
     @list = LinkedList(Line).new
     @flags = Bflags::None
     @nwind = 0
     @filename = ""
+    @@list.unshift(self)
+  end
+
+  # Returns the list of all buffers.
+  def self.buffers : Array(Buffer)
+    @@list
   end
 
   # Clears the buffer, and reads the file `filename` into the buffer.
   # Returns true if successful, false otherwise
-  def readfile(filename : String) : Bool
-    return false unless File.exists?(filename)
+  def readfile(@filename) : Bool
+    return false unless File.exists?(@filename)
     @list.clear
-    File.open(filename) do |f|
+    File.open(@filename) do |f|
       lastline = nil
       while s = f.gets(chomp: false)
 	l = Line.alloc(s.chomp)

@@ -31,7 +31,7 @@ class Display
       @tty.move(@tty.nrow - 2, 0)
       @tty.color(Terminal::CMODE)
       @tty.eeol
-      @tty.puts(" MicroEMACS #{b.name} File:#{b.filename}")
+      @tty.puts((b.flags.changed? ? "*" : " ") + "MicroEMACS #{b.name} File:#{b.filename}")
       @tty.color(Terminal::CTEXT)
 
      end

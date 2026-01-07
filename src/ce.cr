@@ -18,18 +18,35 @@ def forw_page(f : Bool, n : Int32, k : Int32) : Result
   return Result::True
 end
 
+def change(f : Bool, n : Int32, k : Int32) : Result
+  E.curb.flags = E.curb.flags ^ Bflags::Changed
+  return Result::True
+end
+
+def quit(f : Bool, n : Int32, k : Int32) : Result
+  E.tty.close
+  puts "Goodbye!"
+  exit 0
+  return Result::True
+end
+
 # `E` a singleton class that implements the top-level editor code,
 # including the initialization and event loop.  It also provides
-# access to "global" variable such as curw (the current window).
+# access to "global" psuedo-variables such as `curw` (the current window)
+# and `curb` (the current buffer).
 class E
   @@instance : E?
 
-  property buffers = [] of Buffer
   property tty : Terminal
-  property curw : Window
   property keymap : KeyMap
+  property kbd : Kbd
+  property disp : Display
 
-  def self.instance : E
+  # Use the following class methods to access the instance variables
+  # of the single instance of `E1.
+
+  # Returns the single instance of E
+  private def self.instance : E
     inst = @@instance
     if inst
       return inst
@@ -39,45 +56,86 @@ class E
   end
 
   # Returns the current window.
-  def self.curw
-    self.instance.curw
+  def self.curw : Window
+    Window.current
+  end
+
+  # Sets the current window.
+  def self.curw=(w : Window)
+    Window.current = w
+  end
+
+  # Returns the current buffer, i.e., the buffer associated with
+  # the current window.
+  def self.curb : Buffer
+    Window.current.buffer
+  end
+
+  # Returns the current buffer list.
+  def self.buffers : Array(Buffer)
+    Buffer.buffers
+  end
+
+  # Returns the Terminal object.
+  def self.tty : Terminal
+    t = self.instance.tty
+    if t
+      return t
+    else
+      raise "No Terminal object!"
+    end
   end
 
   def initialize
-    # Create a terminal object; clear screen and write the last two lines.
+    # Create a terminal object.
     @tty = Terminal.new
     @tty.open
-    @tty.move(@tty.nrow - 2, 0)
-    @tty.color(Terminal::CMODE)
-    @tty.eeol
-    @tty.puts("*MicroEMACS test.rb File:test.rb")
-    @tty.color(Terminal::CTEXT)
 
     # Create a keyboard object.
-    @keymapbd = Kbd.new(@tty)
+    @kbd = Kbd.new(@tty)
 
-    # Create a buffer and read the file "junk" into it.
-    @b = Buffer.new("junk")
-    @b.readfile("junk")
-    #puts "There are #{@b.length} lines in the buffer"
-
-    # Create a window on the buffer that fills the screen.
-    @curw = Window.new(@b)
-    @curw.toprow = 0
-    @curw.nrows = @tty.nrow - 2
-
-    # Update the display.
-    @disp = Display.new(@tty)
-
-    # Creating some key bindings.
+    # Create some key bindings.
     @keymap = KeyMap.new
     @keymap.add(Kbd::PGDN, cmdptr(forw_page), "down-page")
     @keymap.add(Kbd::PGUP, cmdptr(back_page), "up-page")
+    @keymap.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
+    @keymap.add_dup('q', "quit")
+    @keymap.add('c', cmdptr(change), "toggle-changed-flag")
+
+    # Create a display object.
+    @disp = Display.new(@tty)
 
     # Set the instance to make this a pseudo-singleton class.
     @@instance = self
   end
 
+  # Reads options and filenames from the command line, reads each file
+  # into its own buffer, creates windows for as many buffers as can fit
+  # on the screen.
+  def process_command_line
+    # Create a buffer, and read the file specified on the command line,
+    # or just leave the buffer empty if no file was specified.
+    if ARGV.size > 0
+      filename = ARGV[0]
+      b = Buffer.new(filename)
+      b.readfile(filename)
+    else
+      b = Buffer.new("main")
+    end
+    #puts "There are #{b.length} lines in the buffer"
+
+    # Create a window on the buffer that fills the screen.
+    w = Window.new(b)
+    E.curw = w
+    E.curw.toprow = 0
+    E.curw.nrows = @tty.nrow - 2
+    if b != E.curb
+      raise "Current buffer #{E.curb} is not #{b}!"
+    end
+  end
+
+  # Enters a loop waiting for the user to hit a key, and responds by executing
+  # the command bound to that key.
   def event_loop
     # Repeatedly get keys, perform some actions.
     # Most keys skip to the next page, PGUP skips
@@ -87,57 +145,25 @@ class E
     while !done
       @disp.update
       @tty.move(@tty.nrow-1, 0)
-      c = @keymapbd.getkey
+      c = @kbd.getkey
 
       if @keymap.key_bound?(c)
         @tty.puts(sprintf("last key hit: %#x (%s), at line %d: Hit any key:",
-		  [c, @keymapbd.keyname(c), @curw.line]))
+		  [c, @kbd.keyname(c), E.curw.line]))
         @keymap.call_by_key(c, false, 42)
       else
         @tty.puts(sprintf("last key hit: %#x (%s)(undef), at line %d: Hit any key:",
-		  [c, @keymapbd.keyname(c), @curw.line]))
+		  [c, @kbd.keyname(c), E.curw.line]))
       end
       @tty.eeol
-
-      case c
-      when Kbd.ctrl('c'), 'Q'.ord, 'q'.ord
-	done = true
-#      when Kbd::PGUP
-#	@curw.line -= @curw.nrows
-#	@curw.line = 0 if @curw.line < 0
-#      else
-#	@curw.line += @curw.nrows
-      end
-
-      if @curw.line >= @b.length
-	done = true
-      end
     end
 
     # Close the terminal.
     @tty.close
   end
-    
-  def readfiles
-    ARGV.each do |arg|
-      filename = arg
-      b = Buffer.new(filename)
-      @@buffers << b
-      if b.readfile(filename)
-	puts "Successfully read #{filename}:"
-      else
-	puts "Couldn't read #{filename}"
-      end
-      lineno = 1
-      b.each do |s|
-	puts "#{lineno}: #{s.text}"
-	lineno += 1
-      end
-    end
-  end
 
 end
 
 e = E.new
+e.process_command_line
 e.event_loop
-#E.main

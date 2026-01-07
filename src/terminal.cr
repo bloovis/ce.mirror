@@ -1,6 +1,15 @@
 require "./curses"
 require "./keyboard"
 
+
+# We have to set the locale so that Ncurses will work correctly
+# with UTF-8 string.
+lib Locale
+  # LC_CTYPE is probably 0 (at least in glibc)
+  LC_CTYPE = 0
+  fun setlocale(category : Int32, locale : LibC::Char*) : LibC::Char*
+end
+
 # `Terminal` provides an abstraction layer over Ncurses, for writing
 # to the screen and accepting keyboard input.
 class Terminal
@@ -48,6 +57,7 @@ class Terminal
 
   # Initialize our instance variables but don't initialize ncurses yet.
   def initialize
+    Locale.setlocale(Locale::LC_CTYPE, "")
     @scr = LibNCurses.initscr
     @npages = 1
     @nrow = -1

@@ -68,11 +68,34 @@ class Kbd
   F11    = 0x95
   F12    = 0x96
   
+  # Returns the internal value of the Ctrl-modified key *s*.
+  # This is *not* the same as an ASCII control character;
+  # for that, use `Terminal#ctrl`.
   def Kbd.ctrl(s : Char) : Int32
-    s.ord & 0x1f | CTRL
+    s.upcase.ord | CTRL
   end
 
-  # Mames of our special keys, plus a few others in the normal ASCII range.
+  # Returns the internal value of the Meta-modified key *s*.
+  def Kbd.meta(s : Char) : Int32
+    s.upcase.ord | META
+  end
+
+  # Returns the internal value of Meta-Ctrl-modified key *s*.
+  def Kbd.meta_ctrl(s : Char) : Int32
+    s.upcase.ord | META | CTRL
+  end
+
+  # Returns the internal value of Ctrl-X *s" sequence.
+  def Kbd.ctlx(s : Char) : Int32
+    s.upcase.ord | CTLX
+  end
+
+  # Returns the internal value of Ctrl-X Ctrl-*s" sequence.
+  def Kbd.ctlx_ctrl(s : Char) : Int32
+    s.upcase.ord | CTLX | CTRL
+  end
+
+  # Names of our special keys, plus a few others in the normal ASCII range.
   @@keynames = {
      # Special keys
      UP    => "Up",
@@ -110,10 +133,10 @@ class Kbd
     # Set the associated Terminal object
     @tty = tty
 
-    # Precompute some useful control character constants
-    @ctrl_x = tty.ctrl('x')
+    # Precompute some useful ASCII control character constants.
+    @ctrl_x =  tty.ctrl('x')
     @ctrl_at = tty.ctrl('@')
-    @ctrl_z = tty.ctrl('z')
+    @ctrl_z =  tty.ctrl('z')
   end
 
   # Return the string representation of a keycode.

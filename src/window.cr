@@ -22,7 +22,8 @@ class Window
   property force : Int32	# if non-zero, force dot to be displayed at this row
   property flags : Wflags	# flags that give hints to the display updater
   
-  @@list = [] of Window
+  @@list = [] of Window		# list of all windows
+  @@curi = -1			# index to @@list of current window
 
   def initialize(@buffer)
     # Initialize the various instance variables.
@@ -38,9 +39,31 @@ class Window
 
     # Add this window to the global list.
     @@list << self
+
+    # If this is the first window, make it the current one.
+    if @@curi == -1
+      @@curi = 0
+    end
   end
 
-  def Window.each
+  def self.current : Window
+    if @@curi >= 0 && @@curi < @@list.size
+      return @@list[@@curi]
+    else
+      raise "Invalid current window index #{@@curi}!"
+    end
+  end
+
+  def self.current= (w : Window)
+    i = @@list.index(w)
+    if i
+      @@curi = i
+    else
+      raise "Window #{w} is not in list!"
+    end
+  end
+
+  def self.each
     @@list.each do |window|
       yield window
     end
