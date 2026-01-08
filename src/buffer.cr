@@ -23,7 +23,7 @@ class Buffer
     @flags = Bflags::None
     @nwind = 0
     @filename = ""
-    @@list.unshift(self)
+    @@list.push(self)
   end
 
   # Returns the list of all buffers.

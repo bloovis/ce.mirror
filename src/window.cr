@@ -17,7 +17,7 @@ class Window
   property mark : Pos		# mark position
   property savep : Pos		# saved line position for search
   property toprow : Int32	# top screen row of window
-  property nrows : Int32	# number of screen rows in window
+  property nrow : Int32		# number of screen rows in window
   property leftcol : Int32	# left column of window
   property force : Int32	# if non-zero, force dot to be displayed at this row
   property flags : Wflags	# flags that give hints to the display updater
@@ -32,7 +32,7 @@ class Window
     @mark = Pos.new()
     @savep = Pos.new()
     @toprow = 0
-    @nrows = 0
+    @nrow = 0
     @leftcol = 0
     @force = 0
     @flags = Wflags::None

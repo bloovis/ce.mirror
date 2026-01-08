@@ -11,10 +11,12 @@ class Display
 
   def update
     Window.each do |w|
+      #STDERR.puts "update: w.line #{w.line}, w.toprow #{w.toprow}, w.nrow #{w.nrow}"
+
       # Figure out how many lines are actually visible.
       b = w.buffer
       first = w.line
-      last = [first + w.nrows, b.length].min - 1
+      last = [first + w.nrow, b.length].min - 1
 
       # Display visible lines.
       b.each_in_range(first, last) do |i, lp|
@@ -22,13 +24,13 @@ class Display
       end
 
       # Fill remainder with blank lines.
-      (last + 1 - first..w.nrows - 1).each do |i|
+      (last + 1 - first..w.nrow - 1).each do |i|
         @tty.move(i + w.toprow, 0)
         @tty.eeol
       end
 
       # Mode line
-      @tty.move(@tty.nrow - 2, 0)
+      @tty.move(w.toprow + w.nrow, 0)
       @tty.color(Terminal::CMODE)
       @tty.eeol
       @tty.puts((b.flags.changed? ? "*" : " ") + "MicroEMACS #{b.name} File:#{b.filename}")

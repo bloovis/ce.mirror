@@ -8,13 +8,13 @@ require "./keymap"
 require "./display"
 
 def back_page(f : Bool, n : Int32, k : Int32) : Result
-  E.curw.line -= E.curw.nrows
+  E.curw.line -= E.curw.nrow
   E.curw.line = 0 if E.curw.line < 0
   return Result::True
 end
 
 def forw_page(f : Bool, n : Int32, k : Int32) : Result
-  E.curw.line += E.curw.nrows
+  E.curw.line += E.curw.nrow
   return Result::True
 end
 
@@ -121,22 +121,39 @@ class E
   def process_command_line
     # Create a buffer, and read the file specified on the command line,
     # or just leave the buffer empty if no file was specified.
-    if ARGV.size > 0
-      filename = ARGV[0]
-      b = Buffer.new(filename)
-      b.readfile(filename)
-    else
+    if ARGV.size == 0
       b = Buffer.new("main")
+    else
+      ARGV.each do |filename|
+        b = Buffer.new(filename)
+        b.readfile(filename)
+      end
     end
-    #puts "There are #{b.length} lines in the buffer"
 
-    # Create a window on the buffer that fills the screen.
-    w = Window.new(b)
-    E.curw = w
-    E.curw.toprow = 0
-    E.curw.nrows = @tty.nrow - 2
-    if b != E.curb
-      raise "Current buffer #{E.curb} is not #{b}!"
+    # Arbitrarily assume the smallest window we will allow is five lines, plus
+    # the status line.  Calculate how many such windows will fit on the screen,
+    # and how big each window will be.
+    nwin = ((@tty.nrow - 1) / 6).to_i
+    if nwin > E.buffers.size
+      nwin = E.buffers.size
+    end
+    nrow = (((@tty.nrow - 1) / nwin) - 1).to_i
+    #STDERR.puts "nwin #{nwin}, nrow #{nrow}, nbuf #{E.buffers.size}"
+
+    # Create up to `nwin` windows for the buffers we've read.
+    toprow = 0
+    nwin.times do |i|
+      b = E.buffers[i]
+      w = Window.new(b)
+      E.curw = w if i == 0
+      w.toprow = toprow
+      if i == nwin - 1
+	w.nrow = @tty.nrow - toprow - 2
+      else
+	w.nrow = nrow
+      end
+      #STDERR.puts "w.toprow #{w.toprow}, w.nrow #{w.nrow}, filename #{b.filename}"
+      toprow += nrow + 1
     end
   end
 
