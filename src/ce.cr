@@ -6,17 +6,7 @@ require "./keyboard"
 require "./terminal"
 require "./keymap"
 require "./display"
-
-def back_page(f : Bool, n : Int32, k : Int32) : Result
-  E.curw.line -= E.curw.nrow
-  E.curw.line = 0 if E.curw.line < 0
-  return Result::True
-end
-
-def forw_page(f : Bool, n : Int32, k : Int32) : Result
-  E.curw.line += E.curw.nrow
-  return Result::True
-end
+require "./basic"
 
 def change(f : Bool, n : Int32, k : Int32) : Result
   E.curb.flags = E.curb.flags ^ Bflags::Changed
@@ -101,8 +91,7 @@ class E
 
     # Create some key bindings.
     @keymap = KeyMap.new
-    @keymap.add(Kbd::PGDN, cmdptr(forw_page), "down-page")
-    @keymap.add(Kbd::PGUP, cmdptr(back_page), "up-page")
+    Basic.bind_keys(@keymap)
     @keymap.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
     @keymap.add_dup('q', "quit")
     @keymap.add('c', cmdptr(change), "toggle-changed-flag")
@@ -133,11 +122,11 @@ class E
     # Arbitrarily assume the smallest window we will allow is five lines, plus
     # the status line.  Calculate how many such windows will fit on the screen,
     # and how big each window will be.
-    nwin = ((@tty.nrow - 1) / 6).to_i
+    nwin = (@tty.nrow - 1) // 6
     if nwin > E.buffers.size
       nwin = E.buffers.size
     end
-    nrow = (((@tty.nrow - 1) / nwin) - 1).to_i
+    nrow = ((@tty.nrow - 1) // nwin) - 1
     #STDERR.puts "nwin #{nwin}, nrow #{nrow}, nbuf #{E.buffers.size}"
 
     # Create up to `nwin` windows for the buffers we've read.
@@ -167,17 +156,14 @@ class E
     done = false
     while !done
       @disp.update
-      @tty.move(@tty.nrow-1, 0)
       c = @kbd.getkey
-
       if @keymap.key_bound?(c)
-        @tty.puts(sprintf("last key hit: %#x (%s), at line %d: Hit any key:",
-		  [c, @kbd.keyname(c), E.curw.line]))
         @keymap.call_by_key(c, false, 42)
-      else
-        @tty.puts(sprintf("last key hit: %#x (%s)(undef), at line %d: Hit any key:",
-		  [c, @kbd.keyname(c), E.curw.line]))
       end
+
+      @tty.move(@tty.nrow-1, 0)
+      @tty.puts(sprintf("key %#x (%s), top line %d, dot line %d",
+		  [c, @kbd.keyname(c), E.curw.line, E.curw.dot.l]))
       @tty.eeol
     end
 

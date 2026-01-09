@@ -12,8 +12,8 @@ end
 
 class Window
   property buffer : Buffer
-  property line : Int32		# top line in the window
-  property dot : Pos		# current position in buffer
+  property line : Int32		# buffer line number of the window's top line
+  property dot : Pos		# current cursor position in buffer
   property mark : Pos		# mark position
   property savep : Pos		# saved line position for search
   property toprow : Int32	# top screen row of window
@@ -21,7 +21,7 @@ class Window
   property leftcol : Int32	# left column of window
   property force : Int32	# if non-zero, force dot to be displayed at this row
   property flags : Wflags	# flags that give hints to the display updater
-  
+
   @@list = [] of Window		# list of all windows
   @@curi = -1			# index to @@list of current window
 
