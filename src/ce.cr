@@ -25,6 +25,14 @@ def quit(f : Bool, n : Int32, k : Int32) : Result
   return Result::True
 end
 
+def info(f : Bool, n : Int32, k : Int32) : Result
+  E.tty.move(E.tty.nrow-1, 0)
+  E.tty.puts("top line #{E.curw.line}, dot line #{E.curw.dot.l}")
+  E.tty.eeol
+  return Result::True
+end
+
+
 # `E` a singleton class that implements the top-level editor code,
 # including the initialization and event loop.  It also provides
 # access to "global" psuedo-variables such as `curw` (the current window)
@@ -96,6 +104,7 @@ class E
     @keymap.add_dup('q', "quit")
     @keymap.add('c', cmdptr(change), "toggle-changed-flag")
     @keymap.add('e', cmdptr(exception), "raise-exception")
+    @keymap.add('i', cmdptr(info), "show-info")
 
     # Create a display object.
     @disp = Display.new(@tty)
@@ -152,19 +161,51 @@ class E
     # Repeatedly get keys, perform some actions.
     # Most keys skip to the next page, PGUP skips
     # the previous page, q quits.
-    c = 'x'.ord
     done = false
+    ctrlu = Kbd.ctrl('u')
+    zero = '0'.ord
+    nine = '9'.ord
+    minus = '-'.ord
+
     while !done
       @disp.update
       c = @kbd.getkey
-      if @keymap.key_bound?(c)
-        @keymap.call_by_key(c, false, 42)
+
+      # Handle the CTRL-U + digits prefix.
+      f = false
+      n = 1
+      if c == ctrlu
+	f = true
+	n = 4
+	while (c = @kbd.getkey) == ctrlu
+	  n *= 4
+	  if (c >= zero && c <= nine) || c == minus
+	    if c == minus
+	      n = 0
+	      mflag = true
+	    else
+	      n = c - zero
+	      mflag = false
+	    end
+	    while (c = @kbd.getkey) >= zero && c <= nine
+	      n = (10 * n) + (c - zero)
+	    end
+	    if mflag
+	      n = (n == 0 ? -1 : -n)
+	    end
+	  end
+	end
       end
 
-      @tty.move(@tty.nrow-1, 0)
-      @tty.puts(sprintf("key %#x (%s), top line %d, dot line %d",
-		  [c, @kbd.keyname(c), E.curw.line, E.curw.dot.l]))
-      @tty.eeol
+      # Call the function bound to the key.
+      if @keymap.key_bound?(c)
+        @keymap.call_by_key(c, f, n)
+      else
+	@tty.move(E.tty.nrow-1, 0)
+	@tty.puts("key #{@kbd.keyname(c)} not bound!")
+	@tty.eeol
+      end
+
     end
 
     # Close the terminal.
