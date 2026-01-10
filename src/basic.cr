@@ -11,7 +11,7 @@ module Basic
 
   # Checks if the dot must move after the current window has been
   # scrolled by forw-page or back-page.
-  def checkdot(w : Window)
+  private def checkdot(w : Window)
     # Do nothing if dot is visible.
     dot = w.dot
     return if dot.l >= w.line && dot.l < w.line + w.nrow
@@ -214,6 +214,121 @@ module Basic
     return Result::True
   end
 
+  # Set the current goal column,
+  # which is saved in the external variable "curgoal",
+  # to the current cursor column. The column is never off
+  # the edge of the screen; it's more like display then
+  # show position.
+  private def setgoal(lp : Pointer(Line), offset : Int32)
+    @@curgoal = Display.screen_size(lp.text, offset)
+  end
+
+  # This routine looks at the line *lp* and the current
+  # vertical motion goal column (set by the "setgoal"
+  # routine above) and returns the best offset to use
+  # when a vertical motion is made into the line.
+  private def getgoal(lp : Pointer(Line)) : Int32
+    col = 0
+    dbo = 0
+    tabsize = Tabs.tabsize
+    lp.text.each_char_with_index do |c, i|
+      newcol = col
+      if c == '\t'
+	newcol += tabsize - (newcol % tabsize) - 1
+      elsif c.ord < 0x20
+	newcol += 1
+      end
+      newcol += 1
+      break if newcol > @@curgoal
+      col = newcol
+      dbo += 1
+    end
+    return dbo
+  end
+
+  # Move forward by full lines.
+  # If the number of lines to move is less
+  # than zero, call the backward line function to
+  # actually do it. The last command controls how
+  # the goal column is set.  Return TRUE if the
+  # move was actually performed; FALSE otherwise
+  # (e.g., if we were already on the last line).
+  def forwline(f : Bool, n : Int32, k : Int32) : Result
+    if n < 0
+      return backline(f, -n, Kbd::RANDOM)
+    end
+
+    # Get the current line pointer.
+    w = E.curw
+    dot = w.dot
+    b = w.buffer
+    bsize = b.size
+    unless lp = b[dot.l]
+      raise "Nil lp in forwline!"
+    end
+
+    # If the last command was not forwline or backline,
+    # set the goal column to the offset of the dot.
+    if !E.lastflag.cpcn?
+      setgoal(lp, dot.o)
+    end
+    E.thisflag = E.thisflag | Eflags::Cpcn
+
+    # If we're already on the last line, do nothing.
+    if dot.l == bsize - 1
+      return Result::True
+    end
+
+    # Move dot to next line.
+    dot.l += 1
+    lp = lp.next
+    dot.o = getgoal(lp)
+    w.flags |= Wflags::Move
+
+    return Result::True
+  end
+
+  # This function is like "forwline", but
+  # goes backwards. The scheme is exactly the same.
+  # Check for arguments that are less than zero and
+  # call your alternate. Figure out the new line and
+  # call "movedot" to perform the motion.  Return TRUE if the
+  # move was actually performed; FALSE otherwise
+  # (e.g., if we were already on the first line).
+  def backline(f : Bool, n : Int32, k : Int32) : Result
+    if n < 0
+      return forwline(f, -n, Kbd::RANDOM)
+    end
+
+    # Get the current line pointer.
+    w = E.curw
+    dot = w.dot
+    b = w.buffer
+    unless lp = b[dot.l]
+      raise "Nil lp in backline!"
+    end
+
+    # If the last command was not forwline or backline,
+    # set the goal column to the offset of the dot.
+    if !E.lastflag.cpcn?
+      setgoal(lp, dot.o)
+    end
+    E.thisflag = E.thisflag | Eflags::Cpcn
+
+    # If we're already on the first line, do nothing.
+    if dot.l == 0
+      return Result::True
+    end
+
+    # Move dot to previous line.
+    dot.l -= 1
+    lp = lp.previous
+    dot.o = getgoal(lp)
+    w.flags |= Wflags::Move
+
+    return Result::True
+  end
+
   # Binds keys for basic commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd::PGDN, cmdptr(forwpage), "forw-page")
@@ -224,6 +339,8 @@ module Basic
     k.add(Kbd::KEND, cmdptr(gotoeol), "goto-eol")
     k.add(Kbd.meta('<'), cmdptr(gotobob), "goto-bob")
     k.add(Kbd.meta('>'), cmdptr(gotoeob), "goto-eob")
+    k.add(Kbd::DOWN, cmdptr(forwline), "forw-line")
+    k.add(Kbd::UP, cmdptr(backline), "back-line")
 
     k.add_dup(Kbd.ctrl('v'), "forw-page")
     k.add_dup(Kbd.ctrl('z'), "back-page")
@@ -231,5 +348,7 @@ module Basic
     k.add_dup(Kbd.ctrl('b'), "back-char")
     k.add_dup(Kbd.ctrl('a'), "goto-bol")
     k.add_dup(Kbd.ctrl('e'), "goto-eol")
+    k.add_dup(Kbd.ctrl('n'), "forw-line")
+    k.add_dup(Kbd.ctrl('p'), "back-line")
   end
 end

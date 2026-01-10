@@ -11,7 +11,6 @@ class Display
 
   # Returns the actual screen size of the first *len* characters of string *s,
   # taking into account tabs and control characters.
-  # to 
   def self.screen_size(s : String, len : Int32)
     col = 0
     tabsize = Tabs.tabsize

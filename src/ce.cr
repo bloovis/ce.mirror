@@ -7,6 +7,7 @@ require "./terminal"
 require "./keymap"
 require "./display"
 require "./basic"
+require "./misc"
 
 def change(f : Bool, n : Int32, k : Int32) : Result
   E.curb.flags = E.curb.flags ^ Bflags::Changed
@@ -32,6 +33,11 @@ def info(f : Bool, n : Int32, k : Int32) : Result
   return Result::True
 end
 
+@[Flags]
+enum Eflags
+  Cpcn		# last command was C-P or C-N
+  Kill		# last command was a kill
+end
 
 # `E` a singleton class that implements the top-level editor code,
 # including the initialization and event loop.  It also provides
@@ -39,6 +45,8 @@ end
 # and `curb` (the current buffer).
 class E
   @@instance : E?
+  @@lastflag : Eflags = Eflags::None
+  @@thisflag : Eflags = Eflags::None
 
   property tty : Terminal
   property keymap : KeyMap
@@ -89,6 +97,18 @@ class E
     end
   end
 
+  def self.lastflag : Eflags
+    return @@lastflag
+  end
+
+  def self.thisflag
+    return @@thisflag
+  end
+
+  def self.thisflag=(f : Eflags)
+    @@thisflag = f
+  end
+
   def initialize
     # Create a terminal object.
     @tty = Terminal.new
@@ -108,6 +128,10 @@ class E
 
     # Create a display object.
     @disp = Display.new(@tty)
+
+    # Set some flags.
+    @@lastflag = Eflags::None
+    @@thisflag = Eflags::None
 
     # Set the instance to make this a pseudo-singleton class.
     @@instance = self
@@ -136,7 +160,6 @@ class E
       nwin = E.buffers.size
     end
     nrow = ((@tty.nrow - 1) // nwin) - 1
-    #STDERR.puts "nwin #{nwin}, nrow #{nrow}, nbuf #{E.buffers.size}"
 
     # Create up to `nwin` windows for the buffers we've read.
     toprow = 0
@@ -150,7 +173,6 @@ class E
       else
 	w.nrow = nrow
       end
-      #STDERR.puts "w.toprow #{w.toprow}, w.nrow #{w.nrow}, filename #{b.filename}"
       toprow += nrow + 1
     end
   end
@@ -199,7 +221,9 @@ class E
 
       # Call the function bound to the key.
       if @keymap.key_bound?(c)
+	@@thisflag = Eflags::None
         @keymap.call_by_key(c, f, n)
+	@@lastflag = @@thisflag
       else
 	@tty.move(E.tty.nrow-1, 0)
 	@tty.puts("key #{@kbd.keyname(c)} not bound!")
