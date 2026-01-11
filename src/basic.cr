@@ -1,5 +1,3 @@
-require "./ce.cr"
-
 # `Basic` contains basic command functions for moving the
 # cursor around on the screen, setting mark, and swapping dot with
 # mark. Only moves between lines, which might make the

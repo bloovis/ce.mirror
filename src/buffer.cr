@@ -1,6 +1,5 @@
 require "./ll"
 require "./line"
-require "./ce"
 
 @[Flags]
 enum Bflags
@@ -91,26 +90,28 @@ class Buffer
     @list.find {|l| lnno += 1; lnno == n}
   end
 
-  # Iterates over each line in the buffer, yielding both the line number
-  # and the line itself.
+  # Iterates over each line in the buffer, yielding both the zero-based
+  # line number and the line itself.
   def each_line
     n = 0
-    @list.each {|l| n += 1; yield n, l }
+    @list.each do |l|
+      return if !yield n, l
+      n += 1
+    end
   end
 
-  # Iterates over each line in the line number range `first` to
-  # `last`, inclusive, yielding both the line number and the line itself.
+  # Iterates over each line in the line number range `low` to
+  # `high`, inclusive, yielding both the line number and the line itself.
   # Aborts the iteration if the block returns false.  Line numbers
   # are zero-based.
-  def each_in_range(first : Int32, last : Int32)
-    last = [last, size - 1].min
-    first = [first, last].min
-    lp = self[first]
-    if lp
-      (first..last).each do |i|
-	return if !yield i, lp
-	lp = lp.next
+  def each_in_range(low : Int32, high : Int32)
+    n = 0
+    @list.each do |l|
+      return if n > high
+      if n >= low
+        return if !yield n, l
       end
+      n += 1
     end
   end
 

@@ -36,7 +36,6 @@ describe Buffer do
     count = 0
     seen = [] of Int32
     b.each_in_range(0,2) do |lineno, s|
-      count += 1
       seen.push(lineno)
       case lineno
       when 0
@@ -46,9 +45,12 @@ describe Buffer do
       when 2
 	s.text.should eq "This is line three."
       end
+      count.should eq(lineno)
+      count += 1
       true	# tell each_in_range to continue
     end
     count.should eq(3)
+    seen.size.should eq(3)
     seen[0].should eq(0)
     seen[1].should eq(1)
     seen[2].should eq(2)
@@ -220,6 +222,52 @@ describe Buffer do
       lineno += 1
     end
     b.size.should eq(5)
+  end
+
+  it "Iterates over a sub-range" do
+    lineno = 1
+    seen = [] of Int32
+    b.each_in_range(1, 3) do |n, s|
+      seen.push(n)
+      n.should eq(lineno)
+      case lineno
+      when 1
+	s.text.should eq "This is line one."
+      when 2
+	s.text.should eq "This is the new line 1.5."
+      when 3
+	s.text.should eq "This is the replacement line 2.5."
+      end
+      lineno += 1
+      true
+    end
+    lineno.should eq(4)
+    seen.size.should eq(3)
+    seen[0].should eq(1)
+    seen[1].should eq(2)
+    seen[2].should eq(3)
+  end
+
+  it "Iterates over a sub-range but exits early" do
+    lineno = 1
+    seen = [] of Int32
+    b.each_in_range(1, 3) do |n, s|
+      seen.push(n)
+      n.should eq(lineno)
+      (n <= 3).should eq(true)
+      case lineno
+      when 1
+	s.text.should eq "This is line one."
+      when 2
+	s.text.should eq "This is the new line 1.5."
+      end
+      lineno += 1
+      n < 2	# stop after line 2
+    end
+    lineno.should eq(3)
+    seen.size.should eq(2)
+    seen[0].should eq(1)
+    seen[1].should eq(2)
   end
 
   it "Test buffer flags" do

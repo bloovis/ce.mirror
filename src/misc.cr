@@ -1,5 +1,3 @@
-require "./ce.cr"
-
 module Misc
 
   extend self
@@ -25,6 +23,7 @@ module Misc
 	bytes_at_dot = bytes + dot.o
       end
       bytes += l.text.size + 1
+      true # tell each_line to continue
     end
     bytes -= 1	# adjust for last line
     percent = bytes_at_dot * 100 // bytes

@@ -1,5 +1,3 @@
-require "./ce"
-
 # `Echo` contains routines for reading and writing characters in
 # the so-called echo line area, the bottom line of the screen.
 module Echo
