@@ -128,7 +128,7 @@ class Terminal
 
   # Write a character to the screen.
   def putc(c : Char)
-    LibNCurses.waddch(@scr, c.ord)
+    LibNCurses.waddstr(@scr, c.to_s)
   end
 
   # Write a string to the screen, but don't erase to end of line afterwards.

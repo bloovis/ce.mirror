@@ -8,6 +8,7 @@ require "./keymap"
 require "./display"
 require "./basic"
 require "./misc"
+require "./echo"
 
 def change(f : Bool, n : Int32, k : Int32) : Result
   E.curb.flags = E.curb.flags ^ Bflags::Changed
@@ -23,13 +24,6 @@ def quit(f : Bool, n : Int32, k : Int32) : Result
   E.tty.close
   puts "Goodbye!"
   exit 0
-  return Result::True
-end
-
-def info(f : Bool, n : Int32, k : Int32) : Result
-  E.tty.move(E.tty.nrow-1, 0)
-  E.tty.puts("top line #{E.curw.line}, dot line #{E.curw.dot.l}")
-  E.tty.eeol
   return Result::True
 end
 
@@ -109,6 +103,17 @@ class E
     @@thisflag = f
   end
 
+  # Returns the context of dot as a tuple containing
+  # the current window, buffer, dot, and line pointer.
+  def self.get_context : Tuple(Window, Buffer, Pos, Pointer(Line))
+    w = E.curw
+    b = w.buffer
+    dot = w.dot
+    lp = b[dot.l]
+    raise "Nil line in get_context!" if lp.nil?
+    return {w, b, dot, lp}
+  end
+
   def initialize
     # Create a terminal object.
     @tty = Terminal.new
@@ -117,14 +122,16 @@ class E
     # Create a keyboard object.
     @kbd = Kbd.new(@tty)
 
-    # Create some key bindings.
+    # Create some key bindings for this module.
     @keymap = KeyMap.new
-    Basic.bind_keys(@keymap)
     @keymap.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
     @keymap.add_dup('q', "quit")
     @keymap.add('c', cmdptr(change), "toggle-changed-flag")
     @keymap.add('e', cmdptr(exception), "raise-exception")
-    @keymap.add('i', cmdptr(info), "show-info")
+
+    # Create some key bindings for other modules.
+    Basic.bind_keys(@keymap)
+    Misc.bind_keys(@keymap)
 
     # Create a display object.
     @disp = Display.new(@tty)
@@ -192,6 +199,7 @@ class E
     while !done
       @disp.update
       c = @kbd.getkey
+      Echo.erase
 
       # Handle the CTRL-U + digits prefix.
       f = false

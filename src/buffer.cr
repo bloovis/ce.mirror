@@ -91,6 +91,13 @@ class Buffer
     @list.find {|l| lnno += 1; lnno == n}
   end
 
+  # Iterates over each line in the buffer, yielding both the line number
+  # and the line itself.
+  def each_line
+    n = 0
+    @list.each {|l| n += 1; yield n, l }
+  end
+
   # Iterates over each line in the line number range `first` to
   # `last`, inclusive, yielding both the line number and the line itself.
   # Aborts the iteration if the block returns false.  Line numbers
