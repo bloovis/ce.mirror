@@ -29,13 +29,8 @@ class Display
 
   def update
     # Determine the actual screen column number of the dot.
-    w = E.curw
-    b = w.buffer
-    dot = w.dot
-    curcol = 0
-    if lp = b[dot.l]
-      curcol = Display.screen_size(lp.text, dot.o)
-    end
+    w, b, dot, lp = E.get_context
+    curcol = Display.screen_size(lp.text, dot.o)
 
     Window.each do |w|
       #STDERR.puts "update: w.line #{w.line}, w.toprow #{w.toprow}, w.nrow #{w.nrow}"
@@ -76,13 +71,16 @@ class Display
       @tty.move(w.toprow + w.nrow, 0)
       @tty.color(Terminal::CMODE)
       @tty.eeol
-      @tty.puts((b.flags.changed? ? "*" : " ") + "CrystalEdit #{b.name} File:#{b.filename}")
+      @tty.puts((b.flags.changed? ? "*" : " ") + "CrystalEdit #{b.name}" +
+		(b.filename == "" ? "" : " File:#{b.filename}"))
       @tty.color(Terminal::CTEXT)
 
     end
 
     # Set the cursor to the corresponding screen position of the dot
     # in the current window.
+    w = E.curw
+    dot = w.dot
     currow = dot.l - w.line + w.toprow 
     @tty.move(currow, curcol)
 

@@ -169,7 +169,7 @@ class E
       b.list.push(Line.alloc(""))
     else
       ARGV.each do |filename|
-        b = Buffer.new(filename)
+        b = Buffer.new(filename, filename)
         b.readfile(filename)
       end
     end
@@ -214,7 +214,10 @@ class E
     while !done
       @disp.update
       c = @kbd.getkey
-      Echo.erase
+      if !Echo.empty?
+	Echo.erase
+	@disp.update
+      end
 
       # Handle the CTRL-U + digits prefix.
       f = false

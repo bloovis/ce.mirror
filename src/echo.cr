@@ -3,12 +3,18 @@
 module Echo
 
   @@noecho = false
+  @@empty = true
 
   extend self
 
   # Sets the `@@noecho` boolean to *x*.
   def self.noecho=(x : Bool)
     @@noecho = x
+  end
+
+  # Returns true if there is nothing on the echo line
+  def self.empty?
+    @@empty
   end
 
   # Below are special versions of the routines in Terminal that don't don't
@@ -27,6 +33,7 @@ module Echo
   def self.puts(s : String)
     tty = E.tty
     tty.putline(tty.nrow - 1, 0, s)
+    @@empty = false
   end
 
   # Erases the echo line.
@@ -34,6 +41,7 @@ module Echo
     tty = E.tty
     tty.move(tty.nrow - 1, 0)
     tty.eeol
+    @@empty = true
   end
 
   # Writes *prompt* to the echo line, and reads back the response.
@@ -55,6 +63,7 @@ module Echo
     tty.putline(row, 0, prompt)
     tty.move(row, leftcol)
     tty.flush
+    @@empty = false
 
     ret = default || ""
     pos = ret.size

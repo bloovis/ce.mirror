@@ -17,11 +17,41 @@ class Buffer
 
   @@list = [] of Buffer
 
-  def initialize(@name)
+  # Finds the buffer with the name *name*, or returns nil if not found
+  def self.find(name : String) : Buffer | Nil
+    @@list.each do |b|
+      return b if b.name == name
+    end
+    return nil
+  end
+
+  def initialize(name, @filename = "")
+    # If the user specified a filename, use the base name
+    # as the buffer name.
+    if filename.size > 0
+      name = Path[filename].basename
+    end
+    newname = name
+
+    # If there is already a buffer with the same name, keep
+    # appending a suffix of the form ".N", with increasing values
+    # for N, until we find a unique name.
+    tries = 0
+    newname = name
+    while b = Buffer.find(newname) && tries < 100
+      newname = name + "." + tries.to_s
+      tries += 1
+    end
+    if tries == 100
+      raise "Too many buffers with a name like #{name}!"
+    end
+    @name = newname
+
+    # Initialize the rest of the instance variables and
+    # add this new Buffer to the list.
     @list = LinkedList(Line).new
     @flags = Bflags::None
     @nwind = 0
-    @filename = ""
     @@list.push(self)
   end
 
