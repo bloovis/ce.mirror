@@ -26,7 +26,11 @@ module Misc
       true # tell each_line to continue
     end
     bytes -= 1	# adjust for last line
-    percent = bytes_at_dot * 100 // bytes
+    if bytes == 0
+      percent = 0
+    else
+      percent = bytes_at_dot * 100 // bytes
+    end
     text = lp.text
     lsize = text.size
     if dot.o >= lsize

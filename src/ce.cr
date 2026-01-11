@@ -91,14 +91,27 @@ class E
     end
   end
 
+  # Returns the Keyboard object
+  def self.kbd : Kbd
+    k = self.instance.kbd
+    if k
+      return k
+    else
+      raise "No Keyboard object!"
+    end
+  end
+
+  # Returns the command flags for the previous command.
   def self.lastflag : Eflags
     return @@lastflag
   end
 
+  # Returns the command flags for the currently executing command.
   def self.thisflag
     return @@thisflag
   end
 
+  # Sets the command flags for the currently executing command.
   def self.thisflag=(f : Eflags)
     @@thisflag = f
   end
@@ -132,6 +145,7 @@ class E
     # Create some key bindings for other modules.
     Basic.bind_keys(@keymap)
     Misc.bind_keys(@keymap)
+    Echo.bind_keys(@keymap)
 
     # Create a display object.
     @disp = Display.new(@tty)
@@ -152,6 +166,7 @@ class E
     # or just leave the buffer empty if no file was specified.
     if ARGV.size == 0
       b = Buffer.new("main")
+      b.list.push(Line.alloc(""))
     else
       ARGV.each do |filename|
         b = Buffer.new(filename)
