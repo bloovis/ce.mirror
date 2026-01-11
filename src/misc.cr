@@ -38,7 +38,7 @@ module Misc
     else
       c = lp.text[dot.o].ord
     end
-    s = sprintf("[CH:0x%02X] Line:%d Row:%d Col:%d %d%% of %d]",
+    s = sprintf("[CH:0x%02X Line:%d Row:%d Col:%d %d%% of %d]",
 	[c, dot.l + 1, dot.l - w.line + w.toprow + 1, dot.o + 1,
 	 percent, bytes])
     Echo.puts(s)

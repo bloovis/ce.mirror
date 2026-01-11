@@ -251,9 +251,7 @@ class E
         @keymap.call_by_key(c, f, n)
 	@@lastflag = @@thisflag
       else
-	@tty.move(E.tty.nrow-1, 0)
-	@tty.puts("key #{@kbd.keyname(c)} not bound!")
-	@tty.eeol
+	Echo.puts "key #{@kbd.keyname(c)} not bound!"
       end
 
     end

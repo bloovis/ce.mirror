@@ -132,10 +132,8 @@ module Echo
 	suffix = yield(ret)
 	ret = ret + suffix
       else
-	if c >= ' '.ord && c < '~'.ord
-	  ret = ret.insert(pos, String.new(Bytes[c]))
-	  pos += 1
-	end
+	ret = ret.insert(pos, c.chr.to_s)	# convert codepoint to Char to String
+	pos += 1
       end
       lastc = c
     end

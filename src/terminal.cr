@@ -152,24 +152,28 @@ class Terminal
   # besides converting special functions keys to our own representation.
   # The Kbd module cooks the characters more by handling prefixes.
   def getc : Int32
-    while LibNCurses.wget_wch(@scr, out c) == LibNCurses::ERR
+    while (result = LibNCurses.wget_wch(@scr, out c)) == LibNCurses::ERR
     end
 
-    case c
-    when (0..255)
-      # Return normal key.
-      return c
-    when LibNCurses::KEY_BACKSPACE
-      # Treat backspace as Ctrl-H.
-      return ctrl('h')
-    when LibNCurses::KEY_RESIZE
-      # Treat window resize as Ctrl-L, which will force a screen redraw.
-      return ctrl('l')
-    when LibNCurses::KEY_MOUSE
-      return 'x'.ord		# horrible testing hack!!!
+    #STDERR.puts "gets: c #{c}, result #{result}"
+    if result == LibNCurses::KEY_CODE_YES
+      case c
+      when LibNCurses::KEY_BACKSPACE
+	# Treat backspace as Ctrl-H.
+	return ctrl('h')
+      when LibNCurses::KEY_RESIZE
+	return ctrl('l')		# Ctrl-L will force a screen redraw
+      when LibNCurses::KEY_MOUSE
+	return Kbd::CLICK		# Horrible hack for mouse
+      else
+	if special = @@keymap[c]?	# Try special key map
+	  return special
+	else
+	  return Kbd::RANDOM		# Unknown function key
+	end
+      end
     else
-      # Try special key map key.
-      @@keymap[c] || Kbd::RANDOM
+      return c.chr.ord			# Unicode codepoint
     end
   end
 

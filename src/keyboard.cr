@@ -67,6 +67,8 @@ class Kbd
   F10    = 0x94
   F11    = 0x95
   F12    = 0x96
+  CLICK  = 0x97
+  DCLICK = 0x98
   
   # Returns the internal value of the Ctrl-modified key *s*.
   # This is *not* the same as an ASCII control character;
