@@ -38,7 +38,7 @@ class Kbd
   CTLX = 0x40000000		# Control-X flag.
 
   # Mask for basic keycode.
-  KEYMASK = 0x01FFFFF
+  CHAR = 0x01FFFFF
 
   # Mask for ASCII code.
   ASCIIMASK = 0x7f
@@ -162,7 +162,7 @@ class Kbd
 	s << "C-" if (k & CTRL) == CTRL
 
 	# Look it up again in the table, but this time without CTRL.
-	n = @@keynames[k & KEYMASK]?
+	n = @@keynames[k & CHAR]?
 	if n
 	  s << n
 	else

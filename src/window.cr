@@ -46,6 +46,7 @@ class Window
     end
   end
 
+  # Returns the current Window.
   def self.current : Window
     if @@curi >= 0 && @@curi < @@list.size
       return @@list[@@curi]
@@ -54,6 +55,7 @@ class Window
     end
   end
 
+  # Sets the current Window.
   def self.current= (w : Window)
     i = @@list.index(w)
     if i
@@ -63,6 +65,7 @@ class Window
     end
   end
 
+  # Yields each Window to the passed-in block.
   def self.each
     @@list.each do |window|
       yield window

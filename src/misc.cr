@@ -45,8 +45,31 @@ module Misc
     return Result::True
   end
 
+  # Inserts *n* copies of the key *k* at the current location.
+  def selfinsert(f : Bool, n : Int32, k : Int32) : Result
+    return Result::False if n < 0
+    return Result::True if n == 0
+
+    # Get the unmodified key code.
+    c = k & Kbd::CHAR;
+
+    # ASCII-fy normal control characters, i.e., characters
+    # Ctrl-@, Ctrl-A, Ctrl-B, etc., up to Ctrl-_.
+    if (k & Kbd::CTRL) != 0 && c >= '@'.ord && c <= '_'.ord
+      c -= '@'.ord
+    end
+
+    # Insert *n* copies of the character.
+    Line.insert(c.chr.to_s * n)
+    return Result::True
+  end
+
   # Creates key bindings for all Misc commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
+    k.add(' '.ord, cmdptr(selfinsert), "ins-self")
+    ('!'.ord .. '~'.ord).each do |c|
+      k.add_dup(c, "ins-self")
+    end
   end
 end
