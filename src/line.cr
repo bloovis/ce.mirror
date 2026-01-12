@@ -24,7 +24,6 @@ class Line
     # Save the dot, then bump the offset in the dot.
     old_dot = Pos.new(dot.l, dot.o)
     n = s.size
-    dot.o += n
 
     # Mark the buffer as changed.
     b.flags = b.flags | Bflags::Changed
@@ -34,6 +33,17 @@ class Line
     mark = w.mark
     if mark.l == old_dot.l && mark.o > old_dot.o
       mark.o += n
+    end
+
+    # Adjust dot offset in all windows that have the same buffer
+    # and dot line.
+    Window.each do |w1|
+      if w1.buffer == b
+	dot = w1.dot
+	if dot.l == old_dot.l && (w1 == w || dot.o > old_dot.o)
+	  dot.o += n
+	end
+      end
     end
   end
 
