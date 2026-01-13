@@ -64,10 +64,22 @@ module Misc
     return Result::True
   end
 
+  # Inserts *n* newlines at the current location.
+  def insnl(f : Bool, n : Int32, k : Int32) : Result
+    return Result::False if n < 0
+    return Result::True if n == 0
+
+    n.times {Line.newline}
+    return Result::True
+  end
+
   # Creates key bindings for all Misc commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
     k.add(' '.ord, cmdptr(selfinsert), "ins-self")
+    k.add(Kbd.ctrl('m'), cmdptr(insnl), "ins-nl")
+
+    # Create bindings for each ASCII printable character.
     ('!'.ord .. '~'.ord).each do |c|
       k.add_dup(c, "ins-self")
     end
