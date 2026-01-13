@@ -47,9 +47,10 @@ class Buffer
     end
     @name = newname
 
-    # Initialize the rest of the instance variables and
-    # add this new Buffer to the list.
+    # Initialize the rest of the instance variables, add a blank line,
+    # and add this new Buffer to the list.
     @list = LinkedList(Line).new
+    @list.push(Line.alloc(""))
     @flags = Bflags::None
     @nwind = 0
     @@list.push(self)
@@ -143,6 +144,22 @@ class Buffer
       end
       n += 1
     end
+  end
+
+  # Returns the first line in the buffer.
+  def first_line : Pointer(Line)
+    if empty?
+      raise "Empty buffer in first_line!"
+    end
+    return @list.head
+  end
+
+  # Returns the last line in the buffer.
+  def last_line : Pointer(Line)
+    if empty?
+      raise "Empty buffer in last_line!"
+    end
+    return @list.head.value.previous
   end
 
   # Allow buffer to have the same methods as the linked list.
