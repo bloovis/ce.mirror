@@ -29,7 +29,7 @@ class Window
     # Initialize the various instance variables.
     @line = 0
     @dot = Pos.new()
-    @mark = Pos.new()
+    @mark = Pos.new(-1, 0)	# -1 means not set
     @savep = Pos.new()
     @toprow = 0
     @nrow = 0

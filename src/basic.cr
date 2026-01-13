@@ -327,6 +327,29 @@ module Basic
     return Result::True
   end
 
+  # Sets the mark in the current window.
+  def setmark(f : Bool, n : Int32, k : Int32) : Result
+    w = E.curw
+    dot = w.dot
+    w.mark = Pos.new(dot.l, dot.o)
+    Echo.puts("[Mark set]")
+    return Result::True
+  end
+
+  # Swaps the values of dot and mark in the current window.
+  def swapmark(f : Bool, n : Int32, k : Int32) : Result
+    w = E.curw
+    dot = w.dot
+    mark = w.mark
+    if mark.l == -1
+      Echo.puts("No mark in this window")
+      return Result::False
+    end
+    w.mark = Pos.new(dot.l, dot.o)
+    w.dot = Pos.new(mark.l, mark.o)
+    return Result::True
+  end
+
   # Binds keys for basic commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd::PGDN, cmdptr(forwpage), "forw-page")
@@ -339,6 +362,8 @@ module Basic
     k.add(Kbd.meta('>'), cmdptr(gotoeob), "goto-eob")
     k.add(Kbd::DOWN, cmdptr(forwline), "forw-line")
     k.add(Kbd::UP, cmdptr(backline), "back-line")
+    k.add(Kbd.ctrl('@'), cmdptr(setmark), "set-mark")
+    k.add(Kbd.ctlx_ctrl('x'), cmdptr(swapmark), "swap-dot-and-mark")
 
     k.add_dup(Kbd.ctrl('v'), "forw-page")
     k.add_dup(Kbd.ctrl('z'), "back-page")
