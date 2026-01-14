@@ -9,12 +9,8 @@ require "./display"
 require "./basic"
 require "./misc"
 require "./echo"
+require "./files"
 require "./e"
-
-def change(f : Bool, n : Int32, k : Int32) : Result
-  E.curb.flags = E.curb.flags ^ Bflags::Changed
-  return Result::True
-end
 
 def exception(f : Bool, n : Int32, k : Int32) : Result
   raise "Exception command executed!"
@@ -35,13 +31,16 @@ begin
   e = E.new
   e.keymap.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
   e.keymap.add_dup('q', "quit")
-  e.keymap.add('c', cmdptr(change), "toggle-changed-flag")
-  e.keymap.add('e', cmdptr(exception), "raise-exception")
+
+  # The following bindings are for testing only!  Delete when
+  # editor is fully implemented.
+  e.keymap.add(Kbd.ctlx('e'), cmdptr(exception), "raise-exception")
 
   # Create some key bindings for other modules.
   Basic.bind_keys(e.keymap)
   Misc.bind_keys(e.keymap)
   Echo.bind_keys(e.keymap)
+  Files.bind_keys(e.keymap)
 
   e.process_command_line
   e.event_loop

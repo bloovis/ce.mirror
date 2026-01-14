@@ -8,6 +8,7 @@ class Line
   def initialize(@text : String)
   end
 
+  # Allocates a new Line object.
   def self.alloc(s : String) : Pointer(Line)
     return Pointer(Line).malloc(1) {Line.new(s)}
   end
@@ -16,6 +17,8 @@ class Line
   # in the current window, by splitting the current line into
   # two lines.
   def self.newline
+    return Result::False unless Files.checkreadonly
+
     # Get the current line.
     w, b, dot, lp = E.get_context
 
@@ -44,7 +47,7 @@ class Line
     b.insert_after(lp, lp1)
 
     # Mark the buffer as changed.
-    b.flags = b.flags | Bflags::Changed
+    b.lchange
 
     # Adjust dot and mark in all windows that have the same buffer.
     old_dot = Pos.new(dot.l, dot.o)
@@ -67,6 +70,8 @@ class Line
   # new lines to be created and inserted.  To do that,
   # call `Line.newline`.
   def self.insert(s : String)
+    return Result::False unless Files.checkreadonly
+
     # Number of characters being inserted.
     n = s.size
 
@@ -75,7 +80,7 @@ class Line
     lp.text = lp.text.insert(dot.o, s)
 
     # Mark the buffer as changed.
-    b.flags = b.flags | Bflags::Changed
+    b.lchange
 
     # Adjust dot and mark in all windows that have the same buffer.
     old_dot = Pos.new(dot.l, dot.o)

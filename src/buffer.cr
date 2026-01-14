@@ -17,14 +17,6 @@ class Buffer
 
   @@list = [] of Buffer
 
-  # Finds the buffer with the name *name*, or returns nil if not found
-  def self.find(name : String) : Buffer | Nil
-    @@list.each do |b|
-      return b if b.name == name
-    end
-    return nil
-  end
-
   def initialize(name, @filename = "")
     # If the user specified a filename, use the base name
     # as the buffer name.
@@ -56,10 +48,22 @@ class Buffer
     @@list.push(self)
   end
 
+  # Class methods.
+
+  # Finds the buffer with the name *name*, or returns nil if not found
+  def self.find(name : String) : Buffer | Nil
+    @@list.each do |b|
+      return b if b.name == name
+    end
+    return nil
+  end
+
   # Returns the list of all buffers.
   def self.buffers : Array(Buffer)
     @@list
   end
+
+  # Instance methods.
 
   # Clears the buffer, and reads the file `filename` into the buffer.
   # Returns true if successful, false otherwise
@@ -160,6 +164,11 @@ class Buffer
       raise "Empty buffer in last_line!"
     end
     return @list.head.value.previous
+  end
+
+  # Sets the changed flag for the buffer.
+  def lchange
+    @flags = @flags | Bflags::Changed
   end
 
   # Allow buffer to have the same methods as the linked list.

@@ -1,3 +1,4 @@
+# The `Misc` module contains some commands for inserting and deleting text.
 module Misc
 
   extend self
@@ -64,6 +65,16 @@ module Misc
     return Result::True
   end
 
+  # Opens up some blank space by inserting one or more newlines
+  # and then backing up over them.
+  def openline(f : Bool, n : Int32, k : Int32) : Result
+    return Result::False if n < 0
+    return Result::True if n == 0
+
+    n.times {Line.newline}
+    return Basic.backchar(f, n, Kbd::RANDOM)
+  end
+
   # Inserts *n* newlines at the current location.
   def insnl(f : Bool, n : Int32, k : Int32) : Result
     return Result::False if n < 0
@@ -73,11 +84,67 @@ module Misc
     return Result::True
   end
 
+  # Twiddles the two characters on either side of
+  # dot. If dot is at the end of the line, twiddles the
+  # two characters before it. Returns with an error if dot
+  # is at the beginning of line.  This fixes up a very
+  # common typo with a single stroke. Normally bound
+  # to "C-T".
+  def twiddle(f : Bool, n : Int32, k : Int32) : Result
+    w, b, dot, lp = E.get_context
+    return Result::False unless Files.checkreadonly
+
+    # Copy the dot offset so that we can leave dot unchanged.
+    doto = dot.o
+
+    # Fetch the line text and its size
+    text = lp.text
+    lsize = lp.text.size
+
+    # If dot is at the end of the line, back up one character.
+    if doto == lsize
+      doto -= 1
+      return Result::False if doto < 0
+    end
+
+    # Get characters to the right and left of the dot.
+    cr = text[doto, 1]
+    doto -= 1
+    return Result::False if doto < 0
+    cl = text[doto, 1]
+
+    # Get the strings to the left and right of the chacters
+    # being twiddled.
+    if doto == 0
+      sl = ""
+    else
+      sl = text[0 .. doto-1]
+    end
+    if doto >= lsize - 1
+      sr = ""
+    else
+      sr = text[doto+2 .. -1]
+    end
+    lp.value.text = sl + cr + cl + sr
+
+    # Move the dot forward by one, unless we're at the end of the line.
+    if dot.o < lsize
+      dot.o += 1
+    end
+
+    # Mark the buffer as changed.
+    b.lchange
+
+    return Result::True
+  end
+
   # Creates key bindings for all Misc commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
     k.add(' '.ord, cmdptr(selfinsert), "ins-self")
     k.add(Kbd.ctrl('m'), cmdptr(insnl), "ins-nl")
+    k.add(Kbd.ctrl('o'), cmdptr(openline), "ins-nl-and-backup")
+    k.add(Kbd.ctrl('t'), cmdptr(twiddle), "twiddle")
 
     # Create bindings for each ASCII printable character.
     ('!'.ord .. '~'.ord).each do |c|
