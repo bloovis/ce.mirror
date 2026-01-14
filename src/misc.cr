@@ -138,6 +138,94 @@ module Misc
     return Result::True
   end
 
+  # Finds the first non-whitespace character in the string *s*, and returns a tuple
+  # containing these two values:
+  # * the on-screen column of that character (taking tabs into account)
+  # * the index of that character in *s*
+  # of that character.
+  def currentindent(s : String) : Tuple(Int32, Int32)
+    # Look for the first non-whitespace character.  If not found,
+    # pretend that the non-whitespace character is just past
+    # the end of the string.
+    i = s.index(/\S/)
+    if i.nil?
+      i = s.size
+    end
+
+    # Return the display size and the offset.
+    return {Display.screen_size(s, i), i}
+  end
+
+  # Inserts a newline followed by the correct number of
+  # tabs and spaces to get the desired indentation *nicol*. If *nonwhitepos*
+  # (the offset of the first nonwhitepos in the current line) is
+  # the end of the line, the line is completely white, so zero it out;
+  # then if an argument was specified to the command, instead of
+  # inserting a new line, just readjust the newly blanked line's indentation.
+  def nlindent(nicol : Int32, nonwhitepos : Int32, f : Bool) : Result
+    w, b, dot, lp = E.get_context
+    linelen = lp.text.size
+
+    if linelen > 0 && nonwhitepos == linelen
+      # If the current line is all whitespace, erase it.
+      lp.text = ""
+      w.dot.o = 0
+
+      # Insert a newline if no numeric argument was provided.
+      if !f
+	return Result::False unless Line.newline
+      end
+    else
+      # Current line is not all whitespace, so insert a newline.
+      return Result::False unless Line.newline
+    end
+
+    # Adjust the indentation of the current line.
+    i = nicol // Tabs.tabsize
+    s = ""
+    if i != 0
+      s = "\t" * i
+    end
+    i = nicol % Tabs.tabsize
+    if i != 0
+      s = s + (" " * i)
+    end
+    if Line.insert(s)
+      return Result::True
+    else
+      return Result::True
+    end
+  end
+
+  # Indents according to Ruby conventions.  Inserts a newline, then enough tabs
+  # and spaces to match the indentation of the previous line.  If the previous
+  # line starts with a block-start keyword, indent by two spaces. If a
+  # two-C-U argument was specified, reduce indentation by two spaces.
+  # Otherwise retain the same indentation.
+  def rubyindent(f : Bool, n : Int32, k : Int32) : Result
+    w, b, dot, lp = E.get_context
+    text = lp.text
+
+    # Find indentation and the offset of the first non-whitespace 
+    nicol, i = currentindent(text)
+
+    # Look at the string following the whitespace in the
+    # current line to determine the indentation of the next line.
+    # If any of certain magic tokens was found, or a single C-U argument
+    # was specified, indent by two spaces.  If a two-C-U argument was
+    # specified, unindent by two spaces.
+    if (f && (n == 4)) ||
+       text =~ /^\s*(def|if|when|for|else|elsif|class|module)\b/
+      nicol += 2
+    elsif f && (n == 16)
+      nicol = nicol < 2 ? 0 : nicol - 2
+    end
+
+    # Insert a newline followed by the correct number of
+    # tabs and spaces to get the desired indentation.
+    return nlindent(nicol, i, f)
+  end
+
   # Creates key bindings for all Misc commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
@@ -145,6 +233,7 @@ module Misc
     k.add(Kbd.ctrl('m'), cmdptr(insnl), "ins-nl")
     k.add(Kbd.ctrl('o'), cmdptr(openline), "ins-nl-and-backup")
     k.add(Kbd.ctrl('t'), cmdptr(twiddle), "twiddle")
+    k.add(Kbd.ctrl('j'), cmdptr(rubyindent), "ruby-indent")
 
     # Create bindings for each ASCII printable character.
     ('!'.ord .. '~'.ord).each do |c|

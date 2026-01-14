@@ -189,20 +189,20 @@ class E
 	n = 4
 	while (c = @kbd.getkey) == ctrlu
 	  n *= 4
-	  if (c >= zero && c <= nine) || c == minus
-	    if c == minus
-	      n = 0
-	      mflag = true
-	    else
-	      n = c - zero
-	      mflag = false
-	    end
-	    while (c = @kbd.getkey) >= zero && c <= nine
-	      n = (10 * n) + (c - zero)
-	    end
-	    if mflag
-	      n = (n == 0 ? -1 : -n)
-	    end
+	end
+	if (c >= zero && c <= nine) || c == minus
+	  if c == minus
+	    n = 0
+	    mflag = true
+	  else
+	    n = c - zero
+	    mflag = false
+	  end
+	  while (c = @kbd.getkey) >= zero && c <= nine
+	    n = (10 * n) + (c - zero)
+	  end
+	  if mflag
+	    n = (n == 0 ? -1 : -n)
 	  end
 	end
       end

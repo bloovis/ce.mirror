@@ -16,8 +16,8 @@ class Line
   # Inserts a newline into the buffer at the current location of dot
   # in the current window, by splitting the current line into
   # two lines.
-  def self.newline
-    return Result::False unless Files.checkreadonly
+  def self.newline : Bool
+    return false unless Files.checkreadonly
 
     # Get the current line.
     w, b, dot, lp = E.get_context
@@ -63,14 +63,15 @@ class Line
 	end
       end
     end
+    return true
   end
 
   # Inserts the string *s* in the current line at the current dot location.
   # Newline characters ('\n') in the string do *not* cause
   # new lines to be created and inserted.  To do that,
   # call `Line.newline`.
-  def self.insert(s : String)
-    return Result::False unless Files.checkreadonly
+  def self.insert(s : String) : Bool
+    return false unless Files.checkreadonly
 
     # Number of characters being inserted.
     n = s.size
@@ -96,6 +97,7 @@ class Line
 	end
       end
     end
+    return true
   end
 
 end
