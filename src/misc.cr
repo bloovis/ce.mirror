@@ -40,7 +40,8 @@ module Misc
       c = lp.text[dot.o].ord
     end
     s = sprintf("[CH:0x%02X Line:%d Row:%d Col:%d %d%% of %d]",
-	[c, dot.l + 1, dot.l - w.line + w.toprow + 1, dot.o + 1,
+	[c, dot.l + 1, dot.l - w.line + w.toprow + 1,
+	 Display.screen_size(text, dot.o) + 1,
 	 percent, bytes])
     Echo.puts(s)
     return Result::True
@@ -193,7 +194,7 @@ module Misc
     if Line.insert(s)
       return Result::True
     else
-      return Result::True
+      return Result::False
     end
   end
 
@@ -235,9 +236,10 @@ module Misc
     k.add(Kbd.ctrl('t'), cmdptr(twiddle), "twiddle")
     k.add(Kbd.ctrl('j'), cmdptr(rubyindent), "ruby-indent")
 
-    # Create bindings for each ASCII printable character.
+    # Create bindings for all ASCII printable characters and tab.
     ('!'.ord .. '~'.ord).each do |c|
       k.add_dup(c, "ins-self")
     end
+    k.add_dup(Kbd.ctrl('i'), "ins-self")
   end
 end
