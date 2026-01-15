@@ -227,6 +227,73 @@ module Misc
     return nlindent(nicol, i, f)
   end
 
+  # Kill line. If called without an argument,
+  # it kills from dot to the end of the line, unless it
+  # is at the end of the line, when it kills the newline.
+  # If called with an argument of 0, it kills from the
+  # start of the line to dot. If called with a positive
+  # argument, it kills from dot forward over that number
+  # of newlines. If called with a negative argument it
+  # kills any text before dot on the current line,
+  # then it kills back abs(arg) lines.
+  def killline(f : Bool, n : Int32, k : Int32) : Result
+    w, b, dot, lp = E.get_context
+
+    # Purge the kill buffer.
+    Line.kdelete
+
+    chunk = 0
+    if !f
+      # No argument: kill from dot to end of line.
+      chunk = [lp.text.size - dot.o, 1].max
+    elsif n > 0
+      # Positive argument: kill from dot forward over n lines.
+      chunk = lp.text.size - dot.o + 1	# +1 for newline
+      (n - 1).times do
+	break if lp == b.last_line
+	lp = lp.next
+	chunk += lp.text.size + 1
+      end
+    else
+      # Negative argument: kill text before dot on current line,
+      # then kill back -n lines.
+      chunk = dot.o
+      dot.o = 0
+      n = -n
+      n.times do
+	break if lp = b.first_line
+	lp = lp.previous
+	dot.l -= 1
+	chunk += lp.text.size
+      end
+    end
+    if Line.delete(chunk, true)
+      return Result::True
+    else
+      return Result::False
+    end
+  end
+
+  # Yanks text back from the kill buffer. This
+  # is really easy. All of the work is done by the
+  # standard insert routines.
+  def yank(f : Bool, n : Int32, k : Int32) : Result
+    return Result::False if n < 0
+    return Result::True if n == 0
+
+    w, b, dot, lp = E.get_context
+    n.times do
+      Line.keach do |s|
+        if s == "\n"
+	  return Result::False unless Line.newline
+	else
+	  return Result::False unless Line.insert(s)
+	end
+      end
+    end
+    return Result::True
+  end
+
   # Creates key bindings for all Misc commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
@@ -235,6 +302,8 @@ module Misc
     k.add(Kbd.ctrl('o'), cmdptr(openline), "ins-nl-and-backup")
     k.add(Kbd.ctrl('t'), cmdptr(twiddle), "twiddle")
     k.add(Kbd.ctrl('j'), cmdptr(rubyindent), "ruby-indent")
+    k.add(Kbd.ctrl('k'), cmdptr(killline), "kill-line")
+    k.add(Kbd.ctrl('y'), cmdptr(yank), "yank")
 
     # Create bindings for all ASCII printable characters and tab.
     ('!'.ord .. '~'.ord).each do |c|
