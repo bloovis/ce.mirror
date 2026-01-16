@@ -41,6 +41,7 @@ begin
   Misc.bind_keys(e.keymap)
   Echo.bind_keys(e.keymap)
   Files.bind_keys(e.keymap)
+  Window.bind_keys(e.keymap)
 
   e.process_command_line
   e.event_loop

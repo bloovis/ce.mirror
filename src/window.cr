@@ -46,6 +46,34 @@ class Window
     end
   end
 
+  # Returns next window in list, or nil if this the last window
+  def next : Window | Nil
+    i = @@list.index[self]
+    if i.nil?
+      raise "Unknown window in Window#next!"
+    end
+    if i == @@list.size - 1
+      return nil
+    else
+      return @@list[i + 1]
+    end
+  end
+
+  # Returns previous window in list, or nil if this the last window
+  def previous : Window | Nil
+    i = @@list.index[self]
+    if i.nil?
+      raise "Unknown window in Window#previous!"
+    end
+    if i == 0
+      return nil
+    else
+      return @@list[i - 1]
+    end
+  end
+
+  # Class methods.
+
   # Returns the current Window.
   def self.current : Window
     if @@curi >= 0 && @@curi < @@list.size
@@ -72,4 +100,33 @@ class Window
     end
   end
 
+  # Commands.
+
+  # Makes the next window the current window, or does nothing
+  # if there is only one window.
+  def self.nextwind(f : Bool, n : Int32, k : Int32) : Result
+    if @@curi == @@list.size - 1
+      @@curi = 0
+    else
+      @@curi = @@curi + 1
+    end
+    return Result::True
+  end
+
+  # Makes the previous window the current window, or does nothing
+  # if there is only one window.
+  def self.prevwind(f : Bool, n : Int32, k : Int32) : Result
+    if @@curi == 0
+      @@curi = @@list.size - 1
+    else
+      @@curi = @@curi - 1
+    end
+    return Result::True
+  end
+
+  # Binds keys for window commands.
+  def self.bind_keys(k : KeyMap)
+    k.add(Kbd.ctlx('n'), cmdptr(nextwind), "forw-window")
+    k.add(Kbd.ctlx('p'), cmdptr(prevwind), "back-window")
+  end
 end
