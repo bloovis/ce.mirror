@@ -205,9 +205,22 @@ class Buffer
     return Result::True
   end
 
+  # Attaches a buffer to a window. The
+  # values of dot and mark come from the buffer
+  # if the use count is 0. Otherwise, they come
+  # from some other window.
+  def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
+    result, bufn = Echo.getbufn
+    return result if result == Result::False
+    return Result::False unless b = Buffer.find(bufn)
+    E.curw.usebuf(b)
+    return Result::True
+  end
+
   # Binds keys for buffer commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd::F8, cmdptr(nextbuffer), "forw-window")
+    k.add(Kbd.ctlx('b'), cmdptr(usebuffer), "use-buffer")
   end
 
   # Allow buffer to have the same methods as the linked list.

@@ -44,18 +44,34 @@ module Echo
     @@empty = true
   end
 
+
+  # Returns the largest common prefix of the
+  # array of strings *a*.
+  private def self.common_prefix(a : Array(String)) : String
+    return "" if a.size == 0
+    prefix = ""
+    f = a.first
+    (0 ... f.size).each do |i|
+      c = f[i]
+      break unless a.all? { |s| s[i]? == c }
+      prefix += f[i].to_s
+    end
+    prefix
+  end
+
   # Writes *prompt* to the echo line, and reads back the response.
   # If *default* is not nil, use that as the initial value of the response,
   # which the user can edit as necessary.
   #
   # When the user hits Tab, calls the passed-in *block* with the response
-  # so far, which returns the longest possible suffix that can be
-  # added the response.  Returns a tuple containing a Result code and
-  # the response string.  The Result code has these meanings:
+  # so far, which returns an array of strings that start with that string.
+  # Returns a tuple containing a Result code and the response string.
+  # The Result code has these meanings:
   # * False - user entered an empty response
   # * True  - user entered a non-empty response
   # * Abort - user aborted the response with Ctrl-G
-  def self.reply(prompt : String, default : String | Nil, &block) : Tuple(Result, String)
+  private def self.do_reply(prompt : String, default : String | Nil,
+		    block_given : Bool, &block) : Tuple(Result, String)
     tty = E.tty
     row = tty.nrow - 1
     leftcol = prompt.size
@@ -129,8 +145,16 @@ module Echo
 	aborted = true
       when Kbd.ctrl('i')
         pos = ret.size
-	suffix = yield(ret)
-	ret = ret + suffix
+	if block_given
+	  a = yield(ret)
+	  if a.size == 1
+	    ret = a[0]
+	    break	# only one choice, so pretend that Enter was pressed
+	  else
+	    ret = common_prefix(a)
+	    pos = ret.size
+	  end
+	end
       else
 	ret = ret.insert(pos, c.chr.to_s)	# convert codepoint to Char to String
 	pos += 1
@@ -144,14 +168,37 @@ module Echo
       if ret.size == 0
 	return {Result::False, ret}
       else
+	# Display the entire string before returning it.
+        tty.putline(row, leftcol, ret)
+        tty.move(row, leftcol + pos)
+	tty.flush
 	return {Result::True, ret}
       end
     end
   end
 
+  # Calls `do_reply` without a completion block.
+  def self.reply(prompt : String, default : String | Nil) : Tuple(Result, String)
+    do_reply(prompt, default, false) {[""]}
+  end
+
+  # Prompts for a buffer name, and returns a tuple containing
+  # the Result and the name entered by the user
+  def self.getbufn : Tuple(Result, String)
+    do_reply("Use buffer: ", nil, true) do |s|
+      a = [] of String
+      Buffer.buffers.each do |b|
+        if b.name.starts_with?(s)
+	  a << b.name
+	end
+      end
+      a
+    end
+  end
+
   # Prompts for a string, and echoes the response.
   def echo(f : Bool, n : Int32, k : Int32) : Result
-    result, ret = Echo.reply("Echo: ", nil) {|s| ""}
+    result, ret = Echo.reply("Echo: ", nil)
     if result == Result::True
       Echo.puts(ret)
     end
