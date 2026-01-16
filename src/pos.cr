@@ -8,4 +8,9 @@ class Pos
     @l = l
     @o = o
   end
+
+  def initialize(p : Pos)
+    @l = p.l
+    @o = p.o
+  end
 end

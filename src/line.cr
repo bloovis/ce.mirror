@@ -90,7 +90,7 @@ class Line
     b.lchange
 
     # Adjust dot and mark in all windows that have the same buffer.
-    oldpos = Pos.new(dot.l, dot.o)
+    oldpos = Pos.new(dot)
     Window.each do |w1|
       if w1.buffer == b
 	[w1.dot, w1.mark].each do |pos|
@@ -124,7 +124,7 @@ class Line
     b.lchange
 
     # Adjust dot and mark in all windows that have the same buffer.
-    oldpos = Pos.new(dot.l, dot.o)
+    oldpos = Pos.new(dot)
     Window.each do |w1|
       if w1.buffer == b
 	dot = w1.dot
@@ -171,7 +171,7 @@ class Line
     b.delete(nextl)
 
     # Adjust dot and mark in all windows that have the same buffer.
-    oldpos = Pos.new(dot.l, dot.o)
+    oldpos = Pos.new(dot)
     Window.each do |w1|
       if w1.buffer == b
 	[w1.dot, w1.mark].each do |pos|
@@ -233,7 +233,7 @@ class Line
 	n -= chars
 
 	# Adjust dot and mark in all windows that have the same buffer.
-	oldpos = Pos.new(dot.l, dot.o)
+	oldpos = Pos.new(dot)
 	Window.each do |w1|
 	  if w1.buffer == b
 	    [w1.dot, w1.mark].each do |pos|

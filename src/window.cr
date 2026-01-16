@@ -24,6 +24,7 @@ class Window
 
   @@list = [] of Window		# list of all windows
   @@curi = -1			# index to @@list of current window
+  @@oldbufn = ""		# old buffer name
 
   def initialize(@buffer)
     # Initialize the various instance variables.
@@ -39,6 +40,9 @@ class Window
 
     # Add this window to the global list.
     @@list << self
+
+    # Bump the window count of the buffer.
+    @buffer.nwind += 1
 
     # If this is the first window, make it the current one.
     if @@curi == -1
@@ -70,6 +74,61 @@ class Window
     else
       return @@list[i - 1]
     end
+  end
+
+  # Adds *n*, which must be 1 or -1, to the window count of the buffer associated
+  # with a window.  Copies the dot and mark from the window to the buffer
+  # if the count goes to zero, or from the buffer to the window if
+  # the count goes to one.
+  def addwind(n : Int32)
+    b = @buffer
+    if b.nwind == 0
+      # This is the first use of the buffer.  Copy the mark, dot,
+      # and leftcol from the buffer to this window.
+      @dot = Pos.new(b.dot)
+      @mark = Pos.new(b.mark)
+      @leftcol = b.leftcol
+    end
+    b.nwind += n
+    if b.nwind == 0
+      # This is the last use of the buffer.  Copy the mark, dot,
+      # and leftcol from this window to the buffer.
+      b.dot = Pos.new(@dot)
+      b.mark = Pos.new(@mark)
+      b.leftcol = @leftcol
+    end
+  end
+
+  # Attach a buffer to this window. The
+  # values of dot and mark come from the buffer
+  # if the use count is 0. Otherwise, they come
+  # from some other window.  This routine
+  # differs from `usebuffer` in that it isn't a user command,
+  # but expects a buffer pointer, instead of prompting the
+  # user for a buffer name.
+  def usebuf(b : Buffer)
+    # Save the current buffer's name.
+    @@oldbufn = @buffer.name
+
+    # Decrement the window count of the old current buffer.
+    addwind(-1)
+
+    # Set the new current buffer and increment its window count.
+    @buffer = b
+    addwind(1)
+
+    # If this is not the first use of the buffer, copy the mark,
+    # dot, and leftcol values from the first other window we find that
+    # is also using this buffer.
+    Window.each do |w|
+      if w != self && w.buffer == b
+	@dot = Pos.new(w.dot)
+	@mark = Pos.new(w.mark)
+	@leftcol = w.leftcol
+        break
+      end
+    end
+    return Result::True
   end
 
   # Class methods.

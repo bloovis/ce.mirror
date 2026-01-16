@@ -29,19 +29,21 @@ end
 # the exception information along with a backtrace before exiting.
 begin
   e = E.new
-  e.keymap.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
-  e.keymap.add_dup('q', "quit")
+  k = e.keymap
+  k.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
+  k.add_dup('q', "quit")
 
   # The following bindings are for testing only!  Delete when
   # editor is fully implemented.
-  e.keymap.add(Kbd.ctlx('e'), cmdptr(exception), "raise-exception")
+  k.add(Kbd.ctlx('e'), cmdptr(exception), "raise-exception")
 
   # Create some key bindings for other modules.
-  Basic.bind_keys(e.keymap)
-  Misc.bind_keys(e.keymap)
-  Echo.bind_keys(e.keymap)
-  Files.bind_keys(e.keymap)
-  Window.bind_keys(e.keymap)
+  Basic.bind_keys(k)
+  Misc.bind_keys(k)
+  Echo.bind_keys(k)
+  Files.bind_keys(k)
+  Window.bind_keys(k)
+  Buffer.bind_keys(k)
 
   e.process_command_line
   e.event_loop

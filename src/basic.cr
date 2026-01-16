@@ -331,7 +331,7 @@ module Basic
   def setmark(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
     dot = w.dot
-    w.mark = Pos.new(dot.l, dot.o)
+    w.mark = Pos.new(dot)
     Echo.puts("[Mark set]")
     return Result::True
   end
@@ -345,8 +345,8 @@ module Basic
       Echo.puts("No mark in this window")
       return Result::False
     end
-    w.mark = Pos.new(dot.l, dot.o)
-    w.dot = Pos.new(mark.l, mark.o)
+    w.mark = Pos.new(dot)
+    w.dot = Pos.new(mark)
     return Result::True
   end
 

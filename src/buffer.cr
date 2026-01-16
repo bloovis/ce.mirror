@@ -15,6 +15,14 @@ class Buffer
   property filename : String
   property nwind : Int32
 
+  # These properties are only used when a window is attached or detached
+  # from this buffer.  When the last window is detached, we save that
+  # window's values, so that the next time a window is attached, we
+  # copy them to that window.  See `Window#addwind` for details.
+  property dot : Pos		# current cursor position in buffer
+  property mark : Pos		# mark position
+  property leftcol : Int32	# left column of window
+
   @@list = [] of Buffer
 
   def initialize(name, @filename = "")
@@ -39,28 +47,19 @@ class Buffer
     end
     @name = newname
 
-    # Initialize the rest of the instance variables, add a blank line,
-    # and add this new Buffer to the list.
+    # Initialize the rest of the instance variables
     @list = LinkedList(Line).new
-    @list.push(Line.alloc(""))
     @flags = Bflags::None
     @nwind = 0
+    @dot = Pos.new(0, 0)
+    @mark = Pos.new(-1, 0)	# -1 means not set
+    @leftcol = 0
+
+    # Add a blank line
+    @list.push(Line.alloc(""))
+
+    # Add this new Buffer to the list.
     @@list.push(self)
-  end
-
-  # Class methods.
-
-  # Finds the buffer with the name *name*, or returns nil if not found
-  def self.find(name : String) : Buffer | Nil
-    @@list.each do |b|
-      return b if b.name == name
-    end
-    return nil
-  end
-
-  # Returns the list of all buffers.
-  def self.buffers : Array(Buffer)
-    @@list
   end
 
   # Instance methods.
@@ -169,6 +168,46 @@ class Buffer
   # Sets the changed flag for the buffer.
   def lchange
     @flags = @flags | Bflags::Changed
+  end
+
+  # Class methods.
+
+  # Finds the buffer with the name *name*, or returns nil if not found
+  def self.find(name : String) : Buffer | Nil
+    @@list.each do |b|
+      return b if b.name == name
+    end
+    return nil
+  end
+
+  # Returns the list of all buffers.
+  def self.buffers : Array(Buffer)
+    @@list
+  end
+
+  # Commands.
+
+  # Makes the next buffer in the buffer list the current buffer.
+  def self.nextbuffer(f : Bool, n : Int32, k : Int32) : Result
+    # Get the index of the current buffer.
+    i = @@list.index(E.curw.buffer)
+    if i.nil?
+      raise "Unknown buffer in Buffer.nextbuffer!"
+    end
+    if i == @@list.size - 1
+      i = 0
+    else
+      i += 1
+    end
+    b = @@list[i]
+    E.curw.usebuf(b)
+
+    return Result::True
+  end
+
+  # Binds keys for buffer commands.
+  def self.bind_keys(k : KeyMap)
+    k.add(Kbd::F8, cmdptr(nextbuffer), "forw-window")
   end
 
   # Allow buffer to have the same methods as the linked list.
