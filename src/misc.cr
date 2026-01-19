@@ -191,11 +191,7 @@ module Misc
     if i != 0
       s = s + (" " * i)
     end
-    if Line.insert(s)
-      return Result::True
-    else
-      return Result::False
-    end
+    return b_to_r(Line.insert(s))
   end
 
   # Indents according to Ruby conventions.  Inserts a newline, then enough tabs
@@ -225,6 +221,39 @@ module Misc
     # Insert a newline followed by the correct number of
     # tabs and spaces to get the desired indentation.
     return nlindent(nicol, i, f)
+  end
+
+  # Deletes forward. This is easy, because the basic delete routine does
+  # all of the work. Watches for negative arguments,
+  # and does the right thing. If any argument is
+  # present, it kills rather than deletes, to prevent
+  # loss of text if typed with a big argument.
+  # Normally bound to "C-D".
+  def forwdel(f : Bool, n : Int32, k : Int32) : Result
+    return backdel(f, -n, Kbd::RANDOM) if n < 0
+
+    # If a numeric prefix was specified, zero out the kill buffer.
+    Line.kdelete if f
+
+    return b_to_r(Line.delete(n, f))
+  end
+
+  # Deletes backwards. This is quite easy too,
+  # because it's all done with other functions. Just
+  # move the cursor back, and delete forwards.
+  # Like delete forward, this actually does a kill
+  # if presented with an argument.
+  def backdel(f : Bool, n : Int32, k : Int32) : Result
+    return forwdel(f, -n, Kbd::RANDOM) if n < 0
+
+    # If a numeric prefix was specified, zero out the kill buffer.
+    Line.kdelete if f
+
+    if Basic.backchar(f, n, Kbd::RANDOM) == Result::True
+      return b_to_r(Line.delete(n, f))
+    else
+      return Result::False
+    end
   end
 
   # Kill line. If called without an argument,
@@ -267,11 +296,7 @@ module Misc
 	chunk += lp.text.size
       end
     end
-    if Line.delete(chunk, true)
-      return Result::True
-    else
-      return Result::False
-    end
+    return b_to_r(Line.delete(chunk, true))
   end
 
   # Yanks text back from the kill buffer. This
@@ -304,6 +329,8 @@ module Misc
     k.add(Kbd.ctrl('j'), cmdptr(rubyindent), "ruby-indent")
     k.add(Kbd.ctrl('k'), cmdptr(killline), "kill-line")
     k.add(Kbd.ctrl('y'), cmdptr(yank), "yank")
+    k.add(Kbd.ctrl('d'), cmdptr(forwdel), "forw-del-char")
+    k.add(Kbd.ctrl('h'), cmdptr(backdel), "back-del-char")
 
     # Create bindings for all ASCII printable characters and tab.
     ('!'.ord .. '~'.ord).each do |c|

@@ -4,6 +4,11 @@ enum Result
   Abort
 end
 
+# Convert true to Result::True, and false to Result::False
+# to false.
+def b_to_r(b : Bool) : Result
+  b ? Result::True : Result::False
+end
 
 # Converts the name of a command method to a Proc object.
 macro cmdptr(name)

@@ -218,8 +218,10 @@ class Line
       if chars == 0
 	# If we're at the end of the line, merge this line
 	# with the next line.
-	Line.delnewline
-	Line.kinsert("\n")
+	return false unless Line.delnewline
+	if kflag
+	  return false unless Line.kinsert("\n")
+	end
 	n -= 1
       else
 	# Mark the buffer as changed.
@@ -227,7 +229,9 @@ class Line
 
 	# Remove nchars characters from this line.
 	right = dot.o + chars
-	Line.kinsert(text[dot.o, chars])
+	if kflag
+	  return false unless Line.kinsert(text[dot.o, chars])
+	end
 	lp.text = text[0, dot.o] + text[right, lsize - right]
 	#STDERR.puts "line with #{chars} chars removed: '#{lp.text}'"
 	n -= chars
