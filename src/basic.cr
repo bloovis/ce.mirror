@@ -145,19 +145,18 @@ module Basic
     if n < 0
       return forwchar(f, -n, Kbd::RANDOM)
     end
-    w = E.curw
-    b = w.buffer
+    w, b, dot, lp = E.get_context
+    #STDERR.puts "backchar: dot.l #{dot.l}, dot.o #{dot.o}"
     bsize = b.size
-    dot = w.dot
-    lp = b[dot.l]
     while n > 0
       if lp.nil?
-	raise "Nil line in forwchar!"
+	raise "Nil line in backchar!"
       end
       if n > dot.o		# need to back up to previous line?
 	if dot.l == 0		# already on first line?
-	  dot.o = 0
-	  n = 0
+	  dot.o = 0		# set dot to first char
+	  #STDERR.puts "backchar returning false"
+	  return Result::False	# error because we can't go back farther
 	else
 	  lp = lp.previous	# move to previous line
 	  n -= dot.o + 1	# +1 is for invisible newline
@@ -171,6 +170,7 @@ module Basic
 	n = 0
       end
     end
+    #STDERR.puts "backchar returning true"
     return Result::True
   end
 
@@ -182,11 +182,8 @@ module Basic
     if n < 0
       return backchar(f, -n, Kbd::RANDOM)
     end
-    w = E.curw
-    b = w.buffer
+    w, b, dot, lp = E.get_context
     bsize = b.size
-    dot = w.dot
-    lp = b[dot.l]
     while n > 0
       if lp.nil?
 	raise "Nil line in forwchar!"
@@ -195,8 +192,8 @@ module Basic
       rem = lsize - dot.o	# remaining chars in this line
       if n > rem		# need to advance to next line?
 	if dot.l + 1 == bsize	# already on last line?
-	  dot.o = lsize
-	  n = 0
+	  dot.o = lsize		# put dot at end of line
+	  return Result::False	# tell caller we failed to advance n chars
 	else
 	  lp = lp.next		# move to next line
 	  n -= rem + 1		# +1 is for invisible newline
@@ -204,8 +201,8 @@ module Basic
 	  dot.o = 0
 	end
       else			# stay on this line
-	dot.o += n
-	n = 0
+	dot.o += n		# advance n chars
+	n = 0			# we're done
       end
     end
       

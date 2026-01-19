@@ -257,6 +257,10 @@ class Line
 
   # Deletes all the text in the kill buffer.
   def self.kdelete
+    E.thisflag = E.thisflag | Eflags::Kill	# This is a kill command
+    if E.lastflag.kill?				# Last command was kill?
+      return					# Don't purge yet
+    end
     @@kbuf = ""
   end
 
