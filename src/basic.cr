@@ -330,8 +330,7 @@ module Basic
   # Sets the mark in the current window.
   def setmark(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
-    dot = w.dot
-    w.mark = Pos.new(dot)
+    w.mark = w.dot.dup
     Echo.puts("[Mark set]")
     return Result::True
   end
@@ -339,14 +338,14 @@ module Basic
   # Swaps the values of dot and mark in the current window.
   def swapmark(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
-    dot = w.dot
-    mark = w.mark
+    dot = w.dot.dup
+    mark = w.mark.dup
     if mark.l == -1
       Echo.puts("No mark in this window")
       return Result::False
     end
-    w.mark = Pos.new(dot)
-    w.dot = Pos.new(mark)
+    w.mark = dot
+    w.dot = mark
     return Result::True
   end
 

@@ -13,4 +13,8 @@ class Pos
     @l = p.l
     @o = p.o
   end
+
+  def dup
+    Pos.new(self)
+  end
 end

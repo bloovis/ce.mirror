@@ -38,15 +38,14 @@ class Window
     @force = 0
     @flags = Wflags::None
 
-    # Add this window to the global list.
-    @@list << self
-
     # Bump the window count of the buffer.
     @buffer.nwind += 1
 
-    # If this is the first window, make it the current one.
+    # If this is the first window, make it the current one
+    # and add to the global list.
     if @@curi == -1
       @@curi = 0
+      @@list << self
     end
   end
 
@@ -183,9 +182,88 @@ class Window
     return Result::True
   end
 
+  # Split the current window. A window
+  # smaller than 3 lines cannot be split.
+  # The only other error that is possible is
+  # a "malloc" failure allocating the structure
+  # for the new window.
+  def self.splitwind(f : Bool, n : Int32, k : Int32) : Result
+    w = Window.current
+    if w.nrow < 3
+      Echo.puts("Cannot split a #{w.nrow}-line window")
+      return Result::False
+    end
+
+    # Create the Window object.
+    w2 = Window.new(w.buffer)
+    w2.dot = w.dot.dup
+    w2.mark = w.mark.dup
+    w2.force = w.force
+    w2.leftcol = w.leftcol
+
+    # Calculate the sizes of the upper and lower windows.
+    upper_nrow = (w.nrow - 1) // 2
+    lower_nrow = (w.nrow - 1) - upper_nrow
+
+    # Calculate how many lines are visible above the dot
+    # in the current window.
+    above = w.dot.l - w.line
+
+    # Set the proposed top line number of the two windows.
+    # It may be adjusted later.
+    line = w.line
+    
+    if above <= upper_nrow
+      # If the dot is above or right on the split point, we
+      # will make the old window be the upper window.
+      # If the dot is right on the split point, i.e., where
+      # the mode line is going to be, bump the top line number.
+      if above == upper_nrow
+	line += 1
+      end
+
+      # Insert the new window after the current window
+      # in the window list.
+      if @@curi == @@list.size - 1
+	@@list << w2
+      else
+	@@list.insert(@@curi + 1, w2)
+      end
+
+      # Adjust window sizes and top rows.
+      w.nrow = upper_nrow
+      w2.toprow = w.toprow + upper_nrow + 1
+      w2.nrow = lower_nrow
+    else
+      # The old window is the lower window.  Insert
+      # the new window above it in the window list.
+      @@list.insert(@@curi, w2)
+
+      # Keep the old window as the current window.
+      @@curi += 1
+
+      # Set the new window's top row and number of rows.
+      w2.toprow = w.toprow
+      w2.nrow = upper_nrow
+      
+      # Set the old window's top row and number of rows.
+      upper_nrow += 1	# skip over upper window's mode line
+      w.toprow += upper_nrow
+      w.nrow = lower_nrow
+      line += upper_nrow
+    end
+
+    # Set the top line numbers of the two windows.
+    w.line = line
+    w2.line = line
+
+    return Result::True
+  end
+
   # Binds keys for window commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('n'), cmdptr(nextwind), "forw-window")
     k.add(Kbd.ctlx('p'), cmdptr(prevwind), "back-window")
+    k.add(Kbd.ctlx('2'), cmdptr(splitwind), "split-window")
   end
 end
