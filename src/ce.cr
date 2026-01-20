@@ -11,6 +11,7 @@ require "./misc"
 require "./echo"
 require "./files"
 require "./word"
+require "./region"
 require "./e"
 
 def exception(f : Bool, n : Int32, k : Int32) : Result
@@ -46,6 +47,7 @@ begin
   Window.bind_keys(k)
   Buffer.bind_keys(k)
   Word.bind_keys(k)
+  Region.bind_keys(k)
 
   e.process_command_line
   e.event_loop
