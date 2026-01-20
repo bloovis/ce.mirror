@@ -25,17 +25,18 @@ class Region
     if mark.l < dot.l
       # Mark is before dot.
       @pos = mark.dup
-      startpos = mark.dup
-      lp = b[startpos.l]
+      startl = mark.l
+      starto = mark.o
+      lp = b[startl]
       if lp.nil?
 	# lp should never be nil, but if it is, return
 	# an empty region with an invalid Pos.
-	Echo.puts "Invalid line number #{startpos.l}"
+	Echo.puts "Invalid line number #{startl}"
 	@pos.l = -1
 	@size = 0
 	return
       end
-      endpos = dot.dup
+      endpos = dot
     elsif mark.l == dot.l
       # Dot and mark are one the same line.  This is the easy case:
       # set the distance between the two offsets and return.
@@ -50,17 +51,18 @@ class Region
     else
       # Mark is after dot.
       @pos = dot.dup
-      startpos = dot.dup
-      endpos = mark.dup
+      startl = dot.l
+      starto = dot.o
+      endpos = mark
     end
 
-    # Get region size, i.e. number of characters between startpos (inclusive)
+    # Get region size, i.e. number of characters between startl/starto (inclusive)
     # and endpos (exclusive).
-    @size = lp.text.size - startpos.o + 1	# +1 for newline
-    while startpos.l + 1 < bsize
-      startpos.l += 1
+    @size = lp.text.size - starto + 1	# +1 for newline
+    while startl + 1 < bsize
+      startl += 1
       lp = lp.next
-      if startpos.l == endpos.l
+      if startl == endpos.l
 	@size += endpos.o
 	return
       else
