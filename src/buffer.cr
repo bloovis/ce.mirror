@@ -8,12 +8,18 @@ enum Bflags
   ReadOnly
 end
 
+# `LineCache` is a hash mapping line numbers to their corresponding
+# Line pointers in the buffer.
+alias LineCache = Hash(Int32, Pointer(Line))
+
 class Buffer
   property list : LinkedList(Line)
   property flags : Bflags
   property name : String
   property filename : String
-  property nwind : Int32
+  property nwind : Int32	# Number of windows using this buffer
+  property lcache : LineCache	# Cache of line numbers
+  property scache : Int32	# Cache of buffer size
 
   # These properties are only used when a window is attached or detached
   # from this buffer.  When the last window is detached, we save that
@@ -58,6 +64,12 @@ class Buffer
     # Add a blank line
     @list.push(Line.alloc(""))
 
+    # Create an empty line number cache.
+    @lcache = LineCache.new
+
+    # Create the size cache
+    @scache = -1
+
     # Add this new Buffer to the list.
     @@list.push(self)
   end
@@ -90,8 +102,17 @@ class Buffer
 
   # Returns the number of lines in the buffer.
   def size : Int32
+    # Is the size already in the cache?
+    if @scache != -1
+      #STDERR.puts "size returning cache value #{@scache}"
+      return @scache
+    end
+
+    # Size is not in the cache.  Calculate it the hard way.
     n = 0
     @list.each {|l| n += 1}
+    #STDERR.puts "size setting cache value #{n}"
+    @scache = n
     return n
   end
 
@@ -120,8 +141,21 @@ class Buffer
   # This is inefficient right now, but we can improve the algorithm
   # in the future by caching one or more line number => line associations.
   def [](n : Int32) : Pointer(Line) | Nil
+    # Is the line already in the cache?
+    if lp = @lcache[n]?
+      #STDERR.puts "Got line #{n} from cache"
+      return lp
+    end
+
+    # Line is not in the cache, must find it the hard way
+    # and add it to the cache.
     lnno = -1
-    @list.find {|l| lnno += 1; lnno == n}
+    lp = @list.find {|l| lnno += 1; lnno == n}
+    if lp
+      #STDERR.puts "Add line #{n} to cache"
+      @lcache[n] = lp
+    end
+    return lp
   end
 
   # Iterates over each line in the buffer, yielding both the zero-based
@@ -168,6 +202,22 @@ class Buffer
   # Sets the changed flag for the buffer.
   def lchange
     @flags = @flags | Bflags::Changed
+  end
+
+  # Deletes the line *lp* from the line list.
+  def delete(lp : Pointer(Line))
+    @list.delete(lp)
+    #STDERR.puts "delete clearing line cache"
+    @lcache.clear
+    @scache = -1
+  end
+
+  # Inserts the line *lp1* after the line *lp* in the list.
+  def insert_after(lp : Pointer(Line), lp1 : Pointer(Line))
+    @list.insert_after(lp, lp1)
+    #STDERR.puts "insert_after clearing line cache"
+    @lcache.clear
+    @scache = -1
   end
 
   # Class methods.
