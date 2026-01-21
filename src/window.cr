@@ -41,12 +41,15 @@ class Window
     # Bump the window count of the buffer.
     @buffer.nwind += 1
 
-    # If this is the first window, make it the current one
-    # and add to the global list.
+    # If this is the first window, make it the current one.
     if @@curi == -1
       @@curi = 0
-      @@list << self
     end
+
+    # Add the window to the global list.
+    @@list << self
+
+    #STDERR.puts "Added window for buffer #{@buffer.name}, toprow #{@toprow}, nrow #{@nrow}"
   end
 
   # Returns next window in list, or nil if this the last window

@@ -33,7 +33,7 @@ class Display
     curcol = Display.screen_size(lp.text, dot.o)
 
     Window.each do |w|
-      #STDERR.puts "update: w.line #{w.line}, w.toprow #{w.toprow}, w.nrow #{w.nrow}"
+      #STDERR.puts "update window for buffer #{w.buffer.name}: w.line #{w.line}, w.toprow #{w.toprow}, w.nrow #{w.nrow}"
 
       b = w.buffer
       bsize = b.size	# number of lines in buffer
