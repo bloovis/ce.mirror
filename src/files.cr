@@ -29,7 +29,7 @@ module Files
   end
 
   # Creates key bindings for all Files commands.
-  def self.bind_keys(k : KeyMap)
+  def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx_ctrl('q'), cmdptr(togglereadonly), "ins-self")
   end
 

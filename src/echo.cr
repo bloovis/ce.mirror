@@ -8,12 +8,12 @@ module Echo
   extend self
 
   # Sets the `@@noecho` boolean to *x*.
-  def self.noecho=(x : Bool)
+  def noecho=(x : Bool)
     @@noecho = x
   end
 
   # Returns true if there is nothing on the echo line
-  def self.empty?
+  def empty?
     @@empty
   end
 
@@ -25,19 +25,19 @@ module Echo
   # messages (i.e. messages that don't start with '[').
 
   # Moves the cursor if `@@noecho` is false.
-  def self.move(row : Int32, col : Int32)
+  def move(row : Int32, col : Int32)
     E.tty.move(row, col) unless @@noecho
   end
 
   # Writes the string *s* to the echo line, and erases the rest of the line.
-  def self.puts(s : String)
+  def puts(s : String)
     tty = E.tty
     tty.putline(tty.nrow - 1, 0, s)
     @@empty = false
   end
 
   # Erases the echo line.
-  def self.erase
+  def erase
     tty = E.tty
     tty.move(tty.nrow - 1, 0)
     tty.eeol
@@ -47,7 +47,7 @@ module Echo
 
   # Returns the largest common prefix of the
   # array of strings *a*.
-  private def self.common_prefix(a : Array(String)) : String
+  private def common_prefix(a : Array(String)) : String
     return "" if a.size == 0
     prefix = ""
     f = a.first
@@ -70,7 +70,7 @@ module Echo
   # * False - user entered an empty response
   # * True  - user entered a non-empty response
   # * Abort - user aborted the response with Ctrl-G
-  private def self.do_reply(prompt : String, default : String | Nil,
+  private def do_reply(prompt : String, default : String | Nil,
 		    block_given : Bool, &block) : Tuple(Result, String)
     tty = E.tty
     row = tty.nrow - 1
@@ -178,13 +178,13 @@ module Echo
   end
 
   # Calls `do_reply` without a completion block.
-  def self.reply(prompt : String, default : String | Nil) : Tuple(Result, String)
+  def reply(prompt : String, default : String | Nil) : Tuple(Result, String)
     do_reply(prompt, default, false) {[""]}
   end
 
   # Prompts for a buffer name, and returns a tuple containing
   # the Result and the name entered by the user
-  def self.getbufn : Tuple(Result, String)
+  def getbufn : Tuple(Result, String)
     do_reply("Use buffer: ", nil, true) do |s|
       a = [] of String
       Buffer.buffers.each do |b|
@@ -196,6 +196,26 @@ module Echo
     end
   end
 
+  # Ask "yes" or "no" question.
+  # Return ABORT if the user answers the question
+  # with the abort ("^G") character. Return FALSE
+  # for "no" and TRUE for "yes". No formatting
+  # services are available.
+  def yesno(prompt : String) : Bool
+    return false
+    loop do
+      r, s = Echo.reply("#{prompt} [y/n]? ", nil)
+      return false if result == Result::Abort
+      if s.size > 0
+	c = s[0].downcase
+	return true if c == 'y'
+	return false if c == 'n'
+      end
+    end
+  end
+
+  # Commands.
+
   # Prompts for a string, and echoes the response.
   def echo(f : Bool, n : Int32, k : Int32) : Result
     result, ret = Echo.reply("Echo: ", nil)
@@ -206,7 +226,7 @@ module Echo
   end
 
   # Creates key bindings for all Misc commands.
-  def self.bind_keys(k : KeyMap)
+  def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx_ctrl('m'), cmdptr(echo), "echo")
   end
 

@@ -8,6 +8,23 @@ enum Bflags
   ReadOnly
 end
 
+# Application-specific extensions to the `String` class.
+class String
+  # Returns this String padded on the left with spaces to make
+  # its size equal to *width*.
+  def pad_left(width : Int32)
+    pad = width - self.size
+    " " * pad + self
+  end
+
+  # Returns this String padded on the right with spaces to make
+  # the its size equal to *width*.
+  def pad_right(width : Int32)
+    pad = width - self.size
+    self + " " * pad
+  end
+end
+
 # `LineCache` is a hash mapping line numbers to their corresponding
 # Line pointers in the buffer.
 alias LineCache = Hash(Int32, Pointer(Line))
@@ -29,7 +46,9 @@ class Buffer
   property mark : Pos		# mark position
   property leftcol : Int32	# left column of window
 
-  @@list = [] of Buffer
+  # Class variables.
+  @@blist = [] of Buffer	# list of user-created buffers
+  @@sysbuf : Buffer | Nil	# special "system" buffer
 
   def initialize(name, @filename = "")
     # If the user specified a filename, use the base name
@@ -61,7 +80,7 @@ class Buffer
     @mark = Pos.new(-1, 0)	# -1 means not set
     @leftcol = 0
 
-    # Add a blank line
+    # Add a blank line.
     @list.push(Line.alloc(""))
 
     # Create an empty line number cache.
@@ -69,12 +88,14 @@ class Buffer
 
     # Create the size cache
     @scache = -1
-
-    # Add this new Buffer to the list.
-    @@list.push(self)
   end
 
   # Instance methods.
+
+  # Adds this Buffer to the list of buffers.
+  def add_to_blist
+    @@blist.push(self)
+  end
 
   # Clears the buffer, and reads the file `filename` into the buffer.
   # Returns true if successful, false otherwise
@@ -220,11 +241,53 @@ class Buffer
     @scache = -1
   end
 
+  # Appends the string *s* to the buffer as a separate line.
+  def addline(s : String)
+    @list.push(Line.alloc(s))
+  end
+
+  # This routine blows away all of the text
+  # in a buffer. If the buffer is marked as changed
+  # then we ask if it is ok to blow it away; this is
+  # to save the user the grief of losing text. The
+  # window chain is nearly always wrong if this gets
+  # called; the caller must arrange for the updates
+  # that are required. Return TRUE if everything
+  # looks good.
+  def clear : Bool
+    if @flags.changed?
+      if !Echo.yesno("Discard changes")
+	return false
+      end
+    end
+
+    # Clear the flags.
+    @flags = Bflags::None
+
+    # Clear the line list.
+    @list.clear
+
+    # Clear the dot and mark.
+    @dot = Pos.new(0, 0)
+    @mark = Pos.new(-1, 0)	# -1 means not set
+    @leftcol = 0
+
+    # Update all windows viewing this buffer.
+    Window.each do |w|
+      if w.buffer == self
+	w.dot = @dot
+	w.mark = @mark
+      end
+    end
+
+    return true
+  end
+
   # Class methods.
 
   # Finds the buffer with the name *name*, or returns nil if not found
   def self.find(name : String) : Buffer | Nil
-    @@list.each do |b|
+    @@blist.each do |b|
       return b if b.name == name
     end
     return nil
@@ -232,7 +295,88 @@ class Buffer
 
   # Returns the list of all buffers.
   def self.buffers : Array(Buffer)
-    @@list
+    @@blist
+  end
+
+  # Returns the secret system buffer, creating it first if necessary.
+  def self.sysbuf : Buffer
+    if @@sysbuf.nil?
+      @@sysbuf = Buffer.new("*sysbuf*")
+    end
+    b = @@sysbuf
+    if b.nil?
+      raise "Unable to create sysbuf!"
+    end
+    return b
+  end
+
+  # This routine rebuilds the
+  # text in the special secret buffer
+  # that holds the buffer list. It is called
+  # by the list buffers command. Return TRUE
+  # if everything works. Return FALSE if there
+  # is an error (if there is no memory).
+  def self.makelist : Bool
+    b = sysbuf
+    b.clear
+    b.filename = ""
+
+    # Find the largest buffer name
+    namesize = 0
+    @@blist.each {|b| namesize = [b.name.size, namesize].max}
+
+    b.addline("C         Size " + "Buffer".pad_right(namesize) + " File")
+    b.addline("-         ---- " + "------".pad_right(namesize) + " ----")
+    @@blist.each do |b2|
+      # Calculate number of bytes in this buffer.  FIXME: this
+      # actually calculates characters, not bytes.
+      bytes = 0
+      b2.each_line do |n,l|
+	bytes += l.text.size + 1
+	true # tell each_line to continue
+      end
+      bytes -= 1	# adjust for last line
+
+      if b2.flags.changed?
+	s = "* "
+      else
+	s = "  "
+      end
+      s = s + bytes.to_s.pad_left(12) + " " +
+	  b2.name.pad_right(namesize) + " " + b2.filename
+      b.addline(s)
+    end
+    return true
+  end
+
+  # Pops the special buffer onto the screen. This is used
+  # by the "listbuffers" command and by other commands.
+  # Returns a status.
+  def self.popsysbuf : Bool
+    b = sysbuf
+    if b.nwind == 0
+      # Not in screen yet, get a pop-up window for it.
+      w = Window.popup
+      return false unless w
+
+      # Stop using the window's current buffer, and make it use
+      # the system buffer.
+      w.addwind(-1)
+      w.buffer = b
+      b.nwind += 1
+    end
+
+    # Update all windows that are using the system buffer.
+    Window.each do |w|
+      if w.buffer == b
+	w.line = 0
+	w.dot = Pos.new(0, 0)
+	w.leftcol = 0
+	w.mark = Pos.new(-1, 0)
+      end
+    end
+
+    return true
   end
 
   # Commands.
@@ -240,16 +384,16 @@ class Buffer
   # Makes the next buffer in the buffer list the current buffer.
   def self.nextbuffer(f : Bool, n : Int32, k : Int32) : Result
     # Get the index of the current buffer.
-    i = @@list.index(E.curw.buffer)
+    i = @@blist.index(E.curw.buffer)
     if i.nil?
       raise "Unknown buffer in Buffer.nextbuffer!"
     end
-    if i == @@list.size - 1
+    if i == @@blist.size - 1
       i = 0
     else
       i += 1
     end
-    b = @@list[i]
+    b = @@blist[i]
     E.curw.usebuf(b)
 
     return Result::True
@@ -267,10 +411,21 @@ class Buffer
     return Result::True
   end
 
+  # Display the buffer list. This is done
+  # in two parts. The `makelist` routine figures out
+  # the text, and puts it in the special sysbuf buffer.
+  # Then `popsysbuf` pops the data onto the screen. Bound to
+  # "C-X C-B".
+  def self.listbuffers(f : Bool, n : Int32, k : Int32) : Result
+    return Result::False unless makelist
+    return b_to_r(popsysbuf)
+  end
+
   # Binds keys for buffer commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd::F8, cmdptr(nextbuffer), "forw-window")
     k.add(Kbd.ctlx('b'), cmdptr(usebuffer), "use-buffer")
+    k.add(Kbd.ctlx_ctrl('b'), cmdptr(listbuffers), "display-buffers")
   end
 
   # Allow buffer to have the same methods as the linked list.

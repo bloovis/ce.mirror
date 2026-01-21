@@ -161,6 +161,27 @@ class Window
     end
   end
 
+  # Picks a window for a pop-up.
+  # Splits the screen if there is only
+  # one window. Picks the uppermost window that
+  # isn't the current window. An LRU algorithm
+  # might be better. Returns a pointer, or
+  # NULL on error.
+  def self.popup : Window | Nil
+    # If there's only one window, split it.
+    if @@list.size == 1
+      if splitwind(false, 0, Kbd::RANDOM) == Result:False
+	return nil
+      end
+    end
+
+    # Find the first non-current window.
+    Window.each do |w|
+      return w if w != E.curw
+    end
+    return nil	# Should never get here
+  end
+
   # Commands.
 
   # Makes the next window the current window, or does nothing

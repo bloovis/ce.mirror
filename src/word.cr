@@ -108,7 +108,7 @@ module Word
   end
 
   # Creates key bindings for all Word commands.
-  def self.bind_keys(k : KeyMap)
+  def bind_keys(k : KeyMap)
     k.add(Kbd.meta('d'), cmdptr(delfword), "forw-del-word")
     k.add(Kbd.meta_ctrl('h'), cmdptr(delbword), "back-del-word")
   end

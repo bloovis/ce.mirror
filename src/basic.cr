@@ -347,7 +347,7 @@ module Basic
   end
 
   # Binds keys for basic commands.
-  def self.bind_keys(k : KeyMap)
+  def bind_keys(k : KeyMap)
     k.add(Kbd::PGDN, cmdptr(forwpage), "forw-page")
     k.add(Kbd::PGUP, cmdptr(backpage), "back-page")
     k.add(Kbd::RIGHT, cmdptr(forwchar), "forw-char")

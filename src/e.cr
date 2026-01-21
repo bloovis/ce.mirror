@@ -128,11 +128,13 @@ class E
     # or just leave the buffer empty if no file was specified.
     if ARGV.size == 0
       b = Buffer.new("main")
+      b.add_to_blist
       b.list.push(Line.alloc(""))
     else
       ARGV.each do |filename|
-        b = Buffer.new(filename, filename)
-        b.readfile(filename)
+	b = Buffer.new(filename, filename)
+	b.add_to_blist
+	b.readfile(filename)
       end
     end
 

@@ -320,7 +320,7 @@ module Misc
   end
 
   # Creates key bindings for all Misc commands.
-  def self.bind_keys(k : KeyMap)
+  def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
     k.add(' '.ord, cmdptr(selfinsert), "ins-self")
     k.add(Kbd.ctrl('m'), cmdptr(insnl), "ins-nl")
