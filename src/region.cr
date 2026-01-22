@@ -84,9 +84,47 @@ class Region
     return b_to_r(Line.delete(region.size, !f))
   end
 
-  # Creates key bindings for all Word commands.
+  # Copy all of the characters in the
+  # region to the kill buffer. Don't move dot
+  # at all. This is a bit like a kill region followed
+  # by a yank.
+  def self.copyregion(f : Bool, n : Int32, k : Int32) : Result
+    region = Region.new
+    if region.pos.l == -1
+      return Result::False
+    end
+
+    # Purge the kill buffer.
+    Line.kdelete
+
+    # Get a pointer to the starting line of the region.
+    b = E.curw.buffer
+    lp = b[region.pos.l]
+    raise "Invalid line number #{region.pos.l} in copyregion!" if lp.nil?
+
+    while region.size > 0
+      if region.pos.o == lp.text.size
+	# End of line.
+	Line.kinsert("\n")
+	lp = lp.next
+	region.pos.o = 0
+	region.size -= 1
+      else
+	# Middle of line.
+	chunk = [lp.text.size - region.pos.o, region.size].min
+	Line.kinsert(lp.text[region.pos.o, chunk])
+	region.pos.o += chunk
+	region.size -= chunk
+      end
+    end
+    Echo.puts("[Region copied]")
+    return Result::True
+  end
+
+  # Creates key bindings for all Region commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('w'), cmdptr(killregion), "kill-region")
+    k.add(Kbd.meta('w'), cmdptr(copyregion), "copy-region")
   end
 
 end
