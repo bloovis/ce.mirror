@@ -285,12 +285,23 @@ class Buffer
 
   # Class methods.
 
-  # Finds the buffer with the name *name*, or returns nil if not found
-  def self.find(name : String) : Buffer | Nil
+  # Searches for a buffer with the name `name`.
+  # If not found, and `create` is true,
+  # creates a buffer and put it in the list of
+  # all buffers.  Return pointer to the buffer, or
+  # nil if not found and `create` is false.
+  def self.find(name : String, create : Bool = false) : Buffer | Nil
     @@blist.each do |b|
       return b if b.name == name
     end
-    return nil
+    if create
+      if b = Buffer.new(name, "")
+	b.add_to_blist
+      end
+      return b
+    else
+      return nil
+    end
   end
 
   # Returns the list of all buffers.
@@ -406,7 +417,7 @@ class Buffer
   def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
     result, bufn = Echo.getbufn
     return result if result == Result::False
-    return Result::False unless b = Buffer.find(bufn)
+    return Result::False unless b = Buffer.find(bufn, true)
     E.curw.usebuf(b)
     return Result::True
   end

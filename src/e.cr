@@ -129,7 +129,6 @@ class E
     if ARGV.size == 0
       b = Buffer.new("main")
       b.add_to_blist
-      b.list.push(Line.alloc(""))
     else
       ARGV.each do |filename|
 	b = Buffer.new(filename, filename)
