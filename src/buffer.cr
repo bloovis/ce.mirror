@@ -103,7 +103,7 @@ class Buffer
     return false unless File.exists?(@filename)
     @list.clear
     File.open(@filename) do |f|
-      lastline = nil
+      lastline = "\n"	# Pretend there's a blank line if file is empty
       while s = f.gets(chomp: false)
 	l = Line.alloc(s.chomp)
 	lastline = s
@@ -332,12 +332,16 @@ class Buffer
     b.clear
     b.filename = ""
 
-    # Find the largest buffer name
+    # Find the largest buffer name.  Take extra care to correctly pad
+    # buffer names smaller than the "Buffer" header.
     namesize = 0
-    @@blist.each {|b| namesize = [b.name.size, namesize].max}
+    bhdr = "Buffer"
+    bhdrsize = bhdr.size
+    bhdrdashes = "-" * bhdrsize
+    @@blist.each {|b| namesize = [b.name.size, namesize, bhdrsize].max}
 
-    b.addline("C         Size " + "Buffer".pad_right(namesize) + " File")
-    b.addline("-         ---- " + "------".pad_right(namesize) + " ----")
+    b.addline("C         Size " + bhdr.pad_right(namesize)       + " File")
+    b.addline("-         ---- " + bhdrdashes.pad_right(namesize) + " ----")
     @@blist.each do |b2|
       # Calculate number of bytes in this buffer.  FIXME: this
       # actually calculates characters, not bytes.
