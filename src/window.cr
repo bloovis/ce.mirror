@@ -284,10 +284,45 @@ class Window
     return Result::True
   end
 
+  # This command makes the current
+  # window the only window on the screen.
+  # Try to set the framing
+  # so that "." does not have to move on
+  # the display. Some care has to be taken
+  # to keep the values of dot and mark
+  # in the buffer structures right if the
+  # destruction of a window makes a buffer
+  # become undisplayed.
+  def self.onlywind(f : Bool, n : Int32, k : Int32) : Result
+    # Decrement the window count for each buffer owned
+    # by a non-current window.
+    Window.each do |w|
+      if w != @@list[@@curi]
+	w.addwind(-1)
+      end
+    end
+
+    # Replace the window list with the current window.
+    w = @@list[@@curi]
+    @@list = [w]
+    @@curi = 0
+
+    # Reframe the window to avoid moving dot, if possible.
+    if w.dot.l - w.toprow < 0
+      w.line = 0
+    else
+      w.line -= w.toprow
+    end
+    w.toprow = 0
+    w.nrow = E.tty.nrow - 2	# 2 = mode line + echo line
+    return Result::True
+  end
+
   # Binds keys for window commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('n'), cmdptr(nextwind), "forw-window")
     k.add(Kbd.ctlx('p'), cmdptr(prevwind), "back-window")
     k.add(Kbd.ctlx('2'), cmdptr(splitwind), "split-window")
+    k.add(Kbd.ctlx('1'), cmdptr(onlywind), "only-window")
   end
 end
