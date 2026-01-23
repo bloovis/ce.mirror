@@ -111,7 +111,7 @@ module Echo
     tty.flush
     @@empty = false
 
-    ret = default || ""
+    ret = ""
     pos = ret.size
     done = false
     aborted = false
@@ -186,6 +186,11 @@ module Echo
 	    pos = ret.size
 	  end
 	end
+      when Kbd.ctrl('s')
+        if default
+	  ret = ret.insert(pos, default)
+	  pos += default.size
+	end
       else
 	# Get the ASCII-fied character and insert it into the buffer. 
 	s = Kbd.ascii(k)
@@ -199,6 +204,9 @@ module Echo
       return {Result::Abort, ret}
     else
       if ret.size == 0
+	# If the user didn't enter anything, but there is a default,
+	# return the default.
+	ret = default || ret
 	return {Result::False, ret}
       else
 	# Display the entire string before returning it.

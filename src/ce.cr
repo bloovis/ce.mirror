@@ -12,6 +12,7 @@ require "./echo"
 require "./files"
 require "./word"
 require "./region"
+require "./search"
 require "./e"
 
 def exception(f : Bool, n : Int32, k : Int32) : Result
@@ -48,6 +49,7 @@ begin
   Buffer.bind_keys(k)
   Word.bind_keys(k)
   Region.bind_keys(k)
+  Search.bind_keys(k)
 
   e.process_command_line
   e.event_loop
