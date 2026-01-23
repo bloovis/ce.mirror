@@ -35,6 +35,52 @@ module Search
     return {result, pattern}
   end
 
+  # Checks if there is a match in buffer *b* at location *pos*
+  # for the match strings *l*.  *lp* is a pointer to the
+  # line at location *pos*.  If found, returns the position
+  # of the first character past the matched string; otherwise
+  # returns nil.
+  def match(l : Array(String), b : Buffer, pos : Pos, lp : Pointer(Line)) : Pos | Nil
+    # Make a copy of pos for use in searching.
+    spos = pos.dup
+
+    # Try each string in l.
+    found = false
+    l.each_with_index do |s, i|
+      text = lp.text
+      if s == "\n"
+	# Match a newline.  Fail if we're not at the end of the line
+	# or this is the last line in the buffer.
+	if spos.o != text.size || lp == b.last_line
+	  found = false
+	  break
+	end
+
+	# Skip to the next line.
+	lp = lp.next
+	spos.l += 1
+	spos.o = 0
+	found = true
+      elsif 
+	# Match a normal string.
+	if spos.o + s.size <= text.size && text[spos.o, s.size] == s
+	  found = true
+	  spos.o += s.size
+	else
+	  found = false
+	  break
+	end
+      end
+    end
+
+    # If all the strings in l matched, return the position past the match.
+    if found
+      return spos
+    else
+      return nil
+    end
+  end
+
   # forwsrch does the real work of a forward search. The pattern is
   # sitting in the class variable `@@pat`. If found, dot is updated, the
   # window system is notified of the change, and TRUE is returned. If the
@@ -45,50 +91,13 @@ module Search
     @@pat.split_lines {|s| l << s}
     return Result::False if l.size == 0
 
-    # Make a copy of dot for use in searching.
-    sdot = dot.dup
-
     done = false
+    sdot = dot.dup
+    result = Result::False
+    endpos = nil
     until done
-      found = false
-
-      # Make a copy of the search dot and line pointer just for use in looping
-      # over the search string array.
-      loopdot = sdot.dup
-      looplp = lp
-      l.each_with_index do |s, i|
-        text = looplp.text
-        if s == "\n"
-	  # Match a newline.  Fail if we're not at the end of the line
-	  # or this is the last line in the buffer.
-	  if loopdot.o != text.size || looplp == b.last_line
-            done = looplp == b.last_line
-	    found = false
-	    break
-	  end
-
-	  # Skip to the next line.
-	  looplp = looplp.next
-	  loopdot.l += 1
-	  loopdot.o = 0
-	  found = true
-	elsif 
-	  # Match a normal string.
-	  if loopdot.o + s.size <= text.size && text[loopdot.o, s.size] == s
-	    found = true
-	    loopdot.o += s.size
-	  else
-	    found = false
-	    break
-	  end
-	end
-      end
-      break if done
-
-      # If all the strings in l matched, we're done.
-      if found
+      if endpos = match(l, b, sdot, lp)
 	done = true
-	sdot = loopdot
       else
 	# Skip to next character in the line.  If we're at the end of the line,
 	# skip to the next line.  If we're on the last line, fail.
@@ -105,8 +114,8 @@ module Search
 	end
       end
     end
-    if found
-      E.curw.dot = sdot
+    if endpos
+      E.curw.dot = endpos
       return Result::True
     else
       return Result::False

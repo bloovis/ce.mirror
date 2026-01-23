@@ -104,6 +104,7 @@ module Echo
 		    block_given : Bool, &block) : Tuple(Result, String)
     tty = E.tty
     row = tty.nrow - 1
+    prompt = readable(prompt)
     leftcol = prompt.size
     fillcols = tty.ncol - leftcol
     tty.putline(row, 0, prompt)
