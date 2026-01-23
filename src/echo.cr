@@ -59,6 +59,36 @@ module Echo
     prefix
   end
 
+  # Returns a readable version of the string *s*, where
+  # control characters are replaced by ^C, where C is
+  # the corresponding letter.
+  def readable(s : String) : String
+    s = s.gsub do |c|
+      if c.ord >= 0x01 && c.ord <= 0x1a
+	"^" + (c + '@'.ord).to_s
+      else
+	c
+      end
+    end
+    return s
+  end
+
+  # Returns the screen width of the first *n* characters of string *s*,
+  # where control characters are treated as having a width of two.
+  def screenwidth(s : String, n : Int32) : Int32
+    width = 0
+    s.each_char do |c|
+      break if n == 0
+      n -= 1
+      if c.ord >= 0x01 && c.ord <= 0x1a
+	width += 2
+      else
+	width += 1
+      end
+    end
+    return width
+  end
+
   # Writes *prompt* to the echo line, and reads back the response.
   # If *default* is not nil, use that as the initial value of the response,
   # which the user can edit as necessary.
@@ -85,7 +115,7 @@ module Echo
     pos = ret.size
     done = false
     aborted = false
-    lastc = ""
+    lastk = Kbd::RANDOM
 
     # Set some commonly-used constants.
     ctrl_h = Kbd.ctrl('h')
@@ -93,19 +123,20 @@ module Echo
     # Loop getting keys.
     until done
       # Redraw the ret buffer.
-      if ret.size >= fillcols
+      s = readable(ret)
+      if s.size >= fillcols
 	# Answer is too big to fit on screen.  Just show the right portion that
 	# does fit.
-	tty.putline(row, leftcol, ret[ret.size-fillcols .. ret.size-1])
+	tty.putline(row, leftcol, s[s.size-fillcols .. s.size-1])
         tty.move(row, tty.ncol - 1)
       else
-        tty.putline(row, leftcol, ret)
-        tty.move(row, leftcol + pos)
+        tty.putline(row, leftcol, s)
+        tty.move(row, screenwidth(ret, pos) + leftcol)
       end
       tty.flush
 
-      c = E.kbd.getkey
-      case c
+      k = E.kbd.getkey
+      case k
       when Kbd.ctrl('a')
         pos = 0
       when Kbd.ctrl('e')
@@ -119,8 +150,8 @@ module Echo
 	  pos += 1
 	end
       when ctrl_h, Kbd::DEL, Kbd.ctrl('d')
-        if !(c == ctrl_h && pos == 0)
-	  if c == ctrl_h
+        if !(k == ctrl_h && pos == 0)
+	  if k == ctrl_h
 	    pos -= 1
 	  end
 	  left = (pos == 0) ? "" : ret[0..pos-1]
@@ -156,10 +187,12 @@ module Echo
 	  end
 	end
       else
-	ret = ret.insert(pos, c.chr.to_s)	# convert codepoint to Char to String
+	# Get the ASCII-fied character and insert it into the buffer. 
+	s = Kbd.ascii(k)
+	ret = ret.insert(pos, s)	# convert codepoint to Char to String
 	pos += 1
       end
-      lastc = c
+      lastk = k
     end
 
     if aborted
@@ -169,8 +202,8 @@ module Echo
 	return {Result::False, ret}
       else
 	# Display the entire string before returning it.
-        tty.putline(row, leftcol, ret)
-        tty.move(row, leftcol + pos)
+	s = readable(ret)
+        tty.putline(row, leftcol, s)
 	tty.flush
 	return {Result::True, ret}
       end
@@ -220,7 +253,7 @@ module Echo
   def echo(f : Bool, n : Int32, k : Int32) : Result
     result, ret = Echo.reply("Echo: ", nil)
     if result == Result::True
-      Echo.puts(ret)
+      Echo.puts(readable(ret))
     end
     return result
   end

@@ -70,31 +70,47 @@ class Kbd
   CLICK  = 0x97
   DCLICK = 0x98
   
+  # Class methods.
+
   # Returns the internal value of the Ctrl-modified key *s*.
   # This is *not* the same as an ASCII control character;
   # for that, use `Terminal#ctrl`.
-  def Kbd.ctrl(s : Char) : Int32
+  def self.ctrl(s : Char) : Int32
     s.upcase.ord | CTRL
   end
 
   # Returns the internal value of the Meta-modified key *s*.
-  def Kbd.meta(s : Char) : Int32
+  def self.meta(s : Char) : Int32
     s.upcase.ord | META
   end
 
   # Returns the internal value of Meta-Ctrl-modified key *s*.
-  def Kbd.meta_ctrl(s : Char) : Int32
+  def self.meta_ctrl(s : Char) : Int32
     s.upcase.ord | META | CTRL
   end
 
   # Returns the internal value of Ctrl-X *s" sequence.
-  def Kbd.ctlx(s : Char) : Int32
+  def self.ctlx(s : Char) : Int32
     s.upcase.ord | CTLX
   end
 
   # Returns the internal value of Ctrl-X Ctrl-*s" sequence.
-  def Kbd.ctlx_ctrl(s : Char) : Int32
+  def self.ctlx_ctrl(s : Char) : Int32
     s.upcase.ord | CTLX | CTRL
+  end
+
+  # Returns a single-character string representing the ASCII-fied
+  # version of a key.
+  def self.ascii(k : Int32) : String
+    # Get the unmodified key code.
+    c = k & Kbd::CHAR;
+
+    # ASCII-fy normal control characters, i.e., characters
+    # Ctrl-@, Ctrl-A, Ctrl-B, etc., up to Ctrl-_.
+    if (k & Kbd::CTRL) != 0 && c >= '@'.ord && c <= '_'.ord
+      c -= '@'.ord
+    end
+    return c.chr.to_s
   end
 
   # Names of our special keys, plus a few others in the normal ASCII range.
