@@ -218,7 +218,7 @@ module Echo
   # Prompts for a buffer name, and returns a tuple containing
   # the Result and the name entered by the user
   def getbufn : Tuple(Result, String)
-    do_reply("Use buffer: ", nil, true) do |s|
+    result, bufn = do_reply("Use buffer [#{E.oldbufn}]: ", nil, true) do |s|
       a = [] of String
       Buffer.buffers.each do |b|
         if b.name.starts_with?(s)
@@ -227,6 +227,17 @@ module Echo
       end
       a
     end
+
+    # Return immediately on Ctrl-G abort.
+    return {result, bufn} if result == Result::Abort
+
+    # Use old buffer name if no name specified.
+    if result == Result::False || bufn.size == 0
+      bufn = E.oldbufn
+    end
+
+    # Check for empty name.
+    return {bufn.size == 0 ? Result::False : Result::True, bufn}
   end
 
   # Ask "yes" or "no" question.

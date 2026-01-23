@@ -421,7 +421,9 @@ class Buffer
   # from some other window.
   def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
     result, bufn = Echo.getbufn
-    return result if result == Result::False
+    return result if result != Result::True
+
+    # Search for a buffer.
     return Result::False unless b = Buffer.find(bufn, true)
     E.curw.usebuf(b)
     return Result::True

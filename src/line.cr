@@ -16,7 +16,10 @@ class String
 	yield self[offset, len - offset]
 	offset = len
       else
-	yield self[offset, i - offset]
+	if i > offset
+	  # Don't yield zero-length strings.
+	  yield self[offset, i - offset]
+	end
 	yield "\n"
 	offset = i + 1
       end

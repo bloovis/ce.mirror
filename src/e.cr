@@ -9,17 +9,18 @@ end
 # access to "global" psuedo-variables such as `curw` (the current window)
 # and `curb` (the current buffer).
 class E
-  @@instance : E?
-  @@lastflag : Eflags = Eflags::None
-  @@thisflag : Eflags = Eflags::None
+  @@instance : E?			# single instance of E
 
   property tty : Terminal
   property keymap : KeyMap
   property kbd : Kbd
   property disp : Display
+  property lastflag : Eflags = Eflags::None	# flags for previous command
+  property thisflag : Eflags = Eflags::None	# flags for currently running command
+  property oldbufn = ""				# old buffer name
 
   # Use the following class methods to access the instance variables
-  # of the single instance of `E1.
+  # of the single instance of `E`.
 
   # Returns the single instance of E
   private def self.instance : E
@@ -74,17 +75,27 @@ class E
 
   # Returns the command flags for the previous command.
   def self.lastflag : Eflags
-    return @@lastflag
+    return self.instance.lastflag
   end
 
   # Returns the command flags for the currently executing command.
   def self.thisflag
-    return @@thisflag
+    return self.instance.thisflag
   end
 
   # Sets the command flags for the currently executing command.
   def self.thisflag=(f : Eflags)
-    @@thisflag = f
+    self.instance.thisflag = f
+  end
+
+  # Returns the old buffer name.
+  def self.oldbufn : String
+    return self.instance.oldbufn
+  end
+
+  # Sets the old buffer name.
+  def self.oldbufn=(s : String)
+    self.instance.oldbufn = s
   end
 
   # Returns the context of dot as a tuple containing
@@ -113,8 +124,8 @@ class E
     @disp = Display.new(@tty)
 
     # Set some flags.
-    @@lastflag = Eflags::None
-    @@thisflag = Eflags::None
+    @lastflag = Eflags::None
+    @thisflag = Eflags::None
 
     # Set the instance to make this a pseudo-singleton class.
     @@instance = self
@@ -210,9 +221,9 @@ class E
 
       # Call the function bound to the key.
       if @keymap.key_bound?(c)
-	@@thisflag = Eflags::None
+	@thisflag = Eflags::None
         @keymap.call_by_key(c, f, n)
-	@@lastflag = @@thisflag
+	@lastflag = @thisflag
       else
 	Echo.puts "key #{@kbd.keyname(c)} not bound!"
       end

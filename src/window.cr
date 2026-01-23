@@ -24,7 +24,6 @@ class Window
 
   @@list = [] of Window		# list of all windows
   @@curi = -1			# index to @@list of current window
-  @@oldbufn = ""		# old buffer name
 
   def initialize(@buffer)
     # Initialize the various instance variables.
@@ -110,7 +109,7 @@ class Window
   # user for a buffer name.
   def usebuf(b : Buffer)
     # Save the current buffer's name.
-    @@oldbufn = @buffer.name
+    E.oldbufn = @buffer.name
 
     # Decrement the window count of the old current buffer.
     addwind(-1)
