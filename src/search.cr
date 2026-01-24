@@ -36,17 +36,17 @@ module Search
   end
 
   # Checks if there is a match in buffer *b* at location *pos*
-  # for the match strings *l*.  *lp* is a pointer to the
+  # for the match strings *pats*.  *lp* is a pointer to the
   # line at location *pos*.  If found, returns the position
   # of the first character past the matched string; otherwise
   # returns nil.
-  def match(l : Array(String), b : Buffer, pos : Pos, lp : Pointer(Line)) : Pos | Nil
+  def match(pats : Array(String), b : Buffer, pos : Pos, lp : Pointer(Line)) : Pos | Nil
     # Make a copy of pos for use in searching.
     spos = pos.dup
 
-    # Try each string in l.
+    # Try each string in pats.
     found = false
-    l.each_with_index do |s, i|
+    pats.each_with_index do |s, i|
       text = lp.text
       if s == "\n"
 	# Match a newline.  Fail if we're not at the end of the line
@@ -81,30 +81,90 @@ module Search
     end
   end
 
+  # backsrch does the real work of a backward search. The pattern is
+  # sitting in the class variable `@@pat`. If found, dot is updated, the
+  # window system is notified of the change, and TRUE is returned. If the
+  # string isn't found, FALSE is returned.
+  def backsrch : Result
+    w, b, dot, lp = E.get_context
+    pats = [] of String
+    @@pat.split_lines {|s| pats << s}
+    return Result::False if pats.size == 0
+
+    # olddot saves the dot in case we have to restore it when `match` fails.
+    # endpos is the ending position returned by `match` when it succeeds.
+    olddot = dot.dup
+    endpos = nil
+
+    # We first have to skip backwards by the size of the pattern
+    # before we can start calling `match`.
+    skip = @@pat.size
+
+    while true
+      if skip > 0
+	skip -= 1
+      else
+	if endpos = match(pats, b, dot, lp)
+	  # Found a match.  End the loop.
+	  break
+	end
+      end
+
+      # Skip to previous character in the line.  If we're at the
+      # start of the line, skip to the previous line, but fail
+      # if we're on the first line.
+      if dot.o == 0
+	if lp == b.first_line
+	  # Tried to back up past the first line.  End the loop.
+	  break
+	else
+	  # Move to the previous character in the line.
+	  lp = lp.previous
+	  dot.l -= 1
+	  dot.o = lp.text.size
+	end
+      else
+	dot.o -= 1
+      end
+    end
+    if endpos
+      E.curw.dot = dot
+      return Result::True
+    else
+      E.curw.dot = olddot
+      return Result::False
+    end
+  end
+
   # forwsrch does the real work of a forward search. The pattern is
   # sitting in the class variable `@@pat`. If found, dot is updated, the
   # window system is notified of the change, and TRUE is returned. If the
   # string isn't found, FALSE is returned.
   def forwsrch : Result
     w, b, dot, lp = E.get_context
-    l = [] of String
-    @@pat.split_lines {|s| l << s}
-    return Result::False if l.size == 0
+    pats = [] of String
+    @@pat.split_lines {|s| pats << s}
+    return Result::False if pats.size == 0
 
-    done = false
+    # sdot is a copy of dot, and will be used to move through
+    # the buffer as we call `match`.  endpos is the ending position
+    # returned by `match` when it succeeds.
     sdot = dot.dup
-    result = Result::False
     endpos = nil
-    until done
-      if endpos = match(l, b, sdot, lp)
-	done = true
+
+    while true
+      if endpos = match(pats, b, sdot, lp)
+	# Found a match.  End the loop.
+	break
       else
-	# Skip to next character in the line.  If we're at the end of the line,
-	# skip to the next line.  If we're on the last line, fail.
+	# Skip to next character in the line.  If we're at the end of the
+	# line, skip to the next line, but fail if we're on the last line.
 	if sdot.o == lp.text.size
 	  if lp == b.last_line
-	    done = true
+	    # Tried to go past the last line.  End the loop.
+	    break
 	  else
+	    # Move to the next character in the line.
 	    lp = lp.next
 	    sdot.l += 1
 	    sdot.o = 0
@@ -132,6 +192,8 @@ module Search
     case dir
     when SearchDir::Forw
       return forwsrch
+    when SearchDir::Back
+      return backsrch
     else
       Echo.puts "Search type #{dir} not implemented"
       return Result::Abort
@@ -166,9 +228,20 @@ module Search
     return searchagain(f, n, k)
   end
 
+  # Searches backward. Gets a search string from the user, and searches for it,
+  # starting at ".". If found, "." gets moved to just after the
+  # matched characters, and display does all the hard stuff.
+  # If not found, it just prints a message.
+  def backsearch(f : Bool, n : Int32, k : Int32) : Result
+    result, pattern = readpattern("Reverse search")
+    @@dir = SearchDir::Back
+    return searchagain(f, n, k)
+  end
+
   # Creates key bindings for all Misc commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('s'), cmdptr(forwsearch), "forw-search")
+    k.add(Kbd.ctrl('r'), cmdptr(backsearch), "back-search")
     k.add(Kbd::F9, cmdptr(searchagain), "search-again")
   end
 end
