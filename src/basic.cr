@@ -269,18 +269,20 @@ module Basic
     end
     E.thisflag = E.thisflag | Eflags::Cpcn
 
-    # If we're already on the last line, do nothing.
-    if dot.l == bsize - 1
-      return Result::True
+    ret = Result::False
+    while n > 0 && lp != b.last_line
+      n -= 1
+
+      # Move dot to next line.
+      dot.l += 1
+      lp = lp.next
+      ret = Result::True
     end
 
-    # Move dot to next line.
-    dot.l += 1
-    lp = lp.next
     dot.o = getgoal(lp)
+    w.dot = dot
     w.flags |= Wflags::Move
-
-    return Result::True
+    return ret
   end
 
   # This function is like "forwline", but
@@ -310,18 +312,20 @@ module Basic
     end
     E.thisflag = E.thisflag | Eflags::Cpcn
 
-    # If we're already on the first line, do nothing.
-    if dot.l == 0
-      return Result::True
+    ret = Result::False
+    while n > 0 && lp != b.first_line
+      n -= 1
+
+      # Move dot to previous line.
+      dot.l -= 1
+      lp = lp.previous
+      ret = Result::True
     end
 
-    # Move dot to previous line.
-    dot.l -= 1
-    lp = lp.previous
     dot.o = getgoal(lp)
+    w.dot = dot
     w.flags |= Wflags::Move
-
-    return Result::True
+    return ret
   end
 
   # Sets the mark in the current window.
