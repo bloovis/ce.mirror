@@ -16,6 +16,7 @@ module Search
 
   @@pat = ""			# last search pattern
   @@dir = SearchDir::Nopr	# last search direction (no previous search)
+  @@regpat : Regex | Nil	# last compiled regex pattern
 
   extend self
 
@@ -30,9 +31,100 @@ module Search
       @@pat = pattern
     elsif result == Result::False && pattern.size > 0
       # User hit Enter, but wants to user the old pattern.
-      result == Result::True
+      result = Result::True
     end
     return {result, pattern}
+  end
+
+  # This routine does the real work of a regular expression
+  # forward search. The pattern is sitting in the class
+  # variable `@@pat`, and the compiled pattern is in `@@regpat`.
+  # If found, dot is updated, the window system
+  # is notified of the change, and TRUE is returned. If the
+  # string isn't found, FALSE is returned.
+  #
+  # A copy of the line where the pattern was found is kept
+  # around until the next search is performed, so that that
+  # pointers to the pattern in regpat will still be valid
+  # if regsub is called.  The copy is freed on the next search.
+  def doregsrch(dir : SearchDir) : Result
+    w, b, dot, lp = E.get_context
+    forward = dir == SearchDir::Regforw
+
+    # Save dot in case the search fails.
+    olddot = dot.dup
+
+    while true
+      # If searching forward, copy the part of the line after the dot;
+      # otherwise copy the part of the line before the dot.
+      if forward
+	s = lp.text[dot.o..]
+      else
+	s = lp.text[0, dot.o]
+      end
+
+      # Test the line portion against the pattern.
+      break unless regex = @@regpat
+      if m = regex.match(s)
+	# There is a match.  If searching forward, put the dot
+	# after the matched string; otherwise put the dot before.
+	if forward
+	  dot.o += m.end(0)
+	else
+	  dot.o = m.begin(0)
+	end
+	w.dot = dot
+	return Result::True
+      end
+      
+      # Try again in next/previous line.
+      if forward
+	break if lp == b.last_line
+	lp = lp.next
+	dot.l += 1
+	dot.o = 0
+      else
+	break if lp == b.first_line
+	lp = lp.previous
+	dot.l -= 1
+	dot.o = lp.text.size
+      end
+    end
+
+    # If we got here, the search failed.  Restore dot.
+    w.dot = olddot
+    return Result::False
+  end
+
+  # Search forward using regular expression.
+  # Get a search string, which must be a regular expression, from the user,
+  # and search for it, starting at ".". If found, "." gets moved to just
+  # after the matched characters, and display does all the hard stuff.
+  # If not found, it just prints a message.
+  def regsearch(prompt : String, dir : SearchDir) : Result
+    result, pattern = readpattern(prompt)
+    return result if result != Result::True
+    @@dir = dir
+
+    # Compile the pattern into a regular expression.
+    if Regex.error?(pattern)
+      Echo.puts "Invalid regular expression"
+      return Result::False
+    end
+    @@regpat = Regex.new(pattern)
+
+    # Search the current buffer for the pattern.
+    result = doregsrch(dir)
+    Echo.puts "Not found" if result == Result::False
+    return result
+  end
+
+  def forwregsearch(f : Bool, n : Int32, k : Int32) : Result
+    return regsearch("Regexp-search", SearchDir::Regforw)
+  end
+
+  def backregsearch(f : Bool, n : Int32, k : Int32) : Result
+    return regsearch("Reverse regexp-search", SearchDir::Regback)
   end
 
   # Checks if there is a match in buffer *b* at location *pos*
@@ -194,6 +286,12 @@ module Search
       return forwsrch
     when SearchDir::Back
       return backsrch
+    when SearchDir::Regforw, SearchDir::Regback
+      if @@regpat
+	return doregsrch(dir)
+      else
+	return Result::Abort
+      end
     else
       Echo.puts "Search type #{dir} not implemented"
       return Result::Abort
@@ -223,6 +321,7 @@ module Search
   # If not found, it just prints a message.
   def forwsearch(f : Bool, n : Int32, k : Int32) : Result
     result, pattern = readpattern("Search")
+    return result if result != Result::True
     #Echo.puts "Result #{result}, pattern #{pattern}"
     @@dir = SearchDir::Forw
     return searchagain(f, n, k)
@@ -234,6 +333,7 @@ module Search
   # If not found, it just prints a message.
   def backsearch(f : Bool, n : Int32, k : Int32) : Result
     result, pattern = readpattern("Reverse search")
+    return result if result != Result::True
     @@dir = SearchDir::Back
     return searchagain(f, n, k)
   end
@@ -242,6 +342,9 @@ module Search
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('s'), cmdptr(forwsearch), "forw-search")
     k.add(Kbd.ctrl('r'), cmdptr(backsearch), "back-search")
+    k.add(Kbd.meta_ctrl('s'), cmdptr(forwregsearch), "forw-regexp-search")
+    k.add(Kbd.meta_ctrl('r'), cmdptr(backregsearch), "back-regexp-search")
+    k.add(Kbd::F9, cmdptr(searchagain), "search-again")
     k.add(Kbd::F9, cmdptr(searchagain), "search-again")
   end
 end
