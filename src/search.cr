@@ -17,6 +17,7 @@ module Search
   @@pat = ""			# last search pattern
   @@dir = SearchDir::Nopr	# last search direction (no previous search)
   @@regpat : Regex | Nil	# last compiled regex pattern
+  @@casefold = true		# if true, ignore case in non-regex searches
 
   extend self
 
@@ -119,14 +120,6 @@ module Search
     return result
   end
 
-  def forwregsearch(f : Bool, n : Int32, k : Int32) : Result
-    return regsearch("Regexp-search", SearchDir::Regforw)
-  end
-
-  def backregsearch(f : Bool, n : Int32, k : Int32) : Result
-    return regsearch("Reverse regexp-search", SearchDir::Regback)
-  end
-
   # Checks if there is a match in buffer *b* at location *pos*
   # for the match strings *pats*.  *lp* is a pointer to the
   # line at location *pos*.  If found, returns the position
@@ -155,7 +148,8 @@ module Search
 	found = true
       elsif 
 	# Match a normal string.
-	if spos.o + s.size <= text.size && text[spos.o, s.size] == s
+	if spos.o + s.size <= text.size &&
+	   text[spos.o, s.size].compare(s, case_insensitive: @@casefold) == 0
 	  found = true
 	  spos.o += s.size
 	else
@@ -338,13 +332,40 @@ module Search
     return searchagain(f, n, k)
   end
 
+  # Searches forwards using a regular expression.
+  # Gets a search string, which must be a regular expression, from the user,
+  # and search for it, starting at ".". If found, "." is left pointing
+  # after the last character of the string that was matched.
+  def forwregsearch(f : Bool, n : Int32, k : Int32) : Result
+    return regsearch("Regexp-search", SearchDir::Regforw)
+  end
+
+  # Searches backwards using a regular expression.
+  # Gets a search string, which must be a regular expression, from the user,
+  # and search for it, starting at ".". If found, "." is left pointing
+  # at the first character of the string that was matched.
+  def backregsearch(f : Bool, n : Int32, k : Int32) : Result
+    return regsearch("Reverse regexp-search", SearchDir::Regback)
+  end
+
+  # Sets the casefold flag according to the numeric argument.
+  # If zero, searches do not fold case (i.e. searches
+  # will be exact).  If non-zero, searches will fold case (i.e.
+  # upper case letters match their corresponding lower case letters).
+  # If no argument was supplied, toggles the casefold flag.
+  def foldcase(f : Bool, n : Int32, k : Int32) : Result
+    @@casefold = f ? n != 0 : !@@casefold
+    Echo.puts("[Case folding now " + (@@casefold ? "ON" : "OFF") + "]")
+    return Result::True
+  end
+
   # Creates key bindings for all Misc commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('s'), cmdptr(forwsearch), "forw-search")
     k.add(Kbd.ctrl('r'), cmdptr(backsearch), "back-search")
     k.add(Kbd.meta_ctrl('s'), cmdptr(forwregsearch), "forw-regexp-search")
     k.add(Kbd.meta_ctrl('r'), cmdptr(backregsearch), "back-regexp-search")
-    k.add(Kbd::F9, cmdptr(searchagain), "search-again")
+    k.add(Kbd.meta_ctrl('f'), cmdptr(foldcase), "fold-case")
     k.add(Kbd::F9, cmdptr(searchagain), "search-again")
   end
 end
