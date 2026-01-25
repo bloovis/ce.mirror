@@ -1,18 +1,19 @@
 # `Search` contains routines for searching/replacing text.
 
-enum SearchDir
-  Begin
-  Forw
-  Back
-  Prev
-  Next
-  Nopr
-  Accm
-  Regforw
-  Regback
-end
-  
 module Search
+
+  # Current search direction/type.
+  enum SearchDir
+    Begin
+    Forw
+    Back
+    Prev
+    Next
+    Nopr
+    Accm
+    Regforw
+    Regback
+  end
 
   @@pat = ""			# last search pattern
   @@dir = SearchDir::Nopr	# last search direction (no previous search)
@@ -359,6 +360,172 @@ module Search
     return Result::True
   end
 
+  # The following code and tables for the searchparen command
+  # were written in C by Walter Bright for MicroEMACS.  I have translated
+  # them into Crystal.
+
+  # State transition table indexes for searchparen command.
+  enum Trans
+    Bslash
+    Fslash
+    Quote
+    Dquote
+    Star
+    Nl
+    Other
+    Ignore
+  end
+
+  # Current state.
+  @@state = 0
+
+  # Forward state diagram.
+  FORWARD_TRANS = [
+  # bs  fsl quo dqu sta nl  oth ign
+   [0,  1,  4,  6,  0,  0,  0,  0], # 0: normal
+   [0,  8,  4,  6,  2,  0,  0,  0], # 1: normal seen /
+   [2,  2,  2,  2,  3,  2,  2,  1], # 2: comment
+   [2,  0,  2,  2,  3,  2,  2,  1], # 3: comment seen *
+   [5,  4,  0,  4,  4,  0,  4,  1], # 4: quote 
+   [4,  4,  4,  4,  4,  4,  4,  1], # 5: quote seen \
+   [7,  6,  6,  0,  6,  0,  6,  1], # 6: string
+   [6,  6,  6,  6,  6,  6,  6,  1], # 7: string seen \
+   [8,  8,  8,  8,  8,  0,  8,  1]  # 8: C++ comment
+  ]
+
+  # Backwards state diagram.
+  BACKWARDS_TRANS = [
+  # bsl fsl quo dqu sta nl  oth ign
+   [0,  1,  4,  6,  0,  0,  0,  0], # 0: normal
+   [0,  1,  4,  6,  2,  0,  0,  0], # 1: normal seen /
+   [2,  2,  2,  2,  3,  2,  2,  1], # 2: comment
+   [2,  0,  2,  2,  3,  2,  2,  1], # 3: comment seen *
+   [4,  4,  5,  4,  4,  5,  4,  1], # 4: quote
+   [4,  0,  0,  0,  0,  0,  0,  0], # 5: quote seen end
+   [6,  6,  6,  7,  6,  7,  6,  1], # 6: string
+   [6,  0,  0,  0,  0,  0,  0,  0]  # 7: string seen end
+  ]
+
+  BRACKET = [
+      ['(', ')'], ['<', '>'], ['[', ']'], ['{', '}']
+  ]
+
+  # Sets the new state based on the character 'ch',
+  # and returns true if we are ignoring characters
+  # in the old state.
+  def searchignore(ch : Char, forward : Bool) : Bool
+    lss = @@state	# local search state
+
+    if forward
+      trans = FORWARD_TRANS
+    else
+      trans = BACKWARDS_TRANS
+    end
+
+    tr = case ch
+    when '\\' then Trans::Bslash
+    when '/'  then Trans::Fslash
+    when '\'' then Trans::Quote
+    when '"'  then Trans::Dquote
+    when '*'  then Trans::Star
+    when '\n' then Trans::Nl
+    else           Trans::Other
+    end
+    @@state = trans[lss][tr.to_i]
+    return trans[lss][Trans::Ignore.to_i] != 0
+  end
+
+  # Searches for a matching character: a paren or bracket.
+  def searchparen(f : Bool, n : Int32, k : Int32) : Result
+    # Examine the character at the dot to determine whether to
+    # search forward or backwards.
+    w, b, dot, lp = E.get_context
+
+    # The character at the dot is the opening bracket, i.e.,
+    # if we see this character again, it will increment
+    # the bracket nesting count (hence the name chINC).
+    if dot.o == lp.text.size
+      chinc = '\n'
+    else
+      chinc = lp.text[dot.o]
+    end
+    olddot = dot.dup	# save dot so we can restore it if necessary
+
+    forward = true	# Assume search forward
+    chdec = chinc	# character that decrements the nesting count
+
+    # See whether the current character is a starting
+    # or ending bracket, and set the direction and the
+    # the ending bracket character that decrement the nesting count.
+    BRACKET.each do |pair|
+      if pair[0] == chinc
+	chdec = pair[1]
+	break
+      elsif pair[1] == chinc
+        chdec = pair[0]
+	forward = false
+	break
+      end
+    end
+
+    @@state = 0	# normal state
+    count = 0	# bracket nesting count
+
+    # Scan for a matching character or bracket.
+    while true
+      if forward
+	# Move forward by one space.
+	if dot.o == lp.text.size
+	  break if lp == b.last_line
+	  lp = lp.next
+	  dot.l += 1
+	  dot.o = 0
+	else
+	  dot.o += 1
+	end
+      else
+	# Move backwards by one space.
+	if dot.o == 0
+	  break if lp == b.first_line
+	  lp = lp.previous
+	  dot.l -= 1
+	  dot.o = lp.text.size
+	else
+	  dot.o -= 1
+	end
+      end
+
+      # Examine the character at the dot.
+      if dot.o == lp.text.size
+	ch = '\n'
+      else
+	ch = lp.text[dot.o]
+      end
+
+      # Set the new state based on the character at the dot.
+      # If we are not ignoring characters, check if the
+      # character matches the bracket we're looking for.
+      # If there is a match, and the bracket nesting count
+      # if zero, we're done.  If there is a match, but the
+      # nesting count is non-zero, decrement the count
+      # and keep searching.
+      if !searchignore(ch, forward)
+	if ch == chdec
+	  if count == 0
+	    w.dot = dot
+	    return Result::True
+	  end
+	  count -= 1
+	elsif ch == chinc
+	  count += 1
+	end
+      end
+    end
+    Echo.puts("Not found")
+    w.dot = olddot
+    return Result::False
+  end
+
   # Creates key bindings for all Misc commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('s'), cmdptr(forwsearch), "forw-search")
@@ -366,6 +533,7 @@ module Search
     k.add(Kbd.meta_ctrl('s'), cmdptr(forwregsearch), "forw-regexp-search")
     k.add(Kbd.meta_ctrl('r'), cmdptr(backregsearch), "back-regexp-search")
     k.add(Kbd.meta_ctrl('f'), cmdptr(foldcase), "fold-case")
+    k.add(Kbd.meta('p'), cmdptr(searchparen), "search-paren")
     k.add(Kbd::F9, cmdptr(searchagain), "search-again")
   end
 end
