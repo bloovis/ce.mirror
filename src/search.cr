@@ -18,6 +18,7 @@ module Search
   @@pat = ""			# last search pattern
   @@dir = SearchDir::Nopr	# last search direction (no previous search)
   @@regpat : Regex | Nil	# last compiled regex pattern
+  @@regmatch : Regex::MatchData | Nil	# result of last regex match
   @@casefold = true		# if true, ignore case in non-regex searches
 
   extend self
@@ -70,6 +71,7 @@ module Search
       if m = regex.match(s)
 	# There is a match.  If searching forward, put the dot
 	# after the matched string; otherwise put the dot before.
+	@@regmatch = m
 	if forward
 	  dot.o += m.end(0)
 	else
@@ -349,18 +351,104 @@ module Search
     return regsearch("Reverse regexp-search", SearchDir::Regback)
   end
 
+  # Determines the replacement string for the search of type *dir* just
+  # completed, and the size of the string being replaced. For normal searches,
+  # the replacement will simply be *news*, and the replacement size
+  # will the size of the search pattern. For regex searches, the replacement
+  # string and the size of the string it replaces will be determined
+  # from the match data.
+  def getrepl(dir : SearchDir, news : String) : Tuple(String, Int32)
+    if dir == SearchDir::Regforw || dir == SearchDir::Regback
+      m = @@regmatch
+      raise "No match data in getrepl!" unless m
+      r = @@regpat
+      raise "No regex in getrepl!" unless r
+      plen = m.end(0) - m.begin(0)
+      repl = m[0].gsub(r, news)
+    else
+      repl = news
+      plen = @@pat.size
+    end
+    return {repl, plen}
+  end
+
   # Helper function for all search and replace functions:
-  #   If query is TRUE, prompt the user for each replacement:
+  #   If query is true, prompts the user for each replacement:
   #     A space or a comma replaces the string, a period replaces and quits,
-  #	  an n doesn't replace, a C-G quits.
-  #   If query is FALSE, replace all strings with no prompting.
-  #   The f parameter is a case-fold hack flag, passed to lreplace.
-  #   The dir parameter indicates the kind of operation (normal
-  #   or regular expression).
+  #	an n doesn't replace, a C-G quits.
+  #   If `query` is false, replace all strings with no prompting.
+  #   The `f` parameter is a case-fold hack flag, passed to Line.replace.
+  #   The `dir` parameter indicates the kind of operation (normal
+  #     or regular expression).
   def searchandreplace(f : Bool, query : Bool, dir : SearchDir) : Result
-    result, repl = Echo.reply("Replacement string: ", nil)
+    if dir == SearchDir::Regforw || dir == SearchDir::Regback
+      oldprompt = "Regexp"
+      newprompt = "Replacement: "
+    else
+      oldprompt = "Old string"
+      newprompt = "New string: "
+    end
+
+    # Prompt the user for the pattern to search for,
+    # and for the replacement string.
+    result, pattern = readpattern(oldprompt)
     return result if result != Result::True
-    return b_to_r(Line.replace(@@pat.size, repl))
+    result, news = Echo.reply(newprompt, nil)
+    return result if result == Result::Abort
+
+    # If this is a regex search, compile the pattern.
+    if dir == SearchDir::Regforw || dir == SearchDir::Regback
+      if Regex.error?(pattern)
+	Echo.puts "Invalid regular expression"
+	return Result::False
+      end
+      @@regpat = Regex.new(pattern)
+    end
+
+    Echo.puts("[Query replace: \"#{pattern}\" -> \"#{news}\"]") if query
+
+    # Save the current position so that we can restore it later.
+    olddot = E.curw.dot.dup
+
+    # Search forward repeatedly, checking each time whether to insert
+    # or not.  The "!" case makes the check always true.
+    ctrl_g = 'G' - '@'.ord
+    rcnt = 0
+    while dosearch(dir) == Result::True
+      if query
+	E.disp.update  # if !inprof
+	c = E.kbd.getinp.chr
+      else
+	c = '!'
+      end
+      case c
+      when ' ', ',', 'y', 'Y', '.', '!'
+        # Set the replacement string to `repl` and the size of the string
+	# it replaces to `plen`.
+	# from the MatchData.
+        repl, plen = getrepl(dir, news)
+	rcnt += 1
+	return Result::False unless Line.replace(plen, repl)
+	break if c == '.'
+      when ctrl_g
+        ctrlg(false, 0, Kbd::RANDOM)
+	break
+      when 'n'
+        next
+      else
+	Echo.puts("<SP>[,Yy] replace, [.] rep-end, [n] don't, [!] repl rest [C-G] quit")
+      end
+    end
+    E.curw.dot = olddot
+    E.disp.update  # if !inprof
+    if rcnt == 0
+      Echo.puts("No replacements done")
+    elsif rcnt == 1
+      Echo.puts("[1 replacement done]")
+    else
+      Echo.puts("[#{rcnt} replacements done]")
+    end
+    return Result::True
   end
 
   # Replace-string function.  This is the same as query-replace,
@@ -376,6 +464,20 @@ module Search
   # don't query, just do all replacements.
   def queryrepl(f : Bool, n : Int32, k : Int32) : Result
     return searchandreplace(f, true, SearchDir::Forw)
+  end
+
+  # Replaces strings unconditionally, using a regular expression as the pattern
+  # and a regular expression subsitution string as the replacement.
+  # Otherwise similar to replace-string.
+  def regrepl(f : Bool, n : Int32, k : Int32) : Result
+    return searchandreplace(f, false, SearchDir::Regforw)
+  end
+
+  # Replaces strings selectively, using a regular expression as the pattern
+  # and a regular expression subsitution string as the replacement.
+  # Otherwise similar to query-replace.
+  def regqueryrepl(f : Bool, n : Int32, k : Int32) : Result
+    return searchandreplace(f, true, SearchDir::Regforw)
   end
 
   # Sets the casefold flag according to the numeric argument.
@@ -565,6 +667,8 @@ module Search
     k.add(Kbd.meta('p'), cmdptr(searchparen), "search-paren")
     k.add(Kbd.meta('r'), cmdptr(replstring), "replace-string")
     k.add(Kbd.meta('q'), cmdptr(queryrepl), "query-replace")
+    k.add(Kbd.meta('/'), cmdptr(regrepl), "reg-replace")
+    k.add(Kbd.meta('?'), cmdptr(regqueryrepl), "reg-query-replace")
     k.add(Kbd::F9, cmdptr(searchagain), "search-again")
   end
 end

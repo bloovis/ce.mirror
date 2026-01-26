@@ -27,6 +27,12 @@ def quit(f : Bool, n : Int32, k : Int32) : Result
   return Result::True
 end
 
+# Kills of any keyboard macro that is in progress.
+def ctrlg(f : Bool, n : Int32, k : Int32) : Result
+  # FIXME: end the macro here!
+  return Result::Abort
+end
+
 
 # Here we capture any unhandled exceptions, and print
 # the exception information along with a backtrace before exiting.
@@ -34,6 +40,8 @@ begin
   e = E.new
   k = e.keymap
   k.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
+  k.add(Kbd.ctrl('g'), cmdptr(ctrlg), "abort")
+
   k.add_dup('q', "quit")
 
   # The following bindings are for testing only!  Delete when

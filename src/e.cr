@@ -109,6 +109,11 @@ class E
     return {w, b, dot, lp}
   end
 
+  # Returns the Display object.
+  def self.disp
+    return self.instance.disp
+  end
+
   def initialize
     # Create a terminal object.
     @tty = Terminal.new
