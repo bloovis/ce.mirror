@@ -308,13 +308,7 @@ module Misc
 
     w, b, dot, lp = E.get_context
     n.times do
-      Line.keach do |s|
-        if s == "\n"
-	  return Result::False unless Line.newline
-	else
-	  return Result::False unless Line.insert(s)
-	end
-      end
+      return Result::False unless Line.insertwithnl(Line.kbuf)
     end
     return Result::True
   end

@@ -1,28 +1,12 @@
 require "./ll"
 require "./line"
+require "./util"
 
 @[Flags]
 enum Bflags
   Changed
   Backup
   ReadOnly
-end
-
-# Application-specific extensions to the `String` class.
-class String
-  # Returns this String padded on the left with spaces to make
-  # its size equal to *width*.
-  def pad_left(width : Int32)
-    pad = width - self.size
-    " " * pad + self
-  end
-
-  # Returns this String padded on the right with spaces to make
-  # the its size equal to *width*.
-  def pad_right(width : Int32)
-    pad = width - self.size
-    self + " " * pad
-  end
 end
 
 # `LineCache` is a hash mapping line numbers to their corresponding

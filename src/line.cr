@@ -1,31 +1,5 @@
 require "./ll"
-
-# Application-specific extensions to the `String` class.
-class String
-  # Splits a string into lines, and passes each line to the block.
-  # It passes newlines (\n) as separate one-character strings, which
-  # allows the block to handle them in a special way.  This also ensures
-  # the correct behavior if the last line in the string does not
-  # end in a newline.
-  def split_lines(&b)
-    offset = 0
-    len = self.size
-    while offset < len
-      i = self.index('\n', offset)
-      if i.nil?
-	yield self[offset, len - offset]
-	offset = len
-      else
-	if i > offset
-	  # Don't yield zero-length strings.
-	  yield self[offset, i - offset]
-	end
-	yield "\n"
-	offset = i + 1
-      end
-    end
-  end
-end
+require "./util"
 
 # The `Line` class is an object that contains a text string, and next and previous links
 # for inserting the line on a doubly-linked list.  The `Buffer` class holds
@@ -112,7 +86,7 @@ class Line
   # Inserts the string *s* in the current line at the current dot location.
   # Newline characters ('\n') in the string do *not* cause
   # new lines to be created and inserted.  To do that,
-  # call `Line.newline`.
+  # call `Line.insertwithnl` instead.
   def self.insert(s : String) : Bool
     return false unless Files.checkreadonly
 
@@ -138,6 +112,20 @@ class Line
 	if mark.l == oldpos.l && mark.o > oldpos.o
 	  mark.o += n
 	end
+      end
+    end
+    return true
+  end
+
+  # Inserts the string *s*, but treats \n characters properly,
+  # i.e., as the starts of new lines instead of raw characters.
+  # Returns true if successful, or false if an error occurs.
+  def self.insertwithnl(s : String) : Bool
+    s.split_lines do |l|
+      if l == "\n"
+	return false unless Line.newline
+      else
+	return false unless Line.insert(l)
       end
     end
     return true
@@ -273,11 +261,9 @@ class Line
     @@kbuf = @@kbuf + s
   end
 
-  # Passes each line in the kill buffer to the passed-in block.
-  # It passes newlines (\n) in the kill buffer as
-  # separate single-character strings, not part of any other line.
-  def self.keach
-    @@kbuf.split_lines {|s| yield s}
+  # Returns the kill buffer.
+  def self.kbuf : String
+    return @@kbuf
   end
 end
 

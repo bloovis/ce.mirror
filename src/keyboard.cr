@@ -190,8 +190,9 @@ class Kbd
     return s
   end
 
-  # Get the raw keycode from the Terminal.
-  def getraw
+  # Get the raw keycode from the Terminal, or from the
+  # profile file if one is currently active.
+  def getinp
     @tty.getc
   end
 
@@ -199,7 +200,7 @@ class Kbd
   # Gets a key after a prefix has been seen; converts lower to upper, and
   # converts control characters to our internal representation.
   def getctrl : Int32
-    c = @tty.getc
+    c = getinp
     case c
     when ('a'.ord..'z'.ord)	# convert to upper case
       return c - 'a'.ord + 'A'.ord 
@@ -212,7 +213,7 @@ class Kbd
 
   # Get a "cooked" key, in our internal representation.
   def getkey : Int32
-    c = @tty.getc
+    c = getinp
     case c
     when METACH
       return META | getctrl
