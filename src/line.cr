@@ -246,6 +246,18 @@ class Line
     return true
   end
 
+  # Replaces *plen* characters BEFORE dot with string *st*.
+  # Control-J characters in st are interpreted as newlines.
+  # There is a casehack disable flag (normally it likes to match
+  # case of replacement to what was there).
+  def self.replace(plen : Int32, st : String) : Bool
+    # Delete the characters to be replaced.
+    return false if Misc.backdel(false, plen, Kbd::RANDOM) != Result::True
+
+    # Insert the new characters.
+    return Line.insertwithnl(st)
+  end
+
   # Deletes all the text in the kill buffer.
   def self.kdelete
     E.thisflag = E.thisflag | Eflags::Kill	# This is a kill command

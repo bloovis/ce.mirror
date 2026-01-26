@@ -176,8 +176,9 @@ module Echo
 	tty.eeol
 	aborted = true
       when Kbd.ctrl('i')
-        pos = ret.size
+	pos = ret.size
 	if block_given
+	  # Get an array of possible completions.
 	  a = yield(ret)
 	  if a.size == 1
 	    ret = a[0]
@@ -186,6 +187,11 @@ module Echo
 	    ret = common_prefix(a)
 	    pos = ret.size
 	  end
+	else
+	  # No completion block provided, so treat the Tab
+	  # as an ordinary character to insert into the line.
+	  ret = ret.insert(pos, "\t")
+	  pos += 1
 	end
       when Kbd.ctrl('s')
         if default

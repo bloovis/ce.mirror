@@ -349,6 +349,35 @@ module Search
     return regsearch("Reverse regexp-search", SearchDir::Regback)
   end
 
+  # Helper function for all search and replace functions:
+  #   If query is TRUE, prompt the user for each replacement:
+  #     A space or a comma replaces the string, a period replaces and quits,
+  #	  an n doesn't replace, a C-G quits.
+  #   If query is FALSE, replace all strings with no prompting.
+  #   The f parameter is a case-fold hack flag, passed to lreplace.
+  #   The dir parameter indicates the kind of operation (normal
+  #   or regular expression).
+  def searchandreplace(f : Bool, query : Bool, dir : SearchDir) : Result
+    result, repl = Echo.reply("Replacement string: ", nil)
+    return result if result != Result::True
+    return b_to_r(Line.replace(@@pat.size, repl))
+  end
+
+  # Replace-string function.  This is the same as query-replace,
+  # with the difference that it does not prompt for confirmation
+  # on each string.
+  def replstring(f : Bool, n : Int32, k : Int32) : Result
+    return searchandreplace(f, false, SearchDir::Forw)
+  end
+
+  # Replaces strings selectively.  Does a search and replace operation.
+  # A space or a comma replaces the string, a period replaces and quits,
+  # an n doesn't replace, a C-G quits.  If an argument is given,
+  # don't query, just do all replacements.
+  def queryrepl(f : Bool, n : Int32, k : Int32) : Result
+    return searchandreplace(f, true, SearchDir::Forw)
+  end
+
   # Sets the casefold flag according to the numeric argument.
   # If zero, searches do not fold case (i.e. searches
   # will be exact).  If non-zero, searches will fold case (i.e.
@@ -534,6 +563,8 @@ module Search
     k.add(Kbd.meta_ctrl('r'), cmdptr(backregsearch), "back-regexp-search")
     k.add(Kbd.meta_ctrl('f'), cmdptr(foldcase), "fold-case")
     k.add(Kbd.meta('p'), cmdptr(searchparen), "search-paren")
+    k.add(Kbd.meta('r'), cmdptr(replstring), "replace-string")
+    k.add(Kbd.meta('q'), cmdptr(queryrepl), "query-replace")
     k.add(Kbd::F9, cmdptr(searchagain), "search-again")
   end
 end
