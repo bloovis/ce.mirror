@@ -149,7 +149,7 @@ class E
       ARGV.each do |filename|
 	b = Buffer.new(filename, filename)
 	b.add_to_blist
-	b.readfile(filename)
+	b.readin(filename)
       end
     end
 

@@ -28,9 +28,29 @@ module Files
     return Result::True
   end
 
+  # Saves the contents of the current buffer back into
+  # its associated file. Do nothing if there have been no changes
+  # (is this a bug, or a feature). Error if there is no remembered
+  # file name.
+  def filesave(f : Bool, n : Int32, k : Int32) : Result
+    b = E.curb
+    return Result::True unless b.flags.changed?
+    if b.filename == ""
+      Echo.puts("No file name")
+      return Result::False
+    end
+    if b.writeout
+      b.flags = b.flags & ~Bflags::Changed
+      return Result::True
+    else
+      return Result::False
+    end
+  end
+
   # Creates key bindings for all Files commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx_ctrl('q'), cmdptr(togglereadonly), "ins-self")
+    k.add(Kbd.ctlx_ctrl('s'), cmdptr(filesave), "file-save")
   end
 
 end

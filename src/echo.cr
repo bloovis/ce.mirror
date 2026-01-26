@@ -260,15 +260,14 @@ module Echo
   # with the abort ("^G") character. Return FALSE
   # for "no" and TRUE for "yes". No formatting
   # services are available.
-  def yesno(prompt : String) : Bool
-    return false
+  def yesno(prompt : String) : Result
     loop do
       r, s = Echo.reply("#{prompt} [y/n]? ", nil)
-      return false if result == Result::Abort
+      return Result::Abort if r == Result::Abort
       if s.size > 0
 	c = s[0].downcase
-	return true if c == 'y'
-	return false if c == 'n'
+	return Result::True if c == 'y'
+	return Result::False if c == 'n'
       end
     end
   end

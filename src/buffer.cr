@@ -74,6 +74,45 @@ class Buffer
     @scache = -1
   end
 
+  # Writes the buffer to its associated file.  Returns true
+  # on success, false otherwise.
+  def writeout : Bool
+    if @filename == ""
+      Echo.puts("No file name")
+      return false
+    end
+
+    # Check if the file has no terminating newline.  This is the
+    # case if the last line in the file is not empty.
+    lp = last_line
+    appendnl = false
+    if lp.text.size != 0
+      result = Echo.yesno("File doesn't end with a newline. Should I add one")
+      return false if result == Result::Abort
+      appendnl = result == Result::True
+    end
+
+    Echo.puts("[Writing...]")
+    nline = 0
+    begin
+      File.open(@filename, "w") do |f|
+        self.each do |lp|
+	  f.print(lp.text)
+	  if (lp != last_line) || appendnl
+	    f.print("\n")
+	  end
+	  nline += 1
+	end
+      end
+      Echo.puts("[Wrote #{nline} line" + (nline == 1 ? "" : "s") + "]")
+      status = true
+    rescue ex
+      Echo.puts("Cannot open #{@filename} for writing")
+      status = false
+    end
+    return status
+  end
+
   # Instance methods.
 
   # Adds this Buffer to the list of buffers.
@@ -83,25 +122,51 @@ class Buffer
 
   # Clears the buffer, and reads the file `filename` into the buffer.
   # Returns true if successful, false otherwise
-  def readfile(@filename) : Bool
+  def readin(@filename) : Bool
     return false unless File.exists?(@filename)
     @list.clear
-    File.open(@filename) do |f|
-      lastline = "\n"	# Pretend there's a blank line if file is empty
-      while s = f.gets(chomp: false)
-	l = Line.alloc(s.chomp)
-	lastline = s
-	@list.push(l)
-      end
 
-      # If the last line ended in a newline, append
-      # a blank line to the buffer, to give the user a place to
-      # start adding new text.
-      if lastline && lastline.size > 0 && lastline[-1] == '\n'
-	@list.push(Line.alloc(""))
+    if !File.exists?(@filename)
+      # If the file doesn't exist, it must be new, so just add a single empty line.
+      Echo.puts("[New file]")
+      @list.push(Line.alloc(""))
+    else
+      File.open(@filename) do |f|
+        nline = 0
+	lastline = "\n"	# Pretend there's a blank line if file is empty
+	while s = f.gets(chomp: false)
+	  l = Line.alloc(s.chomp)
+	  lastline = s
+	  @list.push(l)
+	  nline += 1
+	end
+
+	# If the last line ended in a newline, append
+	# a blank line to the buffer, to give the user a place to
+	# start adding new text.
+	if lastline && lastline.size > 0 && lastline[-1] == '\n'
+	  @list.push(Line.alloc(""))
+	end
+
+	Echo.puts("[Read #{nline} line" + (nline == 1 ? "" : "s") + "]")
       end
     end
+
+    # Mark the buffer as unchanged.
     @flags = @flags & ~Bflags::Changed
+
+    # For all windows that are viewing this buffer, set
+    # the dot to the top of the buffer, and invalidate the mark.
+    Window.each do |w|
+      if w.buffer == self
+	w.dot = Pos.new(0, 0)
+	w.mark = Pos.new(-1, 0)
+      end
+    end
+
+    # In case the buffer isn't in any window, set its dot to the top.
+    @dot = Pos.new(0, 0)
+
     return true
   end
 
@@ -240,7 +305,7 @@ class Buffer
   # looks good.
   def clear : Bool
     if @flags.changed?
-      if !Echo.yesno("Discard changes")
+      if Echo.yesno("Discard changes") != Result::True
 	return false
       end
     end
