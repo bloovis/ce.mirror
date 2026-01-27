@@ -197,7 +197,7 @@ class Line
     end
     return false unless Files.checkreadonly
     while n > 0
-      # This is inefficient.  We should be able to keep updating
+      # FIXME: This is inefficient.  We should be able to keep updating
       # lp using lp.next.
       w, b, dot, lp = E.get_context
       #STDERR.puts "Line.delete: n #{n}, dot (#{dot.l},#{dot.o}), line '#{lp.text}'"
