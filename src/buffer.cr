@@ -7,6 +7,7 @@ enum Bflags
   Changed
   Backup
   ReadOnly
+  System
 end
 
 # `LineCache` is a hash mapping line numbers to their corresponding
@@ -25,7 +26,7 @@ class Buffer
   # These properties are only used when a window is attached or detached
   # from this buffer.  When the last window is detached, we save that
   # window's values, so that the next time a window is attached, we
-  # copy them to that window.  See `Window#addwind` for details.
+  # copy them to that window.  See `Window#add_wind` for details.
   property dot : Pos		# current cursor position in buffer
   property mark : Pos		# mark position
   property leftcol : Int32	# left column of window
@@ -34,11 +35,13 @@ class Buffer
   @@blist = [] of Buffer	# list of user-created buffers
   @@sysbuf : Buffer | Nil	# special "system" buffer
 
-  def initialize(name, @filename = "")
-    # If the user specified a filename, use the base name
-    # as the buffer name.
-    if filename.size > 0
-      name = Path[filename].basename
+  def initialize(name : String, @filename = "")
+    #STDERR.puts("Buffer.initialize: name #{name}, filename #{@filename}")
+    # If the user specified a filename, use its basename
+    # as the buffer name instead of `name`.
+    if @filename.size > 0
+      @filename = Files.tilde_expand(@filename)
+      name = File.basename(@filename)
     end
     newname = name
 
@@ -72,6 +75,9 @@ class Buffer
 
     # Create the size cache
     @scache = -1
+
+    # Add buffer to the list.
+    @@blist.push(self)
   end
 
   # Writes the buffer to its associated file.  Returns true
@@ -114,11 +120,6 @@ class Buffer
   end
 
   # Instance methods.
-
-  # Adds this Buffer to the list of buffers.
-  def add_to_blist
-    @@blist.push(self)
-  end
 
   # Clears the buffer, and reads the file `filename` into the buffer.
   # Returns true if successful, false otherwise
@@ -174,14 +175,12 @@ class Buffer
   def size : Int32
     # Is the size already in the cache?
     if @scache != -1
-      #STDERR.puts "size returning cache value #{@scache}"
       return @scache
     end
 
     # Size is not in the cache.  Calculate it the hard way.
     n = 0
     @list.each {|l| n += 1}
-    #STDERR.puts "size setting cache value #{n}"
     @scache = n
     return n
   end
@@ -213,7 +212,6 @@ class Buffer
   def [](n : Int32) : Pointer(Line) | Nil
     # Is the line already in the cache?
     if lp = @lcache[n]?
-      #STDERR.puts "Got line #{n} from cache"
       return lp
     end
 
@@ -222,7 +220,6 @@ class Buffer
     lnno = -1
     lp = @list.find {|l| lnno += 1; lnno == n}
     if lp
-      #STDERR.puts "Add line #{n} to cache"
       @lcache[n] = lp
     end
     return lp
@@ -277,7 +274,6 @@ class Buffer
   # Deletes the line *lp* from the line list.
   def delete(lp : Pointer(Line))
     @list.delete(lp)
-    #STDERR.puts "delete clearing line cache"
     @lcache.clear
     @scache = -1
   end
@@ -285,7 +281,6 @@ class Buffer
   # Inserts the line *lp1* after the line *lp* in the list.
   def insert_after(lp : Pointer(Line), lp1 : Pointer(Line))
     @list.insert_after(lp, lp1)
-    #STDERR.puts "insert_after clearing line cache"
     @lcache.clear
     @scache = -1
   end
@@ -310,8 +305,8 @@ class Buffer
       end
     end
 
-    # Clear the flags.
-    @flags = Bflags::None
+    # Clear all flags except System.
+    @flags = @flags & Bflags::System
 
     # Clear the line list.
     @list.clear
@@ -344,10 +339,7 @@ class Buffer
       return b if b.name == name
     end
     if create
-      if b = Buffer.new(name, "")
-	b.add_to_blist
-      end
-      return b
+      return Buffer.new(name, "")
     else
       return nil
     end
@@ -361,7 +353,11 @@ class Buffer
   # Returns the secret system buffer, creating it first if necessary.
   def self.sysbuf : Buffer
     if @@sysbuf.nil?
-      @@sysbuf = Buffer.new("*sysbuf*")
+      if b = Buffer.new("*sysbuf*")
+	@@sysbuf = b
+	b.flags = Bflags::System
+	return b
+      end
     end
     b = @@sysbuf
     if b.nil?
@@ -383,16 +379,23 @@ class Buffer
     bhdr = "Buffer"
     bhdrsize = bhdr.size
     bhdrdashes = "-" * bhdrsize
-    @@blist.each {|b| namesize = [b.name.size, namesize, bhdrsize].max}
+    @@blist.each do |b|
+      next if b.flags.system?
+      namesize = [b.name.size, namesize, bhdrsize].max
+    end
 
-    # Populate the system buffer with the information about th
+    # Populate the system buffer with the information about the
     # "normal" buffers.
     b = sysbuf
     b.clear
     b.filename = ""
-    b.addline("C         Size " + bhdr.pad_right(namesize)       + " File")
-    b.addline("-         ---- " + bhdrdashes.pad_right(namesize) + " ----")
+    b.addline("C W          Size " + bhdr.pad_right(namesize)       + " File")
+    b.addline("- -          ---- " + bhdrdashes.pad_right(namesize) + " ----")
     @@blist.each do |b2|
+      #STDERR.puts("makelist: b2 name #{b2.name}, nwind #{b2.nwind}")
+      # Don't include system buffers in the list.
+      next if b2.flags.system?
+
       # Calculate number of bytes in this buffer.  FIXME: this
       # actually calculates characters, not bytes.
       bytes = 0
@@ -407,7 +410,9 @@ class Buffer
       else
 	s = "  "
       end
-      s = s + bytes.to_s.pad_left(12) + " " +
+      s = s +
+	  b2.nwind.to_s.pad_right(2) + " " +
+	  bytes.to_s.pad_left(12) + " " +
 	  b2.name.pad_right(namesize) + " " + b2.filename
       b.addline(s)
     end
@@ -419,16 +424,17 @@ class Buffer
   # Returns a status.
   def self.popsysbuf : Bool
     b = sysbuf
+    #STDERR.puts("popsysbuf: nwind #{b.nwind}")
     if b.nwind == 0
       # Not in screen yet, get a pop-up window for it.
+      #STDERR.puts("popsysbuf: calling popup")
       w = Window.popup
       return false unless w
 
       # Stop using the window's current buffer, and make it use
       # the system buffer.
-      w.addwind(-1)
+      #STDERR.puts("popsysbuf: setting popup buffer to #{b.name}")
       w.buffer = b
-      b.nwind += 1
     end
 
     # Update all windows that are using the system buffer.

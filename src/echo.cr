@@ -255,6 +255,32 @@ module Echo
     return {bufn.size == 0 ? Result::False : Result::True, bufn}
   end
 
+  # Prompts for a filename, and returns a tuple containing
+  # the Result and the filename entered by the user
+  def getfname(prompt : String) : Tuple(Result, String)
+    result, fname = do_reply(prompt, nil, true) do |s|
+      # Get the list of filenames that start with `s`.
+      a = Dir.glob([s + "*"], File::MatchOptions.glob_default | File::MatchOptions::DotFiles)
+
+      # If there's only one file, and it's a directory, present a list of all files
+      # in that directory
+      if a.size == 1
+	f = a[0]
+	info = File.info?(f)
+	if info && info.directory?
+	  a = Dir.glob([f + "/*"], File::MatchOptions.glob_default | File::MatchOptions::DotFiles)
+	end
+      end
+      a
+    end
+
+    # Return immediately on Ctrl-G abort.
+    return {result, fname} if result == Result::Abort
+
+    # Check for empty name.
+    return {fname.size == 0 ? Result::False : Result::True, fname}
+  end
+
   # Ask "yes" or "no" question.
   # Return ABORT if the user answers the question
   # with the abort ("^G") character. Return FALSE

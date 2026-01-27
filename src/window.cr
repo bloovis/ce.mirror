@@ -11,7 +11,7 @@ enum Wflags
 end
 
 class Window
-  property buffer : Buffer
+  getter   buffer : Buffer	# buffer attached to this window
   property line : Int32		# buffer line number of the window's top line
   property dot : Pos		# current cursor position in buffer
   property mark : Pos		# mark position
@@ -38,17 +38,27 @@ class Window
     @flags = Wflags::None
 
     # Bump the window count of the buffer.
-    @buffer.nwind += 1
-
-    # If this is the first window, make it the current one.
-    if @@curi == -1
-      @@curi = 0
-    end
-
-    # Add the window to the global list.
-    @@list << self
+    #STDERR.puts("Window.initialize: calling add_wind(1)")
+    add_wind(1)
 
     #STDERR.puts "Added window for buffer #{@buffer.name}, toprow #{@toprow}, nrow #{@nrow}"
+  end
+
+  # Sets the buffer *b* associated with this window.  First decrement
+  # the window count of the old buffer.  Then if *b* is not nil,
+  # associate it with the window and increment its window count.
+  def buffer=(b : Buffer | Nil)
+    if b && (b == @buffer)
+       #STDERR.puts("buffer=: setting buffer to old buffer #{b.name}!")
+    end
+    #STDERR.puts("buffer=: before decrement, old buffer #{@buffer.name}, nwind #{@buffer.nwind}")
+    add_wind(-1)
+    #STDERR.puts("buffer=: after decrement, old buffer #{@buffer.name}, nwind #{@buffer.nwind}")
+    if b
+      @buffer = b
+      add_wind(1)
+      #STDERR.puts("buffer=: new buffer #{@buffer.name}, nwind #{@buffer.nwind}")
+    end
   end
 
   # Returns next window in list, or nil if this the last window
@@ -81,8 +91,9 @@ class Window
   # with a window.  Copies the dot and mark from the window to the buffer
   # if the count goes to zero, or from the buffer to the window if
   # the count goes to one.
-  def addwind(n : Int32)
+  private def add_wind(n : Int32)
     b = @buffer
+    #STDERR.puts("add_wind: n #{n}, buffer #{b.name}, nwind #{b.nwind}")
     if b.nwind == 0
       # This is the first use of the buffer.  Copy the mark, dot,
       # and leftcol from the buffer to this window.
@@ -111,12 +122,9 @@ class Window
     # Save the current buffer's name.
     E.oldbufn = @buffer.name
 
-    # Decrement the window count of the old current buffer.
-    addwind(-1)
-
     # Set the new current buffer and increment its window count.
-    @buffer = b
-    addwind(1)
+    #STDERR.puts("usebuf: old buffer #{@buffer.name}, new buffer #{b.name}")
+    self.buffer = b
 
     # If this is not the first use of the buffer, copy the mark,
     # dot, and leftcol values from the first other window we find that
@@ -133,6 +141,16 @@ class Window
   end
 
   # Class methods.
+
+  # Append the window *w* to the list of windows.  
+  # If this is the first window, make it the current one.
+  def self.add_to_list(w : Window)
+    if @@curi == -1
+      @@curi = 0
+    end
+    @@list << w
+  end
+
 
   # Returns the current Window.
   def self.current : Window
@@ -218,6 +236,7 @@ class Window
     end
 
     # Create the Window object.
+    #STDERR.puts("splitwind: splitting window with buffer #{w.buffer.name}")
     w2 = Window.new(w.buffer)
     w2.dot = w.dot.dup
     w2.mark = w.mark.dup
@@ -293,11 +312,16 @@ class Window
   # destruction of a window makes a buffer
   # become undisplayed.
   def self.onlywind(f : Bool, n : Int32, k : Int32) : Result
+    #STDERR.puts("onlywind: buffer #{E.curw.buffer.name}")
     # Decrement the window count for each buffer owned
     # by a non-current window.
     Window.each do |w|
+      #STDERR.puts("onlywind: checking window with buffer #{w.buffer.name}")
       if w != @@list[@@curi]
-	w.addwind(-1)
+	# Break the association the window (which is about to be
+	# discarded) and its buffer.
+	#STDERR.puts("onlywind: decrementing nwind for #{w.buffer.name}")
+	w.buffer = nil
       end
     end
 

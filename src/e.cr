@@ -144,12 +144,12 @@ class E
     # or just leave the buffer empty if no file was specified.
     if ARGV.size == 0
       b = Buffer.new("main")
-      b.add_to_blist
     else
       ARGV.each do |filename|
-	b = Buffer.new(filename, filename)
-	b.add_to_blist
-	b.readin(filename)
+        fname = Files.tilde_expand(filename)
+	bname = File.basename(fname)
+	b = Buffer.new(bname, fname)
+	b.readin(fname)
       end
     end
 
@@ -167,6 +167,7 @@ class E
     nwin.times do |i|
       b = E.buffers[i]
       w = Window.new(b)
+      Window.add_to_list(w)
       E.curw = w if i == 0
       w.toprow = toprow
       if i == nwin - 1
