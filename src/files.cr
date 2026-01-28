@@ -60,7 +60,7 @@ module Files
     fname = tilde_expand(fname)	# Get fully expanded filename
 
     # Look for a buffer already associated with this file.
-    Buffer.buffers.each do |b|
+    Buffer.each do |b|
       if b.filename == fname
 	# Found a buffer with this file.  Make the current
 	# window use that buffer.

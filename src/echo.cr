@@ -221,7 +221,7 @@ module Echo
   def getbufn : Tuple(Result, String)
     result, bufn = do_reply("Use buffer [#{E.oldbufn}]: ", nil, true) do |s|
       a = [] of String
-      Buffer.buffers.each do |b|
+      Buffer.each do |b|
         if b.name.starts_with?(s)
 	  a << b.name
 	end

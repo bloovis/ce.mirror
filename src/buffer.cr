@@ -340,7 +340,7 @@ class Buffer
   # all buffers.  Return pointer to the buffer, or
   # nil if not found and `create` is false.
   def self.find(name : String, create : Bool = false) : Buffer | Nil
-    @@blist.each do |b|
+    Buffer.each do |b|
       return b if b.name == name
     end
     if create
@@ -353,6 +353,11 @@ class Buffer
   # Returns the list of all buffers.
   def self.buffers : Array(Buffer)
     @@blist
+  end
+
+  # Yields each buffer to the passed-in block
+  def self.each
+    @@blist.each {|b| yield b}
   end
 
   # Returns the secret system buffer, creating it first if necessary.
@@ -384,7 +389,7 @@ class Buffer
     bhdr = "Buffer"
     bhdrsize = bhdr.size
     bhdrdashes = "-" * bhdrsize
-    @@blist.each do |b|
+    Buffer.each do |b|
       next if b.flags.system?
       namesize = [b.name.size, namesize, bhdrsize].max
     end
@@ -396,7 +401,7 @@ class Buffer
     b.filename = ""
     b.addline("C W          Size " + bhdr.pad_right(namesize)       + " File")
     b.addline("- -          ---- " + bhdrdashes.pad_right(namesize) + " ----")
-    @@blist.each do |b2|
+    Buffer.each do |b2|
       #STDERR.puts("makelist: b2 name #{b2.name}, nwind #{b2.nwind}")
       # Don't include system buffers in the list.
       next if b2.flags.system?
@@ -453,6 +458,18 @@ class Buffer
     end
 
     return true
+  end
+
+  # Looks through the list of buffers and returns true if there
+  # are any changed buffers. Special buffers like the buffer list
+  # buffer don't count.  Returns false if there are no changed buffers.
+  def self.anycb : Bool
+    Buffer.each do |b|
+      if b.flags.changed? && !b.flags.system?
+	return true
+      end
+    end
+    return false
   end
 
   # Commands.

@@ -21,6 +21,10 @@ def exception(f : Bool, n : Int32, k : Int32) : Result
 end
 
 def quit(f : Bool, n : Int32, k : Int32) : Result
+  # Check if there are any changed buffers.
+  if Buffer.anycb
+    return Result::False if Echo.yesno("There are changed buffers.  Quit") != Result::True
+  end
   E.tty.close
   puts "Goodbye!"
   exit 0
