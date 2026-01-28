@@ -154,7 +154,7 @@ class Buffer
     end
 
     # Mark the buffer as unchanged.
-    @flags = @flags & ~Bflags::Changed
+    lchange(false)
 
     # For all windows that are viewing this buffer, set
     # the dot to the top of the buffer, and invalidate the mark.
@@ -266,9 +266,14 @@ class Buffer
     return @list.head.value.previous
   end
 
-  # Sets the changed flag for the buffer.
-  def lchange
-    @flags = @flags | Bflags::Changed
+  # Sets the changed flag for the buffer if *state* is true (default
+  # if not specified), or clears the changed flag if *state* is false.
+  def lchange(state : Bool = true)
+    if state
+      @flags = @flags | Bflags::Changed
+    else
+      @flags = @flags & ~Bflags::Changed
+    end
   end
 
   # Deletes the line *lp* from the line list.

@@ -124,7 +124,7 @@ module Files
       return Result::False
     end
     if b.writeout
-      b.flags = b.flags & ~Bflags::Changed
+      b.lchange(false)	# mark buffer as unchanged
       return Result::True
     else
       return Result::False

@@ -125,7 +125,7 @@ module Word
 	c = getc
 	if c.lowercase?
 	  putc(c.upcase)
-	  b.flags = b.flags | Bflags::Changed
+	  b.lchange
 	end
         if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
 	  # Hit end of buffer, return now.
@@ -162,7 +162,55 @@ module Word
 	c = getc
 	if c.uppercase?
 	  putc(c.downcase)
-	  b.flags = b.flags | Bflags::Changed
+	  b.lchange
+	end
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	  # Hit end of buffer, return now.
+	  return Result::False
+	end
+      end
+    end
+    return Result::True
+  end
+
+  # Move the cursor forward by
+  # the specified number of words. As you move
+  # convert the first character of the word to upper
+  # case, and subsequent characters to lower case. Error
+  # if you try and move past the end of the buffer.
+  def capword(f : Bool, n : Int32, k : Int32) : Result
+    return Result::False if n < 0
+    return Result::False unless Files.checkreadonly
+
+    b = E.curw.buffer
+    while n > 0
+      n -= 1
+      # Skip forward to start of word.
+      while !inword
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	  # Hit end of buffer, return now.
+	  return Result::False
+	end
+      end
+
+      # Get first character of word, and convert it to uppercase.
+      c = getc
+      if c.lowercase?
+	putc(c.upcase)
+	b.lchange
+      end
+      if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	# Hit end of buffer, return now.
+	return Result::False
+      end
+
+      # Skip forward to end of word, converting characters
+      # as we go.
+      while inword
+	c = getc
+	if c.uppercase?
+	  putc(c.downcase)
+	  b.lchange
 	end
         if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
 	  # Hit end of buffer, return now.
@@ -276,6 +324,7 @@ module Word
     k.add(Kbd.meta('d'), cmdptr(delfword), "forw-del-word")
     k.add(Kbd.meta('u'), cmdptr(upperword), "upper-word")
     k.add(Kbd.meta('l'), cmdptr(lowerword), "lower-word")
+    k.add(Kbd.meta('c'), cmdptr(capword), "cap-word")
     k.add(Kbd.meta_ctrl('h'), cmdptr(delbword), "back-del-word")
   end
 
