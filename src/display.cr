@@ -40,7 +40,7 @@ class Display
 
       # Display visible lines.
       b.each_in_range(first, last) do |i, lp|
-        @tty.putline(i - first + w.toprow, 0, Tabs.detab(lp.text).readable)
+        @tty.putline(i - first + w.toprow, 0, lp.text.detab.readable)
       end
 
       # Fill remainder with blank lines.

@@ -164,12 +164,12 @@ module Misc
     end
 
     # Adjust the indentation of the current line.
-    i = nicol // Tabs.tabsize
+    i = nicol // String.tabsize
     s = ""
     if i != 0
       s = "\t" * i
     end
-    i = nicol % Tabs.tabsize
+    i = nicol % String.tabsize
     if i != 0
       s = s + (" " * i)
     end
