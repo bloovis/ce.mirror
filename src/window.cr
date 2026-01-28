@@ -341,11 +341,39 @@ class Window
     return Result::True
   end
 
+  # Adjusts windows so that they all have approximately
+  # the same height.
+  def self.balancewindows(f : Bool, n : Int32, k : Int32) : Result
+    nwind = @@list.size
+    if nwind == 1
+      Echo.puts("Only one window")
+      return Result::False
+    end
+    toprow = 0
+    size = (E.tty.nrow // nwind) - 1
+    @@list.each_with_index do |w, i|
+      if i == nwind - 1
+	size = E.tty.nrow - toprow - 2
+      end
+      if size < w.nrow
+	# Shrink this window.  Move the top line number down
+	# by the amount being shrunk to avoid scrolling the window.
+	n = w.nrow - size	# No. of rows to remove
+	w.line = [w.line + n, w.buffer.size - 1].min
+      end
+      w.toprow = toprow
+      w.nrow = size
+      toprow += size + 1
+    end
+    return Result::True
+  end
+
   # Binds keys for window commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('n'), cmdptr(nextwind), "forw-window")
     k.add(Kbd.ctlx('p'), cmdptr(prevwind), "back-window")
     k.add(Kbd.ctlx('2'), cmdptr(splitwind), "split-window")
     k.add(Kbd.ctlx('1'), cmdptr(onlywind), "only-window")
+    k.add(Kbd.ctlx('+'), cmdptr(balancewindows), "balance-windows")
   end
 end
