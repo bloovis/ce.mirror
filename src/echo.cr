@@ -59,20 +59,6 @@ module Echo
     prefix
   end
 
-  # Returns a readable version of the string *s*, where
-  # control characters are replaced by ^C, where C is
-  # the corresponding letter.
-  def readable(s : String) : String
-    s = s.gsub do |c|
-      if c.ord >= 0x01 && c.ord <= 0x1a
-	"^" + (c + '@'.ord).to_s
-      else
-	c
-      end
-    end
-    return s
-  end
-
   # Returns the screen width of the first *n* characters of string *s*,
   # where control characters are treated as having a width of two.
   def screenwidth(s : String, n : Int32) : Int32
@@ -104,7 +90,7 @@ module Echo
 		    block_given : Bool, &block) : Tuple(Result, String)
     tty = E.tty
     row = tty.nrow - 1
-    prompt = readable(prompt)
+    prompt = prompt.readable
     leftcol = prompt.size
     fillcols = tty.ncol - leftcol
     tty.putline(row, 0, prompt)
@@ -124,7 +110,7 @@ module Echo
     # Loop getting keys.
     until done
       # Redraw the ret buffer.
-      s = readable(ret)
+      s = ret.readable
       if s.size >= fillcols
 	# Answer is too big to fit on screen.  Just show the right portion that
 	# does fit.
@@ -217,7 +203,7 @@ module Echo
 	return {Result::False, ret}
       else
 	# Display the entire string before returning it.
-	s = readable(ret)
+	s = ret.readable
         tty.putline(row, leftcol, s)
 	tty.flush
 	return {Result::True, ret}
@@ -304,7 +290,7 @@ module Echo
   def echo(f : Bool, n : Int32, k : Int32) : Result
     result, ret = Echo.reply("Echo: ", nil)
     if result == Result::True
-      Echo.puts(readable(ret))
+      Echo.puts(ret.readable)
     end
     return result
   end

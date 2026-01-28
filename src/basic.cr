@@ -215,7 +215,7 @@ module Basic
   # the edge of the screen; it's more like display then
   # show position.
   private def setgoal(lp : Pointer(Line), offset : Int32)
-    @@curgoal = Display.screen_size(lp.text, offset)
+    @@curgoal = lp.text.screen_width(offset)
   end
 
   # This routine looks at the line *lp* and the current

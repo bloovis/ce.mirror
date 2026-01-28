@@ -41,7 +41,7 @@ module Misc
     end
     s = sprintf("[CH:0x%02X Line:%d Row:%d Col:%d %d%% of %d]",
 	[c, dot.l + 1, dot.l - w.line + w.toprow + 1,
-	 Display.screen_size(text, dot.o) + 1,
+	 text.screen_width(dot.o) + 1,
 	 percent, bytes])
     Echo.puts(s)
     return Result::True
@@ -139,24 +139,6 @@ module Misc
     return Result::True
   end
 
-  # Finds the first non-whitespace character in the string *s*, and returns a tuple
-  # containing these two values:
-  # * the on-screen column of that character (taking tabs into account)
-  # * the index of that character in *s*
-  # of that character.
-  def currentindent(s : String) : Tuple(Int32, Int32)
-    # Look for the first non-whitespace character.  If not found,
-    # pretend that the non-whitespace character is just past
-    # the end of the string.
-    i = s.index(/\S/)
-    if i.nil?
-      i = s.size
-    end
-
-    # Return the display size and the offset.
-    return {Display.screen_size(s, i), i}
-  end
-
   # Inserts a newline followed by the correct number of
   # tabs and spaces to get the desired indentation *nicol*. If *nonwhitepos*
   # (the offset of the first nonwhitepos in the current line) is
@@ -204,7 +186,7 @@ module Misc
     text = lp.text
 
     # Find indentation and the offset of the first non-whitespace 
-    nicol, i = currentindent(text)
+    nicol, i = text.current_indent
 
     # Look at the string following the whitespace in the
     # current line to determine the indentation of the next line.

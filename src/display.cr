@@ -9,28 +9,10 @@ class Display
   def initialize(@tty)
   end
 
-  # Returns the actual screen size of the first *len* characters of string *s,
-  # taking into account tabs and control characters.
-  def self.screen_size(s : String, len : Int32)
-    col = 0
-    tabsize = Tabs.tabsize
-    s.each_char_with_index do |c, i|
-      break if i >= len
-      if c == '\t'
-	col += tabsize - (col % tabsize)
-      elsif c.ord < 0x20
-	col += 2
-      else
-	col += 1	# FIXME: should be unicode width!
-      end
-    end
-    return col
-  end
-
   def update
     # Determine the actual screen column number of the dot.
     w, b, dot, lp = E.get_context
-    curcol = Display.screen_size(lp.text, dot.o)
+    curcol = lp.text.screen_width(dot.o)
 
     Window.each do |w|
       #STDERR.puts "update window for buffer #{w.buffer.name}: w.line #{w.line}, w.toprow #{w.toprow}, w.nrow #{w.nrow}"
@@ -58,7 +40,7 @@ class Display
 
       # Display visible lines.
       b.each_in_range(first, last) do |i, lp|
-        @tty.putline(i - first + w.toprow, 0, Tabs.detab(lp.text))
+        @tty.putline(i - first + w.toprow, 0, Tabs.detab(lp.text).readable)
       end
 
       # Fill remainder with blank lines.
