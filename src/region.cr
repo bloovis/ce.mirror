@@ -1,10 +1,11 @@
 # The `Region` class contains some commands for dealing with regions.
 class Region
 
-  property pos : Pos		# starting position of region
+  property start : Pos		# starting position of region
+  property finish : Pos		# ending position of region
   property size : Int32		# size of region in characters
 
-  # The `Region` constructor calculates the starting position
+  # The `Region` constructor calculates the starting and ending positions,
   # and size of the region between the current window's dot
   # and mark.
   def initialize
@@ -13,10 +14,11 @@ class Region
     bsize = b.size
 
     # If there is no mark in current window, display an error message
-    # and return a region that has an invalid Pos, i.e., pos.l is -1.
+    # and return a region that has invalid Pos members, i.e., pos.l is -1.
     if mark.l == -1
       Echo.puts("No mark in this window")
-      @pos = Pos.new(-1, 0)
+      @start = Pos.new(-1, 0)
+      @finish = Pos.new(-1, 0)
       @size = 0
       return
     end
@@ -24,7 +26,8 @@ class Region
     # Determine which is first: the mark or the dot?
     if mark.l < dot.l
       # Mark is before dot.
-      @pos = mark.dup
+      @start = mark.dup
+      @finish = dot.dup
       startl = mark.l
       starto = mark.o
       lp = b[startl]
@@ -32,28 +35,30 @@ class Region
 	# lp should never be nil, but if it is, return
 	# an empty region with an invalid Pos.
 	Echo.puts "Invalid line number #{startl}"
-	@pos.l = -1
+	@start.l = -1
+	@finish.l = -1
 	@size = 0
 	return
       end
-      endpos = dot
     elsif mark.l == dot.l
       # Dot and mark are one the same line.  This is the easy case:
       # set the distance between the two offsets and return.
       if dot.o < mark.o
-	@pos = dot.dup
+	@start = dot.dup
+	@finish = mark.dup
 	@size = mark.o - dot.o
       else
-	@pos = mark.dup
+	@start = mark.dup
+	@finish = dot.dup
 	@size = dot.o - mark.o
       end
       return
     else
       # Mark is after dot.
-      @pos = dot.dup
+      @start = dot.dup
+      @finish = mark.dup
       startl = dot.l
       starto = dot.o
-      endpos = mark
     end
 
     # Get region size, i.e. number of characters between startl/starto (inclusive)
@@ -62,8 +67,8 @@ class Region
     while startl + 1 < bsize
       startl += 1
       lp = lp.next
-      if startl == endpos.l
-	@size += endpos.o
+      if startl == @finish.l
+	@size += @finish.o
 	return
       else
 	@size += lp.text.size + 1
@@ -76,11 +81,11 @@ class Region
   # characters in the kill buffer.
   def self.killregion(f : Bool, n : Int32, k : Int32) : Result
     region = Region.new
-    if region.pos.l == -1
+    if region.start.l == -1
       return Result::False
     end
     Line.kdelete
-    E.curw.dot = region.pos
+    E.curw.dot = region.start.dup
     return b_to_r(Line.delete(region.size, !f))
   end
 
@@ -90,7 +95,7 @@ class Region
   # by a yank.
   def self.copyregion(f : Bool, n : Int32, k : Int32) : Result
     region = Region.new
-    if region.pos.l == -1
+    if region.start.l == -1
       return Result::False
     end
 
@@ -99,21 +104,21 @@ class Region
 
     # Get a pointer to the starting line of the region.
     b = E.curw.buffer
-    lp = b[region.pos.l]
-    raise "Invalid line number #{region.pos.l} in copyregion!" if lp.nil?
+    lp = b[region.start.l]
+    raise "Invalid line number #{region.start.l} in copyregion!" if lp.nil?
 
     while region.size > 0
-      if region.pos.o == lp.text.size
+      if region.start.o == lp.text.size
 	# End of line.
 	Line.kinsert("\n")
 	lp = lp.next
-	region.pos.o = 0
+	region.start.o = 0
 	region.size -= 1
       else
 	# Middle of line.
-	chunk = [lp.text.size - region.pos.o, region.size].min
-	Line.kinsert(lp.text[region.pos.o, chunk])
-	region.pos.o += chunk
+	chunk = [lp.text.size - region.start.o, region.size].min
+	Line.kinsert(lp.text[region.start.o, chunk])
+	region.start.o += chunk
 	region.size -= chunk
       end
     end
@@ -121,12 +126,52 @@ class Region
     return Result::True
   end
 
+  # Adjusts the indentation of the lines in the region by the number of
+  # spaces in the argument *n*, which can be negative to unindent.
+  def self.indentregion(f : Bool, n : Int32, k : Int32) : Result
+    region = Region.new
+    if region.start.l == -1
+      return Result::False
+    end
+    return Result::False unless Files.checkreadonly
+
+    # Get the first line in the region.
+    w = E.curw
+    b = w.buffer
+    lp = b[region.start.l]
+    return Result::False unless lp
+
+    # Loop through every line in the region.
+    while region.start.l != region.finish.l
+      # Calculate the current indentation of the line.
+      text = lp.text
+      col, offset = text.current_indent
+
+      # The new indentation is the old indentation + n, but
+      # cannot be less than zero.
+      new_indent = [col + n, 0].max
+
+      # Replace the line text with the proper indentation prefix,
+      # plus the part of the line after the leading whitespace.
+      lp.text = String.indent(new_indent) + text[offset..]
+      b.lchange
+
+      # Move the next line.  Stop if we're at the line buffer line.
+      break if lp == b.last_line
+      lp = lp.next
+      region.start.l += 1
+    end
+
+    # Set the dot to the end of the region.
+    w.dot = region.finish
+    return Result::True
+  end
+
   # Creates key bindings for all Region commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('w'), cmdptr(killregion), "kill-region")
     k.add(Kbd.meta('w'), cmdptr(copyregion), "copy-region")
+    k.add(Kbd.meta('+'), cmdptr(indentregion), "indent-region")
   end
 
 end
-
-

@@ -37,14 +37,14 @@ class String
 
   # Returns this String padded on the left with spaces to make
   # its size equal to *width*.
-  def pad_left(width : Int32)
+  def pad_left(width : Int32) : String
     pad = width - self.size
     " " * pad + self
   end
 
   # Returns this String padded on the right with spaces to make
   # the its size equal to *width*.
-  def pad_right(width : Int32)
+  def pad_right(width : Int32) : String
     pad = width - self.size
     self + " " * pad
   end
@@ -71,7 +71,7 @@ class String
   # Returns a readable version of the string, where
   # control characters (including Tab!) are replaced by ^C, where C is
   # the corresponding letter.
-  def readable
+  def readable : String
     s = self.gsub do |c|
       if c.ord >= 0x01 && c.ord <= 0x1a
 	"^" + (c + '@'.ord).to_s
@@ -99,9 +99,15 @@ class String
     return {self.screen_width(i), i}
   end
 
-  # Replaces tabs in a string with the equivalent number of spaces
-  def detab
+  # Replaces tabs in a string with the equivalent number of spaces.
+  def detab : String
     self.gsub(/([^\t]*)(\t)/) { $1 + " " * (@@tabsize - $1.size % @@tabsize) }
+  end
+
+  # Returns a string composed of tabs and spaces whose display size
+  # is equal to *col*.
+  def self.indent(col : Int32) : String
+    return ("\t" * (col // @@tabsize)) + (" " * (col % @@tabsize))
   end
 
 end

@@ -164,15 +164,7 @@ module Misc
     end
 
     # Adjust the indentation of the current line.
-    i = nicol // String.tabsize
-    s = ""
-    if i != 0
-      s = "\t" * i
-    end
-    i = nicol % String.tabsize
-    if i != 0
-      s = s + (" " * i)
-    end
+    s = String.indent(nicol)
     return b_to_r(Line.insert(s))
   end
 
