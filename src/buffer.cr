@@ -215,6 +215,28 @@ class Buffer
       return lp
     end
 
+    # See if the previous line is in the cache.  If it is,
+    # the line that follows it is the one we're looking for.
+    if n > 0
+      if lp = @lcache[n-1]?
+	#STDERR.puts "found previous line #{n-1} in cache"
+	lp = lp.next
+	@lcache[n] = lp
+	return lp
+      end
+    end
+
+    # See if the next line is in the cache.  If it is, the
+    # line that precedes it is the one we're looking for.
+    if n < self.size - 1
+      if lp = @lcache[n+1]?
+	#STDERR.puts "found next line #{n+1} in cache"
+	lp = lp.previous
+	@lcache[n] = lp
+	return lp
+      end
+    end
+
     # Line is not in the cache, must find it the hard way
     # and add it to the cache.
     lnno = -1
