@@ -1,4 +1,5 @@
 require "./pos"
+require "./util"
 
 # The `Undo` class holds undo information for a buffer.
 # The information consists of insert and delete records,
@@ -8,46 +9,58 @@ require "./pos"
 # off the undo stack, replays the operation# specified
 # by the records, then pushes the record onto the redo stack.
 class Undo
-  enum Type
+  enum Kind
     Insert
     Delete
-    StartGroup
-    EndGroup
+  end
+
+  @[Flags]
+  enum Uflags
+    Start
+    Finish
   end
 
   class Record
-    getter kind : Undo::Type
+    getter kind : Undo::Kind
+    property flags : Uflags
     getter pos : Pos
     getter s : String
 
-    def initialize(@kind, @pos, @s)
+    def initialize(@kind, @flags, @pos, @s)
     end
 
     def to_s : String
-      if @kind == Type::StartGroup || @kind == Type::EndGroup
-	return "kind #{@kind}"
-      else
-	return "kind #{@kind}, pos (#{@pos.l},#{@pos.o}), s '#{@s.readable}'"
-      end
+      return "kind #{@kind}, flags #{flags}, pos (#{@pos.l},#{@pos.o}), s '#{@s.readable}'"
     end
   end
 
-  @undo_stack : Array(Record)
-  @redo_stack : Array(Record)
-  @undoing : Bool
+  @undo_stack : Array(Record)	# Stack of undo records
+  @redo_stack : Array(Record)	# Stack of redo records
+  @undoing : Bool		# True if we're in the middle of an undo
+  @count : Int32		# Count of records seen since a group start
 
   def initialize
     @undo_stack = [] of Record
     @redo_stack = [] of Record
     @undoing = false
+    @count = -1			# -1 means a group start hasn't been seen yet
   end
 
-  def add(kind : Undo::Type, pos : Pos | Nil = nil, s : String | Nil = nil)
+  private def add(kind : Undo::Kind, pos : Pos | Nil = nil, s : String | Nil = nil)
     # Do nothing if we're in the middle of an undo operation.
     return if @undoing
 
     # Clear the redo stack.
     @redo_stack = [] of Record
+
+    # If this is the first record since a group start, mark it
+    # as the start of the group.
+    if @count == 0
+      flags = Uflags::Start
+      @count += 1
+    else
+      flags = Uflags::None
+    end
 
     # If pos and s were nil, replace them with invalid/empty values.
     if pos
@@ -59,35 +72,37 @@ class Undo
     s ||= ""
 
     # Push a new record onto the undo stack.
-    @undo_stack.push(Record.new(kind, pos, s))
+    @undo_stack.push(Record.new(kind, flags, pos, s))
   end
 
-  # Adds a start-group record.
+  # Indicate that we are starting an undo group by setting
+  # the record count to 0.
   def start
-    add(Type::StartGroup)
+    @count = 0
   end
 
-  # Adds an end-group record.
+  # Indicate that we are finishing an undo group by marking
+  # the last record seen as the end of the group.
   def finish
-    # If the previous record was a StartGroup, the group is empty,
-    # so delete it and don't add an Endgroup.
-    usize = @undo_stack.size
-    if usize > 0 && @undo_stack[usize - 1].kind == Type::StartGroup
-      @undo_stack.pop
-    else
-      add(Type::EndGroup)
+    if @count > 0
+      usize = @undo_stack.size
+      if usize > 0	# this should always be true, but check anyway
+	r = @undo_stack[usize - 1]
+	r.flags = r.flags | Uflags::Finish
+      end
       print	# FIXME: debug only
     end
+    @count = -1		# -1 means we haven't seen a group start yet
   end
 
   # Adds an insert-string record.
   def insert(pos : Pos, s : String)
-    add(Type::Insert, pos, s)
+    add(Kind::Insert, pos, s)
   end
 
   # Adds a delete-string record.
   def delete(pos : Pos, s : String)
-    add(Type::Delete, pos, s)
+    add(Kind::Delete, pos, s)
   end
 
   # Pops one or more undo records from the stack
@@ -115,14 +130,15 @@ end
 
 u = Undo.new
 u.start
-u.add(Undo::Type::Delete, Pos.new(1,2), "this string is being deleted")
-u.add(Undo::Type::Insert, Pos.new(3,4), "this string is being added")
+u.delete(Pos.new(1,2), "this string is being deleted")
+u.insert(Pos.new(3,4), "this string is being added")
+u.insert(Pos.new(7,8), "a string at line 7")
 u.finish
 u.print
 u.undo
 u.undo
 u.print
-u.add(Undo::Type::Insert, Pos.new(5,6), "another string is being added")
+u.insert(Pos.new(5,6), "another string is being added at line 5")
 u.print
 
 {% end %} # flag TEST
