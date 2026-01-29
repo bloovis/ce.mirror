@@ -1,6 +1,7 @@
 require "./ll"
 require "./line"
 require "./util"
+require "./undo"
 
 @[Flags]
 enum Bflags
@@ -22,6 +23,7 @@ class Buffer
   property nwind : Int32	# Number of windows using this buffer
   property lcache : LineCache	# Cache of line numbers
   property scache : Int32	# Cache of buffer size
+  property undo : Undo		# Undo stack
 
   # These properties are only used when a window is attached or detached
   # from this buffer.  When the last window is detached, we save that
@@ -66,6 +68,7 @@ class Buffer
     @dot = Pos.new(0, 0)
     @mark = Pos.new(-1, 0)	# -1 means not set
     @leftcol = 0
+    @undo = Undo.new
 
     # Add a blank line.
     @list.push(Line.alloc(""))

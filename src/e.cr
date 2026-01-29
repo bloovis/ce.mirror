@@ -227,9 +227,11 @@ class E
 
       # Call the function bound to the key.
       if @keymap.key_bound?(c)
+	E.curw.buffer.undo.start
 	@thisflag = Eflags::None
         @keymap.call_by_key(c, f, n)
 	@lastflag = @thisflag
+	E.curw.buffer.undo.finish
       else
 	Echo.puts "key #{@kbd.keyname(c)} not bound!"
       end

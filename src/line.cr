@@ -1,5 +1,6 @@
 require "./ll"
 require "./util"
+require "./undo"
 
 # The `Line` class is an object that contains a text string, and next and previous links
 # for inserting the line on a doubly-linked list.  The `Buffer` class holds
@@ -38,6 +39,9 @@ class Line
 
     # Get the current line.
     w, b, dot, lp = E.get_context
+
+    # Save undo information
+    b.undo.insert(dot, "\n")
 
     # Create a new line and populate it with the
     # portion of the old line that is being split off,
@@ -95,6 +99,11 @@ class Line
 
     # Insert the string in the current line.
     w, b, dot, lp = E.get_context
+
+    # Save undo information.
+    b.undo.insert(dot, s)
+
+    # Insert the text.
     lp.text = lp.text.insert(dot.o, s)
 
     # Mark the buffer as changed.
@@ -210,6 +219,7 @@ class Line
 	# If we're at the end of the line, merge this line
 	# with the next line.
 	return false unless Line.delnewline
+	b.undo.delete(dot, "\n")
 	if kflag
 	  return false unless Line.kinsert("\n")
 	end
@@ -218,10 +228,14 @@ class Line
 	# Mark the buffer as changed.
 	b.lchange
 
+	# Save undo information
+	deleted_text = text[dot.o, chars]
+	b.undo.delete(dot, deleted_text)
+
 	# Remove nchars characters from this line.
 	right = dot.o + chars
 	if kflag
-	  return false unless Line.kinsert(text[dot.o, chars])
+	  return false unless Line.kinsert(deleted_text)
 	end
 	lp.text = text[0, dot.o] + text[right, lsize - right]
 	#STDERR.puts "line with #{chars} chars removed: '#{lp.text}'"
