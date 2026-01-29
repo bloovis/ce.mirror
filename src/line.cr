@@ -258,6 +258,28 @@ class Line
     return Line.insertwithnl(st)
   end
 
+  # Gets the character at the dot.  If the dot is past
+  # the end of the line, returns a newline character (\n).
+  def self.getc : Char
+    w, b, dot, lp = E.get_context
+    if dot.o == lp.text.size
+      return '\n' 
+    else
+      return lp.text[dot.o]
+    end
+  end
+
+  # Replaces the character at the dot with `c` and moves
+  # the dot to the next character. If dot is at the end
+  # of the line, do nothing.
+  def self.putc(c : Char)
+    w, b, dot, lp = E.get_context
+    Line.delete(1, false)
+    Line.insert(c.to_s)
+  end
+
+  # Kill buffer methods.
+
   # Deletes all the text in the kill buffer.
   def self.kdelete
     E.thisflag = E.thisflag | Eflags::Kill	# This is a kill command

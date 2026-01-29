@@ -3,40 +3,10 @@ module Word
 
   extend self
 
-  # Gets the character at the dot.
-  def getc : Char
-    w, b, dot, lp = E.get_context
-    if dot.o == lp.text.size
-      return '\n' 
-    else
-      return lp.text[dot.o]
-    end
-  end
-
-  # Replaces the character at the dot with `c`.
-  # If dot is at the end of the line, do nothing.
-  def putc(c : Char)
-    w, b, dot, lp = E.get_context
-    text = lp.text
-    lsize = text.size
-
-    # Don't handle the perverse cases where the line is empty
-    # or the dot is past the end of the line.
-    return if dot.o == lsize || lsize == 0
-
-    # Replace the line text with *c* sandwiched in between
-    # the parts of the line before and after the dot.
-    if dot.o == 0
-      lp.text = c.to_s + text[1..]
-    else
-      lp.text = text[0 .. (dot.o - 1)] + c.to_s + text[dot.o + 1 ..]
-    end
-  end
-
   # Returns true if the character at the dot
   # is considered to be part of a word.
   def inword
-    return getc.to_s =~ /\w/
+    return Line.getc.to_s =~ /\w/
   end
 
   # Commands
@@ -122,14 +92,15 @@ module Word
       # Skip forward to end of word, converting characters
       # as we go.
       while inword
-	c = getc
+	c = Line.getc
 	if c.lowercase?
-	  putc(c.upcase)
+	  Line.putc(c.upcase)
 	  b.lchange
-	end
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
-	  # Hit end of buffer, return now.
-	  return Result::False
+	else
+	  if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	    # Hit end of buffer, return now.
+	    return Result::False
+	  end
 	end
       end
     end
@@ -159,14 +130,15 @@ module Word
       # Skip forward to end of word, converting characters
       # as we go.
       while inword
-	c = getc
+	c = Line.getc
 	if c.uppercase?
-	  putc(c.downcase)
+	  Line.putc(c.downcase)
 	  b.lchange
-	end
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
-	  # Hit end of buffer, return now.
-	  return Result::False
+	else
+	  if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	    # Hit end of buffer, return now.
+	    return Result::False
+	  end
 	end
       end
     end
@@ -194,27 +166,29 @@ module Word
       end
 
       # Get first character of word, and convert it to uppercase.
-      c = getc
+      c = Line.getc
       if c.lowercase?
-	putc(c.upcase)
+	Line.putc(c.upcase)
 	b.lchange
-      end
-      if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
-	# Hit end of buffer, return now.
-	return Result::False
+      else
+	if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	  # Hit end of buffer, return now.
+	  return Result::False
+	end
       end
 
       # Skip forward to end of word, converting characters
       # as we go.
       while inword
-	c = getc
+	c = Line.getc
 	if c.uppercase?
-	  putc(c.downcase)
+	  Line.putc(c.downcase)
 	  b.lchange
-	end
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
-	  # Hit end of buffer, return now.
-	  return Result::False
+	else
+	  if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	    # Hit end of buffer, return now.
+	    return Result::False
+	  end
 	end
       end
     end

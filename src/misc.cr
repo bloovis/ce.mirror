@@ -151,8 +151,8 @@ module Misc
 
     if linelen > 0 && nonwhitepos == linelen
       # If the current line is all whitespace, erase it.
-      lp.text = ""
       w.dot.o = 0
+      Line.delete(linelen, false)
 
       # Insert a newline if no numeric argument was provided.
       if !f

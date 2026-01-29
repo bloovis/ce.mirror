@@ -138,11 +138,13 @@ class Region
     # Get the first line in the region.
     w = E.curw
     b = w.buffer
+    w.dot = region.start
+    w.dot.o = 0
     lp = b[region.start.l]
     return Result::False unless lp
 
     # Loop through every line in the region.
-    while region.start.l != region.finish.l
+    while w.dot.l != region.finish.l
       # Calculate the current indentation of the line.
       text = lp.text
       col, offset = text.current_indent
@@ -153,17 +155,16 @@ class Region
 
       # Replace the line text with the proper indentation prefix,
       # plus the part of the line after the leading whitespace.
-      lp.text = String.indent(new_indent) + text[offset..]
+      Line.delete(offset, false)
+      Line.insert(String.indent(new_indent))
       b.lchange
 
       # Move the next line.  Stop if we're at the line buffer line.
       break if lp == b.last_line
       lp = lp.next
-      region.start.l += 1
+      w.dot.l += 1
+      w.dot.o = 0
     end
-
-    # Set the dot to the end of the region.
-    w.dot = region.finish
     return Result::True
   end
 
