@@ -95,47 +95,21 @@ module Misc
     w, b, dot, lp = E.get_context
     return Result::False unless Files.checkreadonly
 
-    # Copy the dot offset so that we can leave dot unchanged.
-    doto = dot.o
-
-    # Fetch the line text and its size
-    text = lp.text
-    lsize = lp.text.size
-
     # If dot is at the end of the line, back up one character.
-    if doto == lsize
-      doto -= 1
-      return Result::False if doto < 0
+    if w.dot.o == lp.text.size
+      return Result::False if w.dot.o == 0
+      w.dot.o -= 1
     end
 
     # Get characters to the right and left of the dot.
-    cr = text[doto, 1]
-    doto -= 1
-    return Result::False if doto < 0
-    cl = text[doto, 1]
+    cr = Line.getc
+    return Result::False if w.dot.o == 0
+    w.dot.o -= 1
+    cl = Line.getc
 
-    # Get the strings to the left and right of the chacters
-    # being twiddled.
-    if doto == 0
-      sl = ""
-    else
-      sl = text[0 .. doto-1]
-    end
-    if doto >= lsize - 1
-      sr = ""
-    else
-      sr = text[doto+2 .. -1]
-    end
-    lp.value.text = sl + cr + cl + sr
-
-    # Move the dot forward by one, unless we're at the end of the line.
-    if dot.o < lsize
-      dot.o += 1
-    end
-
-    # Mark the buffer as changed.
-    b.lchange
-
+    # Put the characters into the line in reverse order.
+    Line.putc(cr)
+    Line.putc(cl)
     return Result::True
   end
 

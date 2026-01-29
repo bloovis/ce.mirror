@@ -273,7 +273,6 @@ class Line
   # the dot to the next character. If dot is at the end
   # of the line, do nothing.
   def self.putc(c : Char)
-    w, b, dot, lp = E.get_context
     Line.delete(1, false)
     Line.insert(c.to_s)
   end
