@@ -78,7 +78,7 @@ module Word
     return Result::False if n < 0
     return Result::False unless Files.checkreadonly
 
-    b = E.curw.buffer
+    b = E.curb
     while n > 0
       n -= 1
       # Skip forward to start of word.
@@ -116,7 +116,7 @@ module Word
     return Result::False if n < 0
     return Result::False unless Files.checkreadonly
 
-    b = E.curw.buffer
+    b = E.curb
     while n > 0
       n -= 1
       # Skip forward to start of word.
@@ -154,7 +154,7 @@ module Word
     return Result::False if n < 0
     return Result::False unless Files.checkreadonly
 
-    b = E.curw.buffer
+    b = E.curb
     while n > 0
       n -= 1
       # Skip forward to start of word.

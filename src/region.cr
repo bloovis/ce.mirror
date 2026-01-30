@@ -103,7 +103,7 @@ class Region
     Line.kdelete
 
     # Get a pointer to the starting line of the region.
-    b = E.curw.buffer
+    b = E.curb
     lp = b[region.start.l]
     raise "Invalid line number #{region.start.l} in copyregion!" if lp.nil?
 

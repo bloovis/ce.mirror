@@ -139,11 +139,41 @@ module Files
     return visit_file(fname)
   end
 
+
+  # Asks for a file name, and write the
+  # contents of the current buffer to that file.
+  # Update the remembered file name and clear the
+  # buffer changed flag.  Unlike MicroEMACS, checks
+  # if the file exists and asks the user if this is OK.
+  def filewrite(f : Bool, n : Int32, k : Int32) : Result
+    result, fname = Echo.getfname("Write file: ")
+    return result if result != Result::True
+    fname = tilde_expand(fname)
+
+    # Check for existing file.
+    b = E.curb
+    if File.exists?(fname)
+      if Echo.yesno("Overwrite existing file") != Result::True
+	return Result::False
+      end
+    end
+
+    # Change the buffer filename and write the file.
+    b.filename = fname
+    if b.writeout
+      b.lchange(false)	# mark buffer as unchanged
+      return Result::True
+    else
+      return Result::False
+    end
+  end
+
   # Creates key bindings for all Files commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx_ctrl('q'), cmdptr(togglereadonly), "ins-self")
     k.add(Kbd.ctlx_ctrl('s'), cmdptr(filesave), "file-save")
     k.add(Kbd.ctlx_ctrl('v'), cmdptr(filevisit), "file-visit")
+    k.add(Kbd.ctlx_ctrl('w'), cmdptr(filewrite), "file-write")
   end
 
 end

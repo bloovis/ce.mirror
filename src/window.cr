@@ -314,7 +314,7 @@ class Window
   # destruction of a window makes a buffer
   # become undisplayed.
   def self.onlywind(f : Bool, n : Int32, k : Int32) : Result
-    #STDERR.puts("onlywind: buffer #{E.curw.buffer.name}")
+    #STDERR.puts("onlywind: buffer #{E.curb.name}")
     # Decrement the window count for each buffer owned
     # by a non-current window.
     Window.each do |w|

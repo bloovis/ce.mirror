@@ -127,7 +127,6 @@ class Buffer
   # Clears the buffer, and reads the file `filename` into the buffer.
   # Returns true if successful, false otherwise
   def readin(@filename) : Bool
-    return false unless File.exists?(@filename)
     @list.clear
 
     if !File.exists?(@filename)
@@ -502,7 +501,7 @@ class Buffer
   # Makes the next buffer in the buffer list the current buffer.
   def self.nextbuffer(f : Bool, n : Int32, k : Int32) : Result
     # Get the index of the current buffer.
-    i = @@blist.index(E.curw.buffer)
+    i = @@blist.index(E.curb)
     if i.nil?
       raise "Unknown buffer in Buffer.nextbuffer!"
     end
