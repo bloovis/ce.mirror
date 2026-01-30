@@ -75,7 +75,7 @@ class Undo
       prevs = prev.s
       if prev.kind == kind && prev.pos.l == pos.l && prev.pos.o + prevs.size == pos.o
 	prev.s = prevs + s
-	STDERR.puts("combined previous insert '#{prevs}' with '#{s}'")
+	#STDERR.puts("combined previous insert '#{prevs}' with '#{s}'")
 	return
       end
     end
