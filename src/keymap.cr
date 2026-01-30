@@ -51,6 +51,7 @@ class KeyMap
     proc = @n2p[name]?
     if proc
       @k2p[key] = proc
+      @k2n[key] = name
     else
       raise "Command '#{name}' does not exist!"
     end
@@ -64,13 +65,13 @@ class KeyMap
     @k2p.has_key?(key)
   end
 
-  # Calls the command method bound to the key *key*, passing it
-  # the arguments *f* and *n*, along with the *key* that invoked it.
-  def call_by_key(key : Int32, f : Bool, n : Int32) : Result
-    if key_bound?(key)
-      @k2p[key].call(f, n, key)
+  # Calls the command method bound to the key *bindkey*, passing it
+  # the arguments *f*, *n*, and *k*.
+  def call_by_key(bindkey : Int32, f : Bool, n : Int32, key : Int32) : Result
+    if key_bound?(bindkey)
+      return @k2p[bindkey].call(f, n, key)
     else
-      puts "No command bound to key #{key}"
+      #STDERR.puts "No command bound to key #{bindkey}"
       return Result::False
     end
   end

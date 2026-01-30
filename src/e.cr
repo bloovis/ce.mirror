@@ -232,11 +232,17 @@ class E
 	end
       end
 
-      # Call the function bound to the key.
-      if @keymap.key_bound?(c)
+      # Call the function bound to the key.  If there is no 
+      # binding, and the key is a Unicode character, use the
+      # binding for Space, i.e. ins-self.
+      bindc = c
+      if !@keymap.key_bound?(c) && c >= 0x80 && c <= 0x10ffff
+	bindc = ' '.ord
+      end
+      if @keymap.key_bound?(bindc)
 	E.curb.undo.start
 	@thisflag = Eflags::None
-        @keymap.call_by_key(c, f, n)
+        @keymap.call_by_key(bindc, f, n, c)
 	@lastflag = @thisflag
 	E.curb.undo.finish
       else

@@ -43,11 +43,14 @@ def self.makechart
   # "normal" buffers.
   b = Buffer.sysbuf
   b.clear
-
+  lines = [] of String
   E.keymap.k2n.each do |key, cmdname|
-    keyname = E.kbd.keyname(key).pad_right(16)
-    b.addline("#{keyname} #{cmdname}")
+    if cmdname != "ins-self"
+      keyname = E.kbd.keyname(key).pad_right(16)
+      lines << "#{keyname} #{cmdname}"
+    end
   end
+  lines.sort.each { |l| b.addline(l) }
   return true
 end
 

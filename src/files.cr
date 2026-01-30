@@ -170,7 +170,7 @@ module Files
 
   # Creates key bindings for all Files commands.
   def bind_keys(k : KeyMap)
-    k.add(Kbd.ctlx_ctrl('q'), cmdptr(togglereadonly), "ins-self")
+    k.add(Kbd.ctlx_ctrl('q'), cmdptr(togglereadonly), "toggle-readonly")
     k.add(Kbd.ctlx_ctrl('s'), cmdptr(filesave), "file-save")
     k.add(Kbd.ctlx_ctrl('v'), cmdptr(filevisit), "file-visit")
     k.add(Kbd.ctlx_ctrl('w'), cmdptr(filewrite), "file-write")
