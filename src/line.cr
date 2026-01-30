@@ -70,11 +70,11 @@ class Line
     # Mark the buffer as changed.
     b.lchange
 
-    # Adjust dot and mark in all windows that have the same buffer.
+    # Adjust dot, mark, and undo dot in all windows that have the same buffer.
     oldpos = dot.dup
     Window.each do |w1|
       if w1.buffer == b
-	[w1.dot, w1.mark].each do |pos|
+	[w1.dot, w1.mark, w1.udot].each do |pos|
 	  if pos.l == oldpos.l && pos.o >= oldpos.o
 	    pos.o -= oldpos.o
 	    pos.l += 1
@@ -109,7 +109,7 @@ class Line
     # Mark the buffer as changed.
     b.lchange
 
-    # Adjust dot and mark in all windows that have the same buffer.
+    # Adjust dot, mark, and undo dot in all windows that have the same buffer.
     oldpos = dot.dup
     Window.each do |w1|
       if w1.buffer == b
@@ -117,9 +117,10 @@ class Line
 	if dot.l == oldpos.l && (w1 == w || dot.o > oldpos.o)
 	  dot.o += n
 	end
-	mark = w1.mark
-	if mark.l == oldpos.l && mark.o > oldpos.o
-	  mark.o += n
+	[w1.mark, w1.udot].each do |pos|
+	  if pos.l == oldpos.l && pos.o > oldpos.o
+	    pos.o += n
+	  end
 	end
       end
     end
@@ -170,11 +171,11 @@ class Line
     # Unlink the next line.
     b.delete(nextl)
 
-    # Adjust dot and mark in all windows that have the same buffer.
+    # Adjust dot, mark, and undo dot in all windows that have the same buffer.
     oldpos = dot.dup
     Window.each do |w1|
       if w1.buffer == b
-	[w1.dot, w1.mark].each do |pos|
+	[w1.dot, w1.mark, w1.udot].each do |pos|
 	  if pos.l == oldpos.l + 1
 	    # This position is in the line that got deleted.
 	    pos.o += prevsize
@@ -241,11 +242,11 @@ class Line
 	#STDERR.puts "line with #{chars} chars removed: '#{lp.text}'"
 	n -= chars
 
-	# Adjust dot and mark in all windows that have the same buffer.
+	# Adjust dot, mark, and undo dot in all windows that have the same buffer.
 	oldpos = dot.dup
 	Window.each do |w1|
 	  if w1.buffer == b
-	    [w1.dot, w1.mark].each do |pos|
+	    [w1.dot, w1.mark, w1.udot].each do |pos|
 	      if pos.l == oldpos.l && pos.o >= oldpos.o
 		pos.o = [pos.o - chars, oldpos.o].max
 	      end

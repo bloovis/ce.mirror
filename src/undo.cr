@@ -132,12 +132,18 @@ class Undo
     b = w.buffer
     u = b.undo
     u.undoing = true
+    result = Result::True
+
+    # Set the "undo dot" to the current dot, in case
+    # it doesn't get set in the following loop.
+    w.udot = w.dot.dup
+    count = 0
     while true
       r = u.undo_stack.pop?
       if r.nil?
 	Echo.puts("Undo stack is empty")
-	u.undoing = false
-	return Result::False
+	result = Result::False
+	break
       end
       #STDERR.puts("Undoing #{r.to_s}")
       case r.kind
@@ -148,12 +154,33 @@ class Undo
         w.dot = r.pos.dup
 	Line.insertwithnl(r.s)
       end
+
+      # We'd like to set the dot to the value it had when it finished
+      # recording this group of undo records.  But because we're
+      # processing those records in reverse order, we need to set the
+      # dot to the value it has after processing the first of those
+      # records we encounter.  We can't set the dot right now because
+      # there may be more records to process.  So save the dot in the
+      # window object in an instance variable that the Line insert and
+      # delete methods will adjust.  Then copy it to dot when all done.
+      if count == 0
+	w.udot = w.dot.dup
+      end
+      count += 1
+
+      # Move the undo record to the redo stack.
       u.redo_stack.push(r)
       #STDERR.puts("After undoing, dot is (#{w.dot.l},#{w.dot.o}")
+
+      # Stop if this record was the start of a group
       break if r.flags.start?
     end
+
+    # Restore the dot.
+    w.dot = w.udot.dup
+
     u.undoing = false
-    return Result::True
+    return result
   end
 
   def self.bind_keys(k : KeyMap)

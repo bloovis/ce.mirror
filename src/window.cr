@@ -15,6 +15,7 @@ class Window
   property line : Int32		# buffer line number of the window's top line
   property dot : Pos		# current cursor position in buffer
   property mark : Pos		# mark position
+  property udot : Pos		# special undo position
   property savep : Pos		# saved line position for search
   property toprow : Int32	# top screen row of window
   property nrow : Int32		# number of screen rows in window
@@ -30,6 +31,7 @@ class Window
     @line = 0
     @dot = Pos.new()
     @mark = Pos.new(-1, 0)	# -1 means not set
+    @udot = Pos.new(-1, 0)	# -1 means not set
     @savep = Pos.new()
     @toprow = 0
     @nrow = 0
