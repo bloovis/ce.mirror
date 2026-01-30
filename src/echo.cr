@@ -244,17 +244,44 @@ module Echo
   # Prompts for a filename, and returns a tuple containing
   # the Result and the filename entered by the user
   def getfname(prompt : String) : Tuple(Result, String)
-    result, fname = do_reply(prompt, nil, true) do |s|
-      # Get the list of filenames that start with `s`.
-      a = Dir.glob([s + "*"], File::MatchOptions.glob_default | File::MatchOptions::DotFiles)
+    # Use the directory portion of the current buffer's filename
+    # as the default answer.
+    default = nil
+    b = E.curb
+    if b.filename != ""
+      dirname = File.dirname(b.filename)
+      if dirname != "."
+	default = File.dirname(b.filename) + "/"
+      end
+    end
+    result, fname = do_reply(prompt, default, true) do |s|
+      # Break the string into the directory and base names.
+      dirname = File.dirname(s)
+      basename = File.basename(s)
 
-      # If there's only one file, and it's a directory, present a list of all files
-      # in that directory
+      # Get the list of filenames in the directory that start with the basename.
+      a = [] of String
+      begin
+        f = Files.tilde_expand(dirname)
+        dir = Dir.new(f)
+	dir.each do |f|
+	  if f.starts_with?(basename)
+	    a << dirname + "/" + f
+	  end
+	end
+      rescue
+        # Unable to open the directory.  Return an empty set.
+      end
+
+      # If there's only one file, and it's a directory, present a two-element list
+      # with the same directory.  We need two to prevent reply from thinking
+      # it's the only choice and the command trying to open it.
       if a.size == 1
-	f = a[0]
+	f = Files.tilde_expand(a[0])
 	info = File.info?(f)
 	if info && info.directory?
-	  a = Dir.glob([f + "/*"], File::MatchOptions.glob_default | File::MatchOptions::DotFiles)
+	  f = f + "/"
+	  a = [f, f]
 	end
       end
       a

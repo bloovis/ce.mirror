@@ -401,6 +401,8 @@ class Window
       w.nrow = tty.nrow - w.toprow - 2
       E.disp.update
       Echo.puts("[New size #{tty.nrow} by #{tty.ncol}]")
+    else
+      E.disp.update
     end
     return Result::True
   end
