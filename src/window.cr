@@ -196,7 +196,10 @@ class Window
 
     # Find the first non-current window.
     Window.each do |w|
-      return w if w != E.curw
+      if w != E.curw
+	#STDERR.puts("popup: toprow #{w.toprow}, nrow #{w.nrow}, line #{w.line}")
+	return w
+      end
     end
     return nil	# Should never get here
   end

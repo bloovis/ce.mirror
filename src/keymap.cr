@@ -17,21 +17,29 @@ end
 
 # `KeyMap` implements a hash associating keystrokes with command methods.
 class KeyMap
+  @@unbound = -1	# negative key values are used for unbound commands
+
   alias CmdProc = Proc(Bool, Int32, Int32, Result)	# cmd(f, n, k) returns Result
-  property k2p = {} of Int32  => CmdProc
-  property n2p = {} of String => CmdProc
+  property k2p = {} of Int32  => CmdProc	# key  => command method
+  property n2p = {} of String => CmdProc	# name => command method
+  property k2n = {} of Int32  => String		# key  => name
 
   def initialize
   end
 
   # Adds a mapping for the key *key) to the command *proc*, whose
-  # name is *name*.
+  # name is *name*.  If the key is KRANDOM, the command is actually
+  # not bound to a key, so use a unique magic negative number for the key.
   def add(key : Int32 | Char, proc : CmdProc, name : String)
     if key.is_a?(Char)
       key = key.ord
+    elsif key == Kbd::RANDOM
+      key = @@unbound
+      @@unbound -= 1
     end
     @k2p[key] = proc
     @n2p[name] = proc
+    @k2n[key] = name
   end
 
   # Adds a mapping for the key *key* to the command with the name *name*,

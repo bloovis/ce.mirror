@@ -300,23 +300,28 @@ class Buffer
     end
   end
 
+  # Clear the line number and size caches
+  def clear_caches
+    @lcache.clear
+    @scache = -1
+  end
+
   # Deletes the line *lp* from the line list.
   def delete(lp : Pointer(Line))
     @list.delete(lp)
-    @lcache.clear
-    @scache = -1
+    clear_caches
   end
 
   # Inserts the line *lp1* after the line *lp* in the list.
   def insert_after(lp : Pointer(Line), lp1 : Pointer(Line))
     @list.insert_after(lp, lp1)
-    @lcache.clear
-    @scache = -1
+    clear_caches
   end
 
   # Appends the string *s* to the buffer as a separate line.
   def addline(s : String)
     @list.push(Line.alloc(s))
+    clear_caches
   end
 
   # This routine blows away all of the text
@@ -344,6 +349,9 @@ class Buffer
     @dot = Pos.new(0, 0)
     @mark = Pos.new(-1, 0)	# -1 means not set
     @leftcol = 0
+
+    # Clear the line number and size caches.
+    clear_caches
 
     # Update all windows viewing this buffer.
     Window.each do |w|
@@ -423,12 +431,12 @@ class Buffer
     b = sysbuf
     b.clear
     b.filename = ""
-    b.addline("C W          Size " + bhdr.pad_right(namesize)       + " File")
-    b.addline("- -          ---- " + bhdrdashes.pad_right(namesize) + " ----")
+    b.addline("C W  S          Size " + bhdr.pad_right(namesize)       + " File")
+    b.addline("- -  -          ---- " + bhdrdashes.pad_right(namesize) + " ----")
     Buffer.each do |b2|
       #STDERR.puts("makelist: b2 name #{b2.name}, nwind #{b2.nwind}")
       # Don't include system buffers in the list.
-      next if b2.flags.system?
+      #next if b2.flags.system?
 
       # Calculate number of bytes in this buffer.  FIXME: this
       # actually calculates characters, not bytes.
@@ -446,6 +454,7 @@ class Buffer
       end
       s = s +
 	  b2.nwind.to_s.pad_right(2) + " " +
+	  (b2.flags.system? ? "Y " : "N ") +
 	  bytes.to_s.pad_left(12) + " " +
 	  b2.name.pad_right(namesize) + " " + b2.filename
       b.addline(s)
@@ -467,7 +476,7 @@ class Buffer
 
       # Stop using the window's current buffer, and make it use
       # the system buffer.
-      #STDERR.puts("popsysbuf: setting popup buffer to #{b.name}")
+      #STDERR.puts("popsysbuf: setting popup buffer to #{b.name}, buffer size #{b.size}")
       w.buffer = b
     end
 

@@ -114,6 +114,13 @@ class E
     return self.instance.disp
   end
 
+  # Returns the Keymap object.
+  def self.keymap
+    return self.instance.keymap
+  end
+
+  # Constructor.
+
   def initialize
     # Create a terminal object.
     @tty = Terminal.new

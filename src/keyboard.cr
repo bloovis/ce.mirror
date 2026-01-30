@@ -161,6 +161,11 @@ class Kbd
   def keyname(k : Int32) : String
     k ||= '?'.ord
 
+    # Negative numbers are special, and are used for unbound commands.
+    if k < 0
+      return "Unbound-#{-k}"
+    end
+
     # Check for Ctrl-X and Meta prefixes.
     s = String.build do |s|
       s << ""
