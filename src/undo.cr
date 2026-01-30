@@ -23,8 +23,8 @@ class Undo
   class Record
     getter kind : Undo::Kind
     property flags : Uflags
-    getter pos : Pos
-    getter s : String
+    property pos : Pos
+    property s : String
 
     def initialize(@kind, @flags, @pos, @s)
     end
@@ -59,7 +59,25 @@ class Undo
       flags = Uflags::Start
       @count += 1
     else
+      # This is not the first record in a group, so set flags to 0.
       flags = Uflags::None
+    end
+
+    # If this is an insert, and it's one character, and not a newline,
+    # and the previous record is also an insert, and the previous record's
+    # position + its size equals this record's position (i.e., the inserts
+    # are contiguous), append this character to the previous record's string
+    # instead of creating a new record.  This saves space for recording
+    # simple strings of typing.
+    n = @undo_stack.size
+    if n > 0 && kind == Kind::Insert && s.size == 1 && s != "\n"
+      prev = @undo_stack[n-1]
+      prevs = prev.s
+      if prev.kind == kind && prev.pos.l == pos.l && prev.pos.o + prevs.size == pos.o
+	prev.s = prevs + s
+	STDERR.puts("combined previous insert '#{prevs}' with '#{s}'")
+	return
+      end
     end
 
     # If pos and s were nil, replace them with invalid/empty values.
