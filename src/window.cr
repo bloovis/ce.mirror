@@ -373,6 +373,38 @@ class Window
     return Result::True
   end
 
+  # Refreshes the display. A call is made to the
+  # `getsize` method in the terminal handler, which tries
+  # to reset "nrow" and "ncol". If the display
+  # changed size, arrange that everything is redone, then
+  # call `update` to fix the display. We do this so the
+  # new size can be displayed. In the normal case the
+  # call to `update` in event loop refreshes the screen,
+  # and all of the windows need not be recomputed.
+  # Note that when you get to the "display unusable"
+  # message, the screen will be messed up. If you make
+  # the window bigger again, and send another command,
+  # everything will get fixed!
+  def self.refreshscreen(f : Bool, n : Int32, k : Int32) : Result
+    tty = E.tty
+    oldnrow = tty.nrow
+    oldncol = tty.ncol
+    E.tty.getsize
+    if tty.nrow != oldnrow || tty.ncol != oldncol
+      # Find the bottom window and see if it can be resized
+      # without making it too small.
+      w = @@list[@@list.size - 1]
+      if tty.nrow < w.toprow + 3
+	Echo.puts("Display unusable")
+	return Result::False
+      end
+      w.nrow = tty.nrow - w.toprow - 2
+      E.disp.update
+      Echo.puts("[New size #{tty.nrow} by #{tty.ncol}]")
+    end
+    return Result::True
+  end
+
   # Binds keys for window commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('n'), cmdptr(nextwind), "forw-window")
@@ -380,5 +412,6 @@ class Window
     k.add(Kbd.ctlx('2'), cmdptr(splitwind), "split-window")
     k.add(Kbd.ctlx('1'), cmdptr(onlywind), "only-window")
     k.add(Kbd.ctlx('+'), cmdptr(balancewindows), "balance-windows")
+    k.add(Kbd.ctrl('l'), cmdptr(refreshscreen), "refresh")
   end
 end
