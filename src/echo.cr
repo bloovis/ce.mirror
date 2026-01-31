@@ -75,6 +75,46 @@ module Echo
     return width
   end
 
+  # Populates the system buffer with the completions information.
+  # Try to display it with more than one entry per line.  Returns
+  # true if successful, false otherwise.
+  private def show_completions(a : Array(String)) : Bool
+    # Grab the system buffer
+    b = Buffer.sysbuf
+    b.clear
+    b.filename = ""
+
+    # Find the largest name size.
+    namesize = 0
+    a.each { |name| namesize = [name.size, namesize].max }
+
+    # Find out how many names will fit in a screen line.
+    cols = E.tty.ncol // (namesize + 1)
+
+    # Construct lines of text using cols as the number of columns.
+    s = ""
+    col = 0
+    a.each_with_index do |name, i|
+      if col == cols - 1 || i == a.size - 1
+        s = s + " " + name
+	b.addline(s)
+	s = ""
+	col = 0
+      elsif col == 0
+        s = name.pad_right(namesize)
+	col = (col + 1) % cols
+      else
+	s = s + " " + name.pad_right(namesize)
+	col = (col + 1) % cols
+      end
+    end
+
+    # Pop up the buffer.
+    status = Buffer.popsysbuf
+    E.disp.update
+    return status
+  end
+
   # Writes *prompt* to the echo line, and reads back the response.
   # If *default* is not nil, use that as the initial value of the response,
   # which the user can edit as necessary.
@@ -170,8 +210,17 @@ module Echo
 	    ret = a[0]
 	    break	# only one choice, so pretend that Enter was pressed
 	  else
-	    ret = common_prefix(a)
-	    pos = ret.size
+	    prefix = common_prefix(a)
+	    if prefix.size > 0
+	      lastk = Kbd::RANDOM if prefix.size > ret.size
+	      ret = prefix
+	      pos = ret.size
+	    end
+	  end
+	  if lastk == Kbd.ctrl('i')
+	    # Pop up the system buffer showing the possible completions.
+	    show_completions(a)
+	    lastk = Kbd::RANDOM
 	  end
 	else
 	  # No completion block provided, so treat the Tab
@@ -266,22 +315,43 @@ module Echo
         dir = Dir.new(f)
 	dir.each do |f|
 	  if f.starts_with?(basename)
-	    a << dirname + "/" + f
+	    #STDERR.puts("Adding #{dirname}/#{f}")
+	    if dirname == "/"
+	      a << "/" + f	# Avoid multiple /
+	    else
+	      a << dirname + "/" + f
+	    end
 	  end
 	end
       rescue
+        #STDERR.puts("Unable to open #{dirname}")
         # Unable to open the directory.  Return an empty set.
       end
 
-      # If there's only one file, and it's a directory, present a two-element list
-      # with the same directory.  We need two to prevent reply from thinking
-      # it's the only choice and the command trying to open it.
+      # If there's only one file, and it's a directory, present a list of files
+      # in that directory.
       if a.size == 1
-	f = Files.tilde_expand(a[0])
-	info = File.info?(f)
+	name = Files.tilde_expand(a[0])
+	info = File.info?(name)
+	#STDERR.puts("Checking info for #{name}")
 	if info && info.directory?
-	  f = f + "/"
-	  a = [f, f]
+	  begin
+	    dir = Dir.new(name)
+	    a = [] of String	# Clear the list
+	    dir.each do |f|
+	      if f != "." && f != ".."
+		#STDERR.puts("Found #{f} in #{name}, adding #{name}/#{f}")
+		a << name + "/" + f
+	      end
+	    end
+	  rescue
+	    # Can't open the directory.  Make a two-element list
+	    # with just that directory name repeated twice.
+	    # We need two elements to prevent the completion code
+	    # in treating the directory name as the sole choice.
+	    dirname = name + "/"
+	    a = [dirname, dirname]
+	  end
 	end
       end
       a
