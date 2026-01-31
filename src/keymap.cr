@@ -15,6 +15,14 @@ macro cmdptr(name)
   ->{{name}}(Bool, Int32, Int32)
 end
 
+# Runs the Ruby command *name*, passing in the usual command
+# parameters *f*, *n*, and *k*, and returning its result.
+# This is just the scaffold for a future working implementation.
+def runruby(name : String, f : Bool, n : Int32, k : Int32) : Result
+  Echo.puts("runruby: name #{name}, f #{f}, n #{n}, k 0x#{k.to_s(16)}")
+  return Result::True
+end
+
 # `KeyMap` implements a hash associating keystrokes with command methods.
 class KeyMap
   @@unbound = -1	# negative key values are used for unbound commands
@@ -55,6 +63,13 @@ class KeyMap
     else
       raise "Command '#{name}' does not exist!"
     end
+  end
+
+  # Binds the key *key* to the Ruby command *name*.
+  def addruby(key : Int32, name : String)
+    add(key, ->(f : Bool, n : Int32, k : Int32) {
+             runruby(name, f, n, key) },
+	name)
   end
 
   # Returns true if there is a command bound to the key *key*.
