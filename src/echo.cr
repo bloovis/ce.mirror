@@ -290,6 +290,14 @@ module Echo
     return {bufn.size == 0 ? Result::False : Result::True, bufn}
   end
 
+  # Returns true if the file *filename* is a directory,
+  # false otherwise.
+  private def isdir(filename : String) : Bool
+    info = File.info?(filename)
+    #STDERR.puts("Checking info for #{filename}")
+    return !info.nil? && info.directory?
+  end
+
   # Prompts for a filename, and returns a tuple containing
   # the Result and the filename entered by the user
   def getfname(prompt : String) : Tuple(Result, String)
@@ -300,13 +308,22 @@ module Echo
     if b.filename != ""
       dirname = File.dirname(b.filename)
       if dirname != "."
-	default = File.dirname(b.filename) + "/"
+	default = dirname + "/"
       end
     end
     result, fname = do_reply(prompt, default, true) do |s|
+      #STDERR.puts("completion block called with #{s}")
       # Break the string into the directory and base names.
-      dirname = File.dirname(s)
-      basename = File.basename(s)
+      # But if the name ends with a slash, treat it as
+      # the directory name.
+      if s[-1] == '/'
+	dirname = s[0...-1]
+	basename = ""
+      else
+	dirname = File.dirname(s)
+	basename = File.basename(s)
+      end
+      #STDERR.puts("dirname #{dirname}, base #{basename}")
 
       # Get the list of filenames in the directory that start with the basename.
       a = [] of String
@@ -315,12 +332,17 @@ module Echo
         dir = Dir.new(f)
 	dir.each do |f|
 	  if f.starts_with?(basename)
-	    #STDERR.puts("Adding #{dirname}/#{f}")
 	    if dirname == "/"
-	      a << "/" + f	# Avoid multiple /
+	      fullname = "/" + f	# Avoid multiple /
 	    else
-	      a << dirname + "/" + f
+	      fullname = dirname + "/" + f
 	    end
+	    #STDERR.puts("fullname is #{fullname}")
+	    if isdir(fullname) && fullname[-1] != '/'
+	      #STDERR.puts("Adding slash to #{fullname}")
+	      fullname = fullname + "/"
+	    end
+	    a << fullname
 	  end
 	end
       rescue
@@ -332,16 +354,23 @@ module Echo
       # in that directory.
       if a.size == 1
 	name = Files.tilde_expand(a[0])
-	info = File.info?(name)
-	#STDERR.puts("Checking info for #{name}")
-	if info && info.directory?
+	if name[-1] == '/'
+	  # Remove trailing slash
+	  name = name[0...-1]
+	end
+	if isdir(name)
 	  begin
 	    dir = Dir.new(name)
 	    a = [] of String	# Clear the list
 	    dir.each do |f|
 	      if f != "." && f != ".."
-		#STDERR.puts("Found #{f} in #{name}, adding #{name}/#{f}")
-		a << name + "/" + f
+		fullname = name + "/" + f
+		#STDERR.puts("single dir #{name}: fullname #{fullname}")
+		if isdir(fullname) && fullname[-1] != '/'
+		  fullname = fullname + "/"
+		  #STDERR.puts("single dir #{name}: adding slash to fullname #{fullname}")
+		end
+		a << fullname
 	      end
 	    end
 	  rescue
@@ -349,8 +378,9 @@ module Echo
 	    # with just that directory name repeated twice.
 	    # We need two elements to prevent the completion code
 	    # in treating the directory name as the sole choice.
-	    dirname = name + "/"
+	    dirname = name # + "/"
 	    a = [dirname, dirname]
+	    #STDERR.puts("Adding two-element #{dirname}")
 	  end
 	end
       end
