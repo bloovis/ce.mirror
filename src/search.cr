@@ -60,15 +60,28 @@ module Search
     while true
       # If searching forward, copy the part of the line after the dot;
       # otherwise copy the part of the line before the dot.
+      #
+      # There are two special cases that are a bit perverse: patterns that
+      # start with ^ or end with $.  These match the beginning and end
+      # of a string, but if we provide a string to match that is a substring
+      # of the current line, these special characters will match the
+      # beginning and end of that substring, not the full line.  To fix
+      # these cases, we must move the dot forward or back to the next or previous
+      # line if the dot offset would have caused a substring to be used.
+      s = nil
       if forward
-	s = lp.text[dot.o..]
+	if dot.o == 0 || @@pat[0] != '^'
+	  s = lp.text[dot.o..]
+	end
       else
-	s = lp.text[0, dot.o]
+	if dot.o == lp.text.size || @@pat[-1] != '$'
+	  s = lp.text[0, dot.o]
+	end
       end
 
       # Test the line portion against the pattern.
       break unless regex = @@regpat
-      if m = regex.match(s)
+      if s && (m = regex.match(s))
 	# There is a match.  If searching forward, put the dot
 	# after the matched string; otherwise put the dot before.
 	@@regmatch = m
