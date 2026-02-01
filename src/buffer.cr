@@ -422,7 +422,7 @@ class Buffer
     bhdrsize = bhdr.size
     bhdrdashes = "-" * bhdrsize
     Buffer.each do |b|
-      next if b.flags.system?
+      #next if b.flags.system?
       namesize = [b.name.size, namesize, bhdrsize].max
     end
 

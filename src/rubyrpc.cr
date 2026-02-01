@@ -216,7 +216,8 @@ module RubyRPC
 
   def get_line(id : Int32) : String
     w, b, dot, lp = E.get_context
-    return make_normal_response(0, lp.text, id)
+    # Append a newline if this is not the last line.
+    return make_normal_response(0, lp.text + (lp == b.last_line ? "" : "\n"), id)
   end
 
   def get_lineno(id : Int32) : String
@@ -320,11 +321,12 @@ module RubyRPC
 
     # FIXME: when modes are implemented, do something special for them.
     k = E.keymap
-    if k.name_bound?(name)
+    if !k.name_bound?(name)
       message = "No such command #{name}"
       Echo.puts(message)
       return make_error_response(ERROR_METHOD, message, id)
     end
+    dprint("set_bind: binding #{key} to #{name}")
     k.add_dup(key, name)
     return make_normal_response(0, "", id)
   end
@@ -583,9 +585,8 @@ module RubyRPC
   # parameters *f*, *n*, and *k*, and returning its result.
   # This is just the scaffold for a future working implementation.
   def rubycall(name : String, f : Bool, n : Int32, k : Int32) : Result
-    # FIXME: do something real here!
-    Echo.puts("runruby: name #{name}, f #{f}, n #{n}, k 0x#{k.to_s(16)}")
-    return Result::True
+    dprint("rubycall: calling #{name}")
+    return call_server(name, f, n, k, [""])
   end
 
   # Evaluates a line of Ruby code
@@ -608,7 +609,7 @@ module RubyRPC
   # The Ruby function *bame* takes a single parameter, which
   # is the numeric argument to the command, or nil
   # if there is no argument.
-  def rubycommand(f : Bool, n : Int32, k : Int32) : Result
+  def rubycommand(f : Bool, n : Int32, key : Int32) : Result
     result, name = Echo.reply("Ruby function: ", nil)
     return result if result != Result::True
     k = E.keymap
@@ -620,9 +621,10 @@ module RubyRPC
     # Bind the command to an unused key.  Eventually
     # the Ruby extension will call E.bind to bind
     # the method to a key.
+    dprint("rubycommand: binding #{key} to #{name}")
     k.add(Kbd::RANDOM,
 	  ->(f : Bool, n : Int32, k : Int32) {
-             rubycall(name, f, n, k) },
+             rubycall(name, f, n, key) },
 	  name)
     return Result::True
   end
