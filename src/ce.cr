@@ -14,6 +14,7 @@ require "./word"
 require "./region"
 require "./search"
 require "./undo"
+require "./rubyrpc"
 require "./e"
 
 def exception(f : Bool, n : Int32, k : Int32) : Result
@@ -97,6 +98,9 @@ begin
   Region.bind_keys(k)
   Search.bind_keys(k)
   Undo.bind_keys(k)
+
+  # Start the Ruby process
+  RubyRPC.start_server
 
   e.process_command_line
   e.event_loop
