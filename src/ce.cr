@@ -98,11 +98,15 @@ begin
   Region.bind_keys(k)
   Search.bind_keys(k)
   Undo.bind_keys(k)
+  RubyRPC.bind_keys(k)
 
   # Start the Ruby process
-  RubyRPC.start_server
+  Echo.puts("Unable to start Ruby server") unless RubyRPC.init_server
 
+  # Load files specified on the command line.
   e.process_command_line
+
+  # Enter the event loop, getting keys and responding to them.
   e.event_loop
 rescue ex
   LibNCurses.echo

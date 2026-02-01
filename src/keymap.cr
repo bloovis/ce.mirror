@@ -60,7 +60,7 @@ class KeyMap
   # Binds the key *key* to the Ruby command *name*.
   def addruby(key : Int32, name : String)
     add(key, ->(f : Bool, n : Int32, k : Int32) {
-             RubyRPC.command(name, f, n, key) },
+             RubyRPC.rubycall(name, f, n, key) },
 	name)
   end
 
@@ -94,7 +94,7 @@ class KeyMap
     if name_bound?(name)
       @n2p[name].call(f, n, k)
     else
-      puts "No command called #{name}"
+      Echo.puts("Unknown command #{name}")
       return Result::False
     end
   end
