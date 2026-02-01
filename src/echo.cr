@@ -4,6 +4,7 @@ module Echo
 
   @@noecho = false
   @@empty = true
+  @@replyq = [] of String
 
   extend self
 
@@ -128,6 +129,9 @@ module Echo
   # * Abort - user aborted the response with Ctrl-G
   private def do_reply(prompt : String, default : String | Nil,
 		    block_given : Bool, &block) : Tuple(Result, String)
+    if ret = replyq_get
+      return {Result::True, ret}
+    end
     tty = E.tty
     row = tty.nrow - 1
     prompt = prompt.readable
@@ -409,6 +413,23 @@ module Echo
 	return Result::False if c == 'n'
       end
     end
+  end
+
+  # Adds another string to the reply queue.
+  def replyq_put(s : String)
+    @@replyq << s
+  end
+
+  # Clears the reply queue.
+  def replyq_clear
+    @@replyq = [] of String
+  end
+
+  # Returns the next string from the reply queue, or
+  # nil if the reqply queue is empty.
+
+  def replyq_get : String | Nil
+    return @@replyq.shift?
   end
 
   # Commands.

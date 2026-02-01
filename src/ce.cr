@@ -78,11 +78,6 @@ begin
   k.add(Kbd.ctlx_ctrl('k'), cmdptr(wallchart), "display-bindings")
   k.add_dup('q', "quit")
 
-  # Test of Ruby binding.  Ruby calls are not implemented yet, 
-  # so these only display information on the echo line.
-  k.addruby(Kbd.ctlx('d'), "insdate")
-  k.addruby(Kbd.ctlx('x'), "xact")
-
   # The following bindings are for testing only!  Delete when
   # editor is fully implemented.
   k.add(Kbd.ctlx('e'), cmdptr(exception), "raise-exception")

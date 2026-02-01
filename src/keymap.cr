@@ -27,7 +27,7 @@ class KeyMap
   def initialize
   end
 
-  # Adds a mapping for the key *key) to the command *proc*, whose
+  # Adds a mapping for the key *key* to the command *proc*, whose
   # name is *name*.  If the key is KRANDOM, the command is actually
   # not bound to a key, so use a unique magic negative number for the key.
   def add(key : Int32 | Char, proc : CmdProc, name : String)
@@ -57,13 +57,6 @@ class KeyMap
     end
   end
 
-  # Binds the key *key* to the Ruby command *name*.
-  def addruby(key : Int32, name : String)
-    add(key, ->(f : Bool, n : Int32, k : Int32) {
-             RubyRPC.rubycall(name, f, n, key) },
-	name)
-  end
-
   # Returns true if there is a command bound to the key *key*.
   def key_bound?(key : Int32) : Bool
     if key.is_a?(Char)
@@ -83,7 +76,7 @@ class KeyMap
     end
   end
 
-  # Returns true if a command named *name* is bound to a key.
+  # Returns true if there is a command *name* in the name-to-proc table.
   def name_bound?(name : String) : Bool
     @n2p.has_key?(name)
   end

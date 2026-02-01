@@ -181,12 +181,16 @@ module RubyRPC
     prefix = get_int(params, "prefix")
     key = get_int(params, "key")
 
-    # FIXME: handle strings array by putting them into the replyq.
+    # Put each string in the strings array into the reply queue.
     strings = params["strings"]?
     if strings
       dprint("handle_cmd: strings:")
       a = strings.as_a
-      a.each {|s| dprint("  #{s.as_s}")}
+      a.each do |s|
+        str = s.as_s
+	dprint("  #{str}")
+	Echo.replyq_put(str)
+      end
     end
 
     # Call the MicroEMACS command `name`.
@@ -300,7 +304,8 @@ module RubyRPC
   end
 
   def set_lineno(id : Int32, lineno : Int32) : String
-    if lineno < E.curb.size
+    lineno -= 1		# Internally we use zero-based line numbers
+    if lineno >= 0 && lineno < E.curb.size
       E.curw.dot = Pos.new(lineno, 0)
     end
     return make_normal_response(0, "", id)
@@ -311,10 +316,16 @@ module RubyRPC
       return make_error_response(ERROR_PARAMS, "missing command name for set_bind", id)
     end
     mode = str[0]
-    cmd = str[1..]
+    name = str[1..]
 
     # FIXME: when modes are implemented, do something special for them.
-    E.keymap.addruby(key, cmd)
+    k = E.keymap
+    if k.name_bound?(name)
+      message = "No such command #{name}"
+      Echo.puts(message)
+      return make_error_response(ERROR_METHOD, message, id)
+    end
+    k.add_dup(key, name)
     return make_normal_response(0, "", id)
   end
 
@@ -365,13 +376,7 @@ module RubyRPC
     # Clear the system buffer, then fill it with the lines in `str`.
     b = Buffer.sysbuf
     b.clear
-    str.split_lines do |s|
-      if s == "\n"
-	b.addline("")
-      else
-	b.addline(s)
-      end
-    end
+    str.lines.each {|s| b.addline(s)}
 
     # Display the system buffer.
     Buffer.popsysbuf
@@ -467,6 +472,9 @@ module RubyRPC
       dprint("code: #{code}") if code
       message = h["message"].as_s?
       dprint("message: #{message}") if message
+      if code == ERROR_EXCEPTION
+	set_popup(0, message)
+      end
     else
       dprint("Unable to get error from JSON")
       return false
@@ -575,6 +583,7 @@ module RubyRPC
   # parameters *f*, *n*, and *k*, and returning its result.
   # This is just the scaffold for a future working implementation.
   def rubycall(name : String, f : Bool, n : Int32, k : Int32) : Result
+    # FIXME: do something real here!
     Echo.puts("runruby: name #{name}, f #{f}, n #{n}, k 0x#{k.to_s(16)}")
     return Result::True
   end
@@ -586,15 +595,47 @@ module RubyRPC
 
   # Commands
 
+  # Prompts for a string, and evaluate the string using the
+  # Ruby interpreter.  Return TRUE if the string was evaluated
+  # successfully, and FALSE if an exception occurred.
   def rubystring(f : Bool, n : Int32, k : Int32) : Result
     result, string = Echo.reply("Ruby code: ", nil)
     return result if result != Result::True
     return runruby(string)
   end
 
+  # Defines a new MicroEMACS command that invokes a Ruby function.
+  # The Ruby function *bame* takes a single parameter, which
+  # is the numeric argument to the command, or nil
+  # if there is no argument.
+  def rubycommand(f : Bool, n : Int32, k : Int32) : Result
+    result, name = Echo.reply("Ruby function: ", nil)
+    return result if result != Result::True
+    k = E.keymap
+    if k.name_bound?(name)
+      Echo.puts("#{name} is already defined")
+      return Result::False
+    end
+
+    # Bind the command to an unused key.  Eventually
+    # the Ruby extension will call E.bind to bind
+    # the method to a key.
+    k.add(Kbd::RANDOM,
+	  ->(f : Bool, n : Int32, k : Int32) {
+             rubycall(name, f, n, k) },
+	  name)
+    return Result::True
+  end
+
   # Creates key bindings for all RubyRPC commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd::F6, cmdptr(rubystring), "ruby-string")
+    k.add(Kbd::RANDOM, cmdptr(rubycommand), "ruby-command")
+
+    # Test of Ruby binding.  rubycall is not fully implemented yet, 
+    # so these only display information on the echo line.
+    #k.addruby(Kbd.ctlx('d'), "insdate")
+    #k.addruby(Kbd.ctlx('x'), "xact")
   end
 
 end
