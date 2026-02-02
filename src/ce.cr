@@ -15,6 +15,7 @@ require "./region"
 require "./search"
 require "./undo"
 require "./rubyrpc"
+require "./extend"
 require "./e"
 
 def exception(f : Bool, n : Int32, k : Int32) : Result
@@ -94,6 +95,7 @@ begin
   Search.bind_keys(k)
   Undo.bind_keys(k)
   RubyRPC.bind_keys(k)
+  Extend.bind_keys(k)
 
   # Start the Ruby process
   Echo.puts("Unable to start Ruby server") unless RubyRPC.init_server

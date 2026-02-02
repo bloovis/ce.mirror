@@ -127,7 +127,7 @@ module Echo
   # * False - user entered an empty response
   # * True  - user entered a non-empty response
   # * Abort - user aborted the response with Ctrl-G
-  private def do_reply(prompt : String, default : String | Nil,
+  def reply_with_completions(prompt : String, default : String | Nil,
 		    block_given : Bool, &block) : Tuple(Result, String)
     if ret = replyq_get
       return {Result::True, ret}
@@ -264,15 +264,15 @@ module Echo
     end
   end
 
-  # Calls `do_reply` without a completion block.
+  # Calls `reply_with_completions` with a dummy completion block.
   def reply(prompt : String, default : String | Nil) : Tuple(Result, String)
-    do_reply(prompt, default, false) {[""]}
+    reply_with_completions(prompt, default, false) {[""]}
   end
 
   # Prompts for a buffer name, and returns a tuple containing
   # the Result and the name entered by the user
   def getbufn : Tuple(Result, String)
-    result, bufn = do_reply("Use buffer [#{E.oldbufn}]: ", nil, true) do |s|
+    result, bufn = reply_with_completions("Use buffer [#{E.oldbufn}]: ", nil, true) do |s|
       a = [] of String
       Buffer.each do |b|
         if b.name.starts_with?(s)
@@ -315,7 +315,7 @@ module Echo
 	default = dirname + "/"
       end
     end
-    result, fname = do_reply(prompt, default, true) do |s|
+    result, fname = reply_with_completions(prompt, default, true) do |s|
       #STDERR.puts("completion block called with #{s}")
       # Break the string into the directory and base names.
       # But if the name ends with a slash, treat it as
@@ -443,7 +443,7 @@ module Echo
     return result
   end
 
-  # Creates key bindings for all Misc commands.
+  # Creates key bindings for all Echo commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx_ctrl('m'), cmdptr(echo), "echo")
   end
