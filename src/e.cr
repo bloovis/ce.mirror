@@ -280,6 +280,7 @@ class E
         @keymap.call_by_key(bindc, f, n, c)
 	@lastflag = @thisflag
 	E.curb.undo.finish
+	Echo.replyq_clear
       else
 	Echo.puts "key #{@kbd.keyname(c)} not bound!"
       end

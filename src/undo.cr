@@ -46,6 +46,9 @@ class Undo
     @count = -1			# -1 means a group start hasn't been seen yet
   end
 
+  # Adds a record of the specified *kind* to the undo stack.
+  # If the position *pos* or the string *s* are nil, uses
+  # default invalid or empty values instead.
   private def add(kind : Undo::Kind, pos : Pos | Nil = nil, s : String | Nil = nil)
     # Do nothing if we're in the middle of an undo operation.
     return if @undoing
@@ -93,7 +96,7 @@ class Undo
     @undo_stack.push(Record.new(kind, flags, pos, s))
   end
 
-  # Indicate that we are starting an undo group by setting
+  # Indicates that we are starting an undo group by setting
   # the record count to 0.
   def start
     @count = 0
@@ -101,7 +104,7 @@ class Undo
     #print
   end
 
-  # Indicate that we are finishing an undo group by marking
+  # Indicates that we are finishing an undo group by marking
   # the last record seen as the end of the group.
   def finish
     if @count > 0
@@ -141,9 +144,9 @@ class Undo
   # Commands.
 
   # Pops one or more undo records from the stack
-  # and carry out their changes.  If the
+  # and carries out their changes.  If the
   # first record popped is an end-group record,
-  # keep popping and undoing until a start-group
+  # keeps popping and undoing until a start-group
   # record is found.
   def self.undo(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
@@ -201,6 +204,7 @@ class Undo
     return result
   end
 
+  # Binds some Undo-related commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('u'), cmdptr(undo), "undo")
     k.add_dup(Kbd::F5, "undo")
