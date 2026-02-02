@@ -123,7 +123,7 @@ module RubyRPC
   #
   # Example JSON:
   #   {"id":4,"result":0,"string":"success: id 4, method callback"}
-  def make_normal_response(result : Int32, string : String, id : Int32) : String
+  def make_normal_response(result : Int32, string : String | Nil, id : Int32) : String
     string = JSON.build do |json|
       json.object do
 	json.field "jsonrpc", "2.0"
@@ -257,7 +257,11 @@ module RubyRPC
       return make_error_response(ERROR_PARAMS, message, id)
     end
     result, str = Echo.reply(prompt, nil)
-    return make_normal_response(result == Result::True ? 1 : 0, str, id)
+    if result == Result::Abort
+      return make_normal_response(0, nil, id)
+    else
+      return make_normal_response(0, str, id)
+    end
   end
 
   def get_bflag(id : Int32) : String
