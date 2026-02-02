@@ -562,7 +562,7 @@ class Buffer
 
   # Binds keys for buffer commands.
   def self.bind_keys(k : KeyMap)
-    k.add(Kbd::F8, cmdptr(nextbuffer), "forw-window")
+    k.add(Kbd::F8, cmdptr(nextbuffer), "next-buffer")
     k.add(Kbd.ctlx('b'), cmdptr(usebuffer), "use-buffer")
     k.add(Kbd.ctlx_ctrl('b'), cmdptr(listbuffers), "display-buffers")
   end
