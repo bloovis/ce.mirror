@@ -267,17 +267,27 @@ class E
 	end
       end
 
-      # Call the function bound to the key.  If there is no 
-      # binding, and the key is a Unicode character, use the
+      # If there is no binding for this key, and the key is a Unicode character, use the
       # binding for Space, i.e. ins-self.
       bindc = c
       if !@keymap.key_bound?(c) && c >= 0x80 && c <= 0x10ffff
 	bindc = ' '.ord
       end
-      if @keymap.key_bound?(bindc)
+
+      # If the buffer has a mode, try its keymap first; then
+      # try the global keymap
+      b = E.curb
+      if b.modename.size != 0 && b.keymap.key_bound?(bindc)
+	#STDERR.puts("Using buffer #{b.name} keymap for key #{bindc.to_s(16)}")
+	map = b.keymap
+      else
+	#STDERR.puts("Using global keymap instead of buffer #{b.name} for key #{bindc.to_s(16)}")
+	map = @keymap
+      end
+      if map.key_bound?(bindc)
 	E.curb.undo.start
 	@thisflag = Eflags::None
-        @keymap.call_by_key(bindc, f, n, c)
+        map.call_by_key(bindc, f, n, c)
 	@lastflag = @thisflag
 	E.curb.undo.finish
 	Echo.replyq_clear

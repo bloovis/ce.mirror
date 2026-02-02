@@ -33,6 +33,15 @@ class Buffer
   property mark : Pos		# mark position
   property leftcol : Int32	# left column of window
 
+  # This properties are used to implement a Mode feature, which
+  # allows key bindings to be associated with a buffer, rather
+  # than being global.  The Mode has two pieces:
+  # * keymap: the set of key bindings
+  # * modename: the name of the mode.  If empty, the keymap
+  #   is not used.
+  property keymap : KeyMap
+  property modename : String
+
   # Class variables.
   @@blist = [] of Buffer	# list of user-created buffers
   @@sysbuf : Buffer | Nil	# special "system" buffer
@@ -69,6 +78,8 @@ class Buffer
     @mark = Pos.new(-1, 0)	# -1 means not set
     @leftcol = 0
     @undo = Undo.new
+    @keymap = KeyMap.new
+    @modename = ""
 
     # Add a blank line.
     @list.push(Line.alloc(""))

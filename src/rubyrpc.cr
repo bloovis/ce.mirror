@@ -193,12 +193,19 @@ module RubyRPC
       end
     end
 
-    # Call the MicroEMACS command `name`.
+    # Call the MicroEMACS command `name`.  If the buffer has a mode,
+    # try using its keymap first, then try the global keymap
     if name.nil?
       dprint("Missing command name")
       return false
     end
-    result = E.keymap.call_by_name(name, flag != 0, prefix, key)
+    b = E.curb
+    if b.modename.size != 0 && b.keymap.name_bound?(name)
+      keymap = b.keymap
+    else
+      keymap = E.keymap
+    end
+    result = keymap.call_by_name(name, flag != 0, prefix, key)
 
     # Send a response, unless it's a notification that expects no response,
     # as indicated by an id of 0 (i.e., the id was missing in the request).
@@ -231,7 +238,16 @@ module RubyRPC
       dprint(message)
       return make_error_response(ERROR_PARAMS, message, id)
     end
-    return make_normal_response(E.keymap.name_bound?(str) ? 1 : 0, "found", id)
+
+    # If the buffer has a mode, check its keymap first;
+    # then check the global keymap.
+    b = E.curb
+    if b.modename.size != 0 && b.keymap.name_bound?(str)
+      found = true
+    else
+      found = E.keymap.name_bound?(str)
+    end
+    return make_normal_response(found ? 1 : 0, found ? "found" : "not found", id)
   end
 
   def get_reply(id : Int32, prompt : String | Nil) : String
@@ -319,9 +335,19 @@ module RubyRPC
     mode = str[0]
     name = str[1..]
 
-    # FIXME: when modes are implemented, do something special for them.
-    k = E.keymap
+    # If this buffer has a mode, use its keymap;
+    # otherwise use the global keymap.
+    b = E.curb
+    if b.modename.size == 0
+      dprint("set_bind: using global keymap instead of buffer #{b.name} for key #{key.to_s(16)}")
+      k = E.keymap
+    else
+      dprint("set_bind: using buffer #{b.name} keymap for key #{key.to_s(16)}")
+      k = b.keymap
+    end
+
     if !k.name_bound?(name)
+      dprint("set_bind: name #{name} is not bound")
       message = "No such command #{name}"
       Echo.puts(message)
       return make_error_response(ERROR_METHOD, message, id)
@@ -358,7 +384,12 @@ module RubyRPC
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing mode for set_mode", id)
     end
-    Echo.puts("Modes not implemented")
+    if str.size == 0
+      Echo.puts("Blank mode name")
+    else
+      E.curb.modename = str
+    end
+    dprint("Setting buffer #{E.curb.name} modename to #{str}")
     return make_normal_response(0, "", id)
   end
 
@@ -606,13 +637,23 @@ module RubyRPC
   end
 
   # Defines a new MicroEMACS command that invokes a Ruby function.
-  # The Ruby function *bame* takes a single parameter, which
+  # The Ruby function *name* takes a single parameter, which
   # is the numeric argument to the command, or nil
   # if there is no argument.
   def rubycommand(f : Bool, n : Int32, key : Int32) : Result
     result, name = Echo.reply("Ruby function: ", nil)
     return result if result != Result::True
-    k = E.keymap
+
+    # If this buffer has a mode, use its keymap;
+    # otherwise use the global keymap.
+    b = E.curb
+    if b.modename.size == 0
+      dprint("rubycommand: using global keymap instead of buffer #{b.name}")
+      k = E.keymap
+    else
+      dprint("rubycommand: using buffer #{b.name} keymap")
+      k = b.keymap
+    end
     if k.name_bound?(name)
       Echo.puts("#{name} is already defined")
       return Result::False

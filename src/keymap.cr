@@ -20,11 +20,20 @@ class KeyMap
   @@unbound = -1	# negative key values are used for unbound commands
 
   alias CmdProc = Proc(Bool, Int32, Int32, Result)	# cmd(f, n, k) returns Result
-  property k2p = {} of Int32  => CmdProc	# key  => command method
-  property n2p = {} of String => CmdProc	# name => command method
+
+  # The name-to-proc table is global.
+  @@n2p        = {} of String => CmdProc	# name => command method
+
+  # The key-to-name table is either in the main editor keymap (E.keymap)
+  # or in a buffer's keymap (E.curb.keymap) if the buffer has a mode.
   property k2n = {} of Int32  => String		# key  => name
 
   def initialize
+  end
+
+  # Returns the global name-to-proc table.
+  def n2p
+    return @@n2p
   end
 
   # Adds a mapping for the key *key* to the command *proc*, whose
@@ -37,8 +46,7 @@ class KeyMap
       key = @@unbound
       @@unbound -= 1
     end
-    @k2p[key] = proc
-    @n2p[name] = proc
+    @@n2p[name] = proc
     @k2n[key] = name
   end
 
@@ -48,9 +56,7 @@ class KeyMap
     if key.is_a?(Char)
       key = key.ord
     end
-    proc = @n2p[name]?
-    if proc
-      @k2p[key] = proc
+    if @@n2p.has_key?(name)
       @k2n[key] = name
     else
       raise "Command '#{name}' does not exist!"
@@ -62,14 +68,14 @@ class KeyMap
     if key.is_a?(Char)
       key = key.ord
     end
-    @k2p.has_key?(key)
+    @k2n.has_key?(key)
   end
 
   # Calls the command method bound to the key *bindkey*, passing it
   # the arguments *f*, *n*, and *k*.
   def call_by_key(bindkey : Int32, f : Bool, n : Int32, key : Int32) : Result
-    if key_bound?(bindkey)
-      return @k2p[bindkey].call(f, n, key)
+    if name = @k2n[bindkey]?
+      return @@n2p[name].call(f, n, key)
     else
       #STDERR.puts "No command bound to key #{bindkey}"
       return Result::False
@@ -78,14 +84,14 @@ class KeyMap
 
   # Returns true if there is a command *name* in the name-to-proc table.
   def name_bound?(name : String) : Bool
-    @n2p.has_key?(name)
+    @@n2p.has_key?(name)
   end
 
   # Calls the command method named *name*, passing it
   # the arguments *f*, *n*, and *k*.
   def call_by_name(name : String, f : Bool, n : Int32, k : Int32) : Result
     if name_bound?(name)
-      @n2p[name].call(f, n, k)
+      @@n2p[name].call(f, n, k)
     else
       Echo.puts("Unknown command #{name}")
       return Result::False
