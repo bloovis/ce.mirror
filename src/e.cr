@@ -152,11 +152,46 @@ class E
     if ARGV.size == 0
       b = Buffer.new("main")
     else
-      ARGV.each do |filename|
-        fname = Files.tilde_expand(filename)
-	bname = File.basename(fname)
-	b = Buffer.new(bname, fname)
-	b.readin(fname)
+      pos = Pos.new(0, 0)
+      ARGV.each do |arg|
+        if arg.starts_with?("+")
+	  # Move to the specified line in the next file being read.
+	  pos.l = arg[1..].to_i - 1
+	  pos.o = 0
+	else
+	  filename = arg
+	  if filename =~ /^([^:]+):(\d+)(:(\d+))?$/
+	    # Filename is followed by :line:column, where :column is optional.
+	    # Both line and column are 1-based, so subtract 1 to make them
+	    # 0-based.
+	    filename = $1
+	    pos.l = $2.to_i - 1
+	    col = $4?
+	    if col
+	      pos.o = col.to_i - 1
+	    end
+	  end
+	  fname = Files.tilde_expand(filename)
+	  bname = File.basename(fname)
+	  b = Buffer.new(bname, fname)
+	  b.readin(fname)
+
+	  # Move to the specified line number.
+	  if pos.l >= 0 && pos.l < b.size
+	    b.dot.l = pos.l
+	  end
+
+	  # Move to the specified column in that line.
+	  if lp = b[b.dot.l]
+	    if pos.o >= 0 && pos.o <= lp.text.size
+	      b.dot.o = pos.o
+	    end
+	  end
+
+	  # Reset the position for the next file.
+	  pos.l = 0
+	  pos.o = 0
+	end
       end
     end
 

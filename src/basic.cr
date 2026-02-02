@@ -350,6 +350,33 @@ module Basic
     return Result::True
   end
 
+  # Goes to a specific line, mostly for looking
+  # up compilation errors, which give the
+  # error a line number. If an argument is present, then
+  # it is the line number, else prompt for a line number
+  # to use.
+  def gotoline(f : Bool, n : Int32, k : Int32) : Result
+    w = E.curw
+    b = w.buffer
+
+    if !f
+      result, str = Echo.reply("Goto line: ", nil)
+      return result if result != Result::True
+      n = str.to_i
+    end
+    if n <= 0
+      Echo.puts("Bad line number")
+      return Result::False
+    end
+    if n > b.size
+      Echo.puts("Line number too large")
+      return Result::False
+    end
+    w.dot.l = n - 1
+    w.dot.o = 0
+    return Result::True
+  end
+
   # Binds keys for basic commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd::PGDN, cmdptr(forwpage), "forw-page")
@@ -364,6 +391,7 @@ module Basic
     k.add(Kbd::UP, cmdptr(backline), "back-line")
     k.add(Kbd.ctrl('@'), cmdptr(setmark), "set-mark")
     k.add(Kbd.ctlx_ctrl('x'), cmdptr(swapmark), "swap-dot-and-mark")
+    k.add(Kbd.ctlx('g'), cmdptr(gotoline), "goto-line")
 
     k.add_dup(Kbd.ctrl('v'), "forw-page")
     k.add_dup(Kbd.ctrl('z'), "back-page")
