@@ -123,7 +123,7 @@ class Undo
   # Adds an insert-string record.
   def insert(pos : Pos, s : String)
     add(Kind::Insert, pos, s)
-    #STDERR.puts "undo delete"
+    #STDERR.puts "undo insert"
     #print
   end
 
@@ -143,11 +143,10 @@ class Undo
 
   # Commands.
 
-  # Pops one or more undo records from the stack
-  # and carries out their changes.  If the
-  # first record popped is an end-group record,
-  # keeps popping and undoing until a start-group
-  # record is found.
+  # Pops one or more undo records from the undo stack
+  # and carries out their changes. Keeps popping and
+  # undoing until a start-group record (which is also
+  # processed) is found.
   def self.undo(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
     b = w.buffer
@@ -204,10 +203,50 @@ class Undo
     return result
   end
 
+  # Pops one or more undo records from the redo stack
+  # and carries out their changes.  Keeps popping and
+  # undoing until an end-group record (which is processed)
+  # is found.
+  def self.redo(f : Bool, n : Int32, k : Int32) : Result
+    w = E.curw
+    b = w.buffer
+    u = b.undo
+    u.undoing = true
+    result = Result::True
+
+    while true
+      r = u.redo_stack.pop?
+      if r.nil?
+	Echo.puts("Redo stack is empty")
+	result = Result::False
+	break
+      end
+      #STDERR.puts("Redoing #{r.to_s}")
+      case r.kind
+      when Undo::Kind::Insert
+        w.dot = r.pos.dup
+	Line.insertwithnl(r.s)
+      when Undo::Kind::Delete
+        w.dot = r.pos.dup
+	Line.delete(r.s.size, false)
+      end
+
+      # Move the undo record to the undo stack.
+      u.undo_stack.push(r)
+
+      # Stop if this record was the end of a group
+      break if r.flags.finish?
+    end
+
+    u.undoing = false
+    return result
+  end
+
   # Binds some Undo-related commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('u'), cmdptr(undo), "undo")
     k.add_dup(Kbd::F5, "undo")
+    k.add(Kbd::F7, cmdptr(redo), "redo")
   end
 
 end
