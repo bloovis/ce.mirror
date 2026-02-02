@@ -18,6 +18,7 @@ class E
   property lastflag : Eflags = Eflags::None	# flags for previous command
   property thisflag : Eflags = Eflags::None	# flags for currently running command
   property oldbufn = ""				# old buffer name
+  property macro : Macro
 
   # Use the following class methods to access the instance variables
   # of the single instance of `E`.
@@ -119,6 +120,11 @@ class E
     return self.instance.keymap
   end
 
+  # Returns the Macro object.
+  def self.macro
+    return self.instance.macro
+  end
+
   # Constructor.
 
   def initialize
@@ -138,6 +144,9 @@ class E
     # Set some flags.
     @lastflag = Eflags::None
     @thisflag = Eflags::None
+
+    # Create a Macro object.
+    @macro = Macro.new
 
     # Set the instance to make this a pseudo-singleton class.
     @@instance = self
@@ -287,12 +296,19 @@ class E
       if map.key_bound?(bindc)
 	E.curb.undo.start
 	@thisflag = Eflags::None
+
+	# Record the macro information.
+	@macro.write_prefix(n) if f
+	@macro.write_key(c)
+	  
+	# Call the method bound to this key
         map.call_by_key(bindc, f, n, c)
+
 	@lastflag = @thisflag
 	E.curb.undo.finish
 	Echo.replyq_clear
       else
-	Echo.puts "key #{@kbd.keyname(c)} not bound!"
+	Echo.puts "key #{Kbd.keyname(c)} not bound!"
       end
 
     end

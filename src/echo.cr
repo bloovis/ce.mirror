@@ -255,6 +255,9 @@ module Echo
 	ret = default || ret
 	return {Result::False, ret}
       else
+	# Record the string in the macro, including the terminating
+	# carriage return.
+	E.macro.write_string(ret + "\r")
 	# Display the entire string before returning it.
 	s = ret.readable
         tty.putline(row, leftcol, s)

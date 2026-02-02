@@ -73,7 +73,7 @@ class String
   # the corresponding letter.
   def readable : String
     s = self.gsub do |c|
-      if c.ord >= 0x01 && c.ord <= 0x1a
+      if c.ord >= 0x00 && c.ord <= 0x1a
 	"^" + (c + '@'.ord).to_s
       else
 	c

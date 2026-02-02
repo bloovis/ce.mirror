@@ -16,6 +16,7 @@ require "./search"
 require "./undo"
 require "./rubyrpc"
 require "./extend"
+require "./macro"
 require "./e"
 
 def exception(f : Bool, n : Int32, k : Int32) : Result
@@ -48,7 +49,7 @@ def self.makechart
   lines = [] of String
   E.keymap.k2n.each do |key, cmdname|
     if cmdname != "ins-self"
-      keyname = E.kbd.keyname(key).pad_right(16)
+      keyname = Kbd.keyname(key).pad_right(16)
       lines << "#{keyname} #{cmdname}"
     end
   end
@@ -69,6 +70,30 @@ def wallchart(f : Bool, n : Int32, k : Int32) : Result
   return b_to_r(Buffer.popsysbuf)
 end
 
+# Starts recording a macro.
+def ctlxlp(f : Bool, n : Int32, k : Int32) : Result
+  if E.macro.recording?
+    Echo.puts("Not now")
+    return Result::False
+  else
+    Echo.puts("[Start macro]")
+    E.macro.start_recording
+    return Result::True
+  end
+end
+
+# Stops recording a macro.
+def ctlxrp(f : Bool, n : Int32, k : Int32) : Result
+  if E.macro.recording?
+    Echo.puts("[End macro]")
+    E.macro.stop_recording
+    return Result::True
+  else
+    Echo.puts("Not now")
+    return Result::False
+  end
+end
+
 # Here we capture any unhandled exceptions, and print
 # the exception information along with a backtrace before exiting.
 begin
@@ -77,6 +102,8 @@ begin
   k.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
   k.add(Kbd.ctrl('g'), cmdptr(ctrlg), "abort")
   k.add(Kbd.ctlx_ctrl('k'), cmdptr(wallchart), "display-bindings")
+  k.add(Kbd.ctlx('('), cmdptr(ctlxlp), "start-macro")
+  k.add(Kbd.ctlx(')'), cmdptr(ctlxrp), "end-macro")
   k.add_dup('q', "quit")
 
   # The following bindings are for testing only!  Delete when

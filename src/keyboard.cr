@@ -147,23 +147,19 @@ class Kbd
      0x7f      => "Rubout"
   }
 
-  def initialize(tty : Terminal)
-    # Set the associated Terminal object
-    @tty = tty
-
-    # Precompute some useful ASCII control character constants.
-    @ctrl_x =  tty.ctrl('x')
-    @ctrl_at = tty.ctrl('@')
-    @ctrl_z =  tty.ctrl('z')
-  end
-
   # Return the string representation of a keycode.
-  def keyname(k : Int32) : String
+  def self.keyname(k : Int32) : String
     k ||= '?'.ord
 
     # Negative numbers are special, and are used for unbound commands.
     if k < 0
       return "Unbound-#{-k}"
+    end
+
+    # If it's an ASCII control character, output ^C, where
+    # is the corresponding letter.
+    if k >= 0x00 && k <= 0x1a
+      return "^" + (k + '@'.ord).chr.to_s
     end
 
     # Check for Ctrl-X and Meta prefixes.
@@ -193,6 +189,16 @@ class Kbd
       end
     end
     return s
+  end
+
+  def initialize(tty : Terminal)
+    # Set the associated Terminal object
+    @tty = tty
+
+    # Precompute some useful ASCII control character constants.
+    @ctrl_x =  tty.ctrl('x')
+    @ctrl_at = tty.ctrl('@')
+    @ctrl_z =  tty.ctrl('z')
   end
 
   # Get the raw keycode from the Terminal, or from the
