@@ -81,6 +81,10 @@ class Macro
   def stop_reading
     @read_index = -1
   end
+
+  def reading?
+    @read_index >= 0
+  end
 end
 
 {% if flag?(:TEST) %}

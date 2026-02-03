@@ -19,11 +19,6 @@ require "./extend"
 require "./macro"
 require "./e"
 
-def exception(f : Bool, n : Int32, k : Int32) : Result
-  raise "Exception command executed!"
-  return Result::True
-end
-
 def quit(f : Bool, n : Int32, k : Int32) : Result
   # Check if there are any changed buffers.
   if Buffer.anycb
@@ -94,6 +89,54 @@ def ctlxrp(f : Bool, n : Int32, k : Int32) : Result
   end
 end
 
+# Executes the current (un-named) macro. The command argument is the
+# number of times to loop. Quit as soon as a command gets an error.
+# Returns TRUE if all ok, else FALSE.
+def ctlxe(f : Bool, n : Int32, k : Int32) : Result
+  # Can't do it if we're recording or already reading the macro.
+  m = E.macro
+  if m.recording? || m.reading?
+    Echo.puts("Not now")
+    return Result::False
+  end
+
+  # Read and execute the command for each key in the macro.  Stop if a
+  # command returns a non-true result, or if we reach the end
+  # of the macro.
+  return Result::True if n <= 0
+
+  # Run the macro n times.
+  s = Result::True
+  n.times do
+    m.start_reading
+    while true
+      s = Result::True
+      af = false
+      an = 1
+      c = m.read_int
+      break unless c
+
+      # Check for Ctrl-U numeric prefix.
+      if c == Kbd.ctrl('u')
+	af = true
+	an = m.read_int
+	break unless an
+      end
+
+      # If this key wasn't the end of of macro marker,
+      # execute the command for this key.
+      break if c == Kbd.ctlx(')')
+      s = E.execute(c, af, an)
+      break if s != Result::True
+    end # while true
+
+    break if s != Result::True
+  end # n.times
+
+  m.stop_reading
+  return s
+end
+
 # Here we capture any unhandled exceptions, and print
 # the exception information along with a backtrace before exiting.
 begin
@@ -104,11 +147,8 @@ begin
   k.add(Kbd.ctlx_ctrl('k'), cmdptr(wallchart), "display-bindings")
   k.add(Kbd.ctlx('('), cmdptr(ctlxlp), "start-macro")
   k.add(Kbd.ctlx(')'), cmdptr(ctlxrp), "end-macro")
+  k.add(Kbd.ctlx('e'), cmdptr(ctlxe), "execute-macro")
   k.add_dup('q', "quit")
-
-  # The following bindings are for testing only!  Delete when
-  # editor is fully implemented.
-  k.add(Kbd.ctlx('e'), cmdptr(exception), "raise-exception")
 
   # Create some key bindings for other modules.
   Basic.bind_keys(k)

@@ -125,8 +125,12 @@ class E
     return self.instance.macro
   end
 
-  # Constructor.
+  # Runs the execute method on the instance
+  def self.execute(c : Int32, f : Bool, n : Int32) : Result
+    return self.instance.execute(c, f, n)
+  end
 
+  # Constructor.
   def initialize
     # Create a terminal object.
     @tty = Terminal.new
@@ -230,6 +234,46 @@ class E
     end
   end
 
+  # Command execution. Look up the binding in the the
+  # binding array, and do what it says. Return a very bad status
+  # if there is no binding, or if the symbol has a type that
+  # is not usable (there is no way to get this into a symbol table
+  # entry now). Also fiddle with the flags.
+  def execute(c : Int32, f : Bool, n : Int32) : Result
+    # If there is no binding for this key, and the key is a Unicode character, use the
+    # binding for Space, i.e. ins-self.
+    bindc = c
+    if !@keymap.key_bound?(c) && c >= 0x80 && c <= 0x10ffff
+      bindc = ' '.ord
+    end
+
+    # If the buffer has a mode, try its keymap first; then
+    # try the global keymap
+    b = E.curb
+    if b.modename.size != 0 && b.keymap.key_bound?(bindc)
+      #STDERR.puts("Using buffer #{b.name} keymap for key #{bindc.to_s(16)}")
+      keymap = b.keymap
+    else
+      #STDERR.puts("Using global keymap instead of buffer #{b.name} for key #{bindc.to_s(16)}")
+      keymap = @keymap
+    end
+    if keymap.key_bound?(bindc)
+      @thisflag = Eflags::None
+      E.curb.undo.start
+
+      # Call the method bound to this key
+      status = keymap.call_by_key(bindc, f, n, c)
+
+      @lastflag = @thisflag
+      E.curb.undo.finish
+      Echo.replyq_clear
+      return status
+    else
+      Echo.puts "key #{Kbd.keyname(c)} not bound!"
+      return Result::Abort
+    end
+  end
+
   # Enters a loop waiting for the user to hit a key, and responds by executing
   # the command bound to that key.
   def event_loop
@@ -276,42 +320,15 @@ class E
 	end
       end
 
-      # If there is no binding for this key, and the key is a Unicode character, use the
-      # binding for Space, i.e. ins-self.
-      bindc = c
-      if !@keymap.key_bound?(c) && c >= 0x80 && c <= 0x10ffff
-	bindc = ' '.ord
-      end
-
-      # If the buffer has a mode, try its keymap first; then
-      # try the global keymap
-      b = E.curb
-      if b.modename.size != 0 && b.keymap.key_bound?(bindc)
-	#STDERR.puts("Using buffer #{b.name} keymap for key #{bindc.to_s(16)}")
-	map = b.keymap
-      else
-	#STDERR.puts("Using global keymap instead of buffer #{b.name} for key #{bindc.to_s(16)}")
-	map = @keymap
-      end
-      if map.key_bound?(bindc)
-	E.curb.undo.start
-	@thisflag = Eflags::None
-
-	# Record the macro information.
-	@macro.write_prefix(n) if f
-	@macro.write_key(c)
+      # Record the macro information.
+      @macro.write_prefix(n) if f
+      @macro.write_key(c)
 	  
-	# Call the method bound to this key
-        map.call_by_key(bindc, f, n, c)
+      # Run the command.
+      execute(c, f, n)
+      Echo.replyq_clear
 
-	@lastflag = @thisflag
-	E.curb.undo.finish
-	Echo.replyq_clear
-      else
-	Echo.puts "key #{Kbd.keyname(c)} not bound!"
-      end
-
-    end
+    end	# while loop
 
     # Close the terminal.
     @tty.close

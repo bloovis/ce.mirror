@@ -68,7 +68,7 @@ class String
     return width
   end
 
-  # Returns a readable version of the string, where
+  # Returns a readable version of the string, where ASCII
   # control characters (including Tab!) are replaced by ^C, where C is
   # the corresponding letter.
   def readable : String
