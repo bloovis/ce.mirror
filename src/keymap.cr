@@ -4,6 +4,10 @@ enum Result
   Abort
 end
 
+FALSE = Result::False
+TRUE  = Result::True
+ABORT = Result::Abort
+
 # Convert true to Result::True, and false to Result::False
 # to false.
 def b_to_r(b : Bool) : Result
