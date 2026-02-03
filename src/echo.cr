@@ -287,13 +287,8 @@ module Echo
   # the Result and the name entered by the user
   def getbufn : Tuple(Result, String)
     result, bufn = reply_with_completions("Use buffer [#{E.oldbufn}]: ", nil, true) do |s|
-      a = [] of String
-      Buffer.each do |b|
-        if b.name.starts_with?(s)
-	  a << b.name
-	end
-      end
-      a
+      # Return the names of all buffers that start with s.
+      Buffer.buffers.map {|b| b.name}.select {|name| name.starts_with?(s)}
     end
 
     # Return immediately on Ctrl-G abort.

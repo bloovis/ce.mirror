@@ -426,22 +426,20 @@ class Buffer
   # if everything works. Return FALSE if there
   # is an error (if there is no memory).
   def self.makelist : Bool
+    # Create the system buffer if necessary.
+    b = sysbuf
+    b.clear
+    b.filename = ""
+
     # Find the largest buffer name.  Take extra care to correctly pad
     # buffer names smaller than the "Buffer" header.
     namesize = 0
     bhdr = "Buffer"
     bhdrsize = bhdr.size
     bhdrdashes = "-" * bhdrsize
-    Buffer.each do |b|
-      #next if b.flags.system?
-      namesize = [b.name.size, namesize, bhdrsize].max
-    end
+    namesize = [Buffer.buffers.map {|b| b.name.size}.max, bhdrsize].max
 
-    # Populate the system buffer with the information about the
-    # "normal" buffers.
-    b = sysbuf
-    b.clear
-    b.filename = ""
+    # Populate the system buffer with information about all buffers.
     b.addline("C W  S          Size " + bhdr.pad_right(namesize)       + " File")
     b.addline("- -  -          ---- " + bhdrdashes.pad_right(namesize) + " ----")
     Buffer.each do |b2|
