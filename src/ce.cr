@@ -17,6 +17,7 @@ require "./undo"
 require "./rubyrpc"
 require "./extend"
 require "./macro"
+require "./paragraph"
 require "./e"
 
 def quit(f : Bool, n : Int32, k : Int32) : Result
@@ -163,6 +164,7 @@ begin
   Undo.bind_keys(k)
   RubyRPC.bind_keys(k)
   Extend.bind_keys(k)
+  Paragraph.bind_keys(k)
 
   # Start the Ruby process
   Echo.puts("Unable to start Ruby server") unless RubyRPC.init_server

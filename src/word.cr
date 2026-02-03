@@ -295,7 +295,6 @@ module Word
     k.add(Kbd.meta('f'), cmdptr(forwword), "forw-word")
     k.add(Kbd.meta('b'), cmdptr(backword), "back-word")
     k.add(Kbd.meta('d'), cmdptr(delfword), "forw-del-word")
-    k.add(Kbd.meta('d'), cmdptr(delfword), "forw-del-word")
     k.add(Kbd.meta('u'), cmdptr(upperword), "upper-word")
     k.add(Kbd.meta('l'), cmdptr(lowerword), "lower-word")
     k.add(Kbd.meta('c'), cmdptr(capword), "cap-word")

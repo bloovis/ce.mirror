@@ -40,6 +40,9 @@ class KeyMap
   # name is *name*.  If the key is KRANDOM, the command is actually
   # not bound to a key, so use a unique magic negative number for the key.
   def add(key : Int32 | Char, proc : CmdProc, name : String)
+    if @@n2p.has_key?(name)
+      raise "Command '#{name}' has already been added to the table!"
+    end
     if key.is_a?(Char)
       key = key.ord
     elsif key == Kbd::RANDOM
