@@ -17,6 +17,7 @@ class Macro
 
   def start_recording
     @recording = true
+    @buf = [] of Int32
   end
 
   def write_key(key : Int32)

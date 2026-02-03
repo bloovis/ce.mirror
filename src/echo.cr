@@ -129,9 +129,20 @@ module Echo
   # * Abort - user aborted the response with Ctrl-G
   def reply_with_completions(prompt : String, default : String | Nil,
 		    block_given : Bool, &block) : Tuple(Result, String)
+    # If there's a string in the replyq, placed there by a Ruby
+    # extension, use it.
     if ret = replyq_get
       return {Result::True, ret}
     end
+
+    # If we're running a keyboard macro, read a string from it.
+    m = E.macro
+    if m.reading?
+      ret = m.read_string
+      return {Result::True, ret} if ret
+    end
+
+    # Have to do it the normal way: prompt the user to enter a string.
     tty = E.tty
     row = tty.nrow - 1
     prompt = prompt.readable
@@ -257,7 +268,7 @@ module Echo
       else
 	# Record the string in the macro, including the terminating
 	# carriage return.
-	E.macro.write_string(ret + "\r")
+	E.macro.write_string(ret)
 	# Display the entire string before returning it.
 	s = ret.readable
         tty.putline(row, leftcol, s)
