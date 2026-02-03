@@ -139,7 +139,7 @@ class Window
         break
       end
     end
-    return Result::True
+    return TRUE
   end
 
   # Class methods.
@@ -214,7 +214,7 @@ class Window
     else
       @@curi = @@curi + 1
     end
-    return Result::True
+    return TRUE
   end
 
   # Makes the previous window the current window, or does nothing
@@ -225,7 +225,7 @@ class Window
     else
       @@curi = @@curi - 1
     end
-    return Result::True
+    return TRUE
   end
 
   # Split the current window. A window
@@ -237,7 +237,7 @@ class Window
     w = Window.current
     if w.nrow < 3
       Echo.puts("Cannot split a #{w.nrow}-line window")
-      return Result::False
+      return FALSE
     end
 
     # Create the Window object.
@@ -304,7 +304,7 @@ class Window
     w.line = line
     w2.line = line
 
-    return Result::True
+    return TRUE
   end
 
   # This command makes the current
@@ -343,7 +343,7 @@ class Window
     end
     w.toprow = 0
     w.nrow = E.tty.nrow - 2	# 2 = mode line + echo line
-    return Result::True
+    return TRUE
   end
 
   # Adjusts windows so that they all have approximately
@@ -352,7 +352,7 @@ class Window
     nwind = @@list.size
     if nwind == 1
       Echo.puts("Only one window")
-      return Result::False
+      return FALSE
     end
     toprow = 0
     size = (E.tty.nrow // nwind) - 1
@@ -370,7 +370,7 @@ class Window
       w.nrow = size
       toprow += size + 1
     end
-    return Result::True
+    return TRUE
   end
 
   # Refreshes the display. A call is made to the
@@ -396,7 +396,7 @@ class Window
       w = @@list[@@list.size - 1]
       if tty.nrow < w.toprow + 3
 	Echo.puts("Display unusable")
-	return Result::False
+	return FALSE
       end
       w.nrow = tty.nrow - w.toprow - 2
       E.disp.update
@@ -404,7 +404,7 @@ class Window
     else
       E.disp.update
     end
-    return Result::True
+    return TRUE
   end
 
   # Binds keys for window commands.

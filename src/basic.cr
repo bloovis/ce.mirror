@@ -25,7 +25,7 @@ module Basic
   # Goes to the beginning of the line.
   def gotobol(f : Bool, n : Int32, k : Int32) : Result
     E.curw.dot.o = 0
-    return Result::True
+    return TRUE
   end
 
   # Goes to the end of the line.
@@ -39,7 +39,7 @@ module Basic
     else
       raise "Nil line in gotobol!"
     end
-    return Result::True
+    return TRUE
   end
 
   # Goes to the beginning of the
@@ -50,7 +50,7 @@ module Basic
     w.dot.l = 0
     w.dot.o = 0
     w.flags |= Wflags::Hard
-    return Result::True
+    return TRUE
   end
 
   # Goes to the end of the buffer.
@@ -71,7 +71,7 @@ module Basic
       raise "Nil line in gotoeob!"
     end
     w.flags |= Wflags::Hard
-    return Result::True
+    return TRUE
   end
 
   # Scrolls forward by a specified number
@@ -103,7 +103,7 @@ module Basic
     w.flags |= Wflags::Hard
 
     checkdot(w)
-    return Result::True
+    return TRUE
   end
 
   # This command is like "forwpage",
@@ -134,7 +134,7 @@ module Basic
     w.flags |= Wflags::Hard
 
     checkdot(w)
-    return Result::True
+    return TRUE
   end
 
   # Move cursor backwards. Do the
@@ -156,7 +156,7 @@ module Basic
 	if dot.l == 0		# already on first line?
 	  dot.o = 0		# set dot to first char
 	  #STDERR.puts "backchar returning false"
-	  return Result::False	# error because we can't go back farther
+	  return FALSE	# error because we can't go back farther
 	else
 	  lp = lp.previous	# move to previous line
 	  n -= dot.o + 1	# +1 is for invisible newline
@@ -171,7 +171,7 @@ module Basic
       end
     end
     #STDERR.puts "backchar returning true"
-    return Result::True
+    return TRUE
   end
 
   # Move cursor forwards. Do the
@@ -193,7 +193,7 @@ module Basic
       if n > rem		# need to advance to next line?
 	if dot.l + 1 == bsize	# already on last line?
 	  dot.o = lsize		# put dot at end of line
-	  return Result::False	# tell caller we failed to advance n chars
+	  return FALSE	# tell caller we failed to advance n chars
 	else
 	  lp = lp.next		# move to next line
 	  n -= rem + 1		# +1 is for invisible newline
@@ -206,7 +206,7 @@ module Basic
       end
     end
       
-    return Result::True
+    return TRUE
   end
 
   # Set the current goal column,
@@ -269,14 +269,14 @@ module Basic
     end
     E.thisflag = E.thisflag | Eflags::Cpcn
 
-    ret = Result::False
+    ret = FALSE
     while n > 0 && lp != b.last_line
       n -= 1
 
       # Move dot to next line.
       dot.l += 1
       lp = lp.next
-      ret = Result::True
+      ret = TRUE
     end
 
     dot.o = getgoal(lp)
@@ -312,14 +312,14 @@ module Basic
     end
     E.thisflag = E.thisflag | Eflags::Cpcn
 
-    ret = Result::False
+    ret = FALSE
     while n > 0 && lp != b.first_line
       n -= 1
 
       # Move dot to previous line.
       dot.l -= 1
       lp = lp.previous
-      ret = Result::True
+      ret = TRUE
     end
 
     dot.o = getgoal(lp)
@@ -333,7 +333,7 @@ module Basic
     w = E.curw
     w.mark = w.dot.dup
     Echo.puts("[Mark set]")
-    return Result::True
+    return TRUE
   end
 
   # Swaps the values of dot and mark in the current window.
@@ -343,11 +343,11 @@ module Basic
     mark = w.mark.dup
     if mark.l == -1
       Echo.puts("No mark in this window")
-      return Result::False
+      return FALSE
     end
     w.mark = dot
     w.dot = mark
-    return Result::True
+    return TRUE
   end
 
   # Goes to a specific line, mostly for looking
@@ -361,20 +361,20 @@ module Basic
 
     if !f
       result, str = Echo.reply("Goto line: ", nil)
-      return result if result != Result::True
+      return result if result != TRUE
       n = str.to_i
     end
     if n <= 0
       Echo.puts("Bad line number")
-      return Result::False
+      return FALSE
     end
     if n > b.size
       Echo.puts("Line number too large")
-      return Result::False
+      return FALSE
     end
     w.dot.l = n - 1
     w.dot.o = 0
-    return Result::True
+    return TRUE
   end
 
   # Binds keys for basic commands.

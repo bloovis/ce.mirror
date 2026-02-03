@@ -18,24 +18,24 @@ module Word
   # start of the buffer.
   def backword(f : Bool, n : Int32, k : Int32) : Result
     return forwword(f, -n, Kbd::RANDOM) if n < 0
-    if Basic.backchar(false, 1, Kbd::RANDOM) == Result::False
-      return Result::False 
+    if Basic.backchar(false, 1, Kbd::RANDOM) == FALSE
+      return FALSE 
     end
     while n > 0
       n -= 1
       # Skip back to last character of word.
       while !inword
-        if Basic.backchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.backchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
 
       # Skip back past start of word.
       while inword
-        if Basic.backchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.backchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
     end
@@ -52,21 +52,21 @@ module Word
       n -= 1
       # Skip forward to start of word.
       while !inword
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
 
       # Skip forward to end of word.
       while inword
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
     end
-    return Result::True
+    return TRUE
   end
 
   # Moves the cursor forward by
@@ -75,17 +75,17 @@ module Word
   # if you try to move beyond the end of the
   # buffer.
   def upperword(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
-    return Result::False unless Files.checkreadonly
+    return FALSE if n < 0
+    return FALSE unless Files.checkreadonly
 
     b = E.curb
     while n > 0
       n -= 1
       # Skip forward to start of word.
       while !inword
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
 
@@ -97,14 +97,14 @@ module Word
 	  Line.putc(c.upcase)
 	  b.lchange
 	else
-	  if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	  if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	    # Hit end of buffer, return now.
-	    return Result::False
+	    return FALSE
 	  end
 	end
       end
     end
-    return Result::True
+    return TRUE
   end
 
   # Moves the cursor forward by
@@ -113,17 +113,17 @@ module Word
   # if you try to move beyond the end of the
   # buffer.
   def lowerword(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
-    return Result::False unless Files.checkreadonly
+    return FALSE if n < 0
+    return FALSE unless Files.checkreadonly
 
     b = E.curb
     while n > 0
       n -= 1
       # Skip forward to start of word.
       while !inword
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
 
@@ -135,14 +135,14 @@ module Word
 	  Line.putc(c.downcase)
 	  b.lchange
 	else
-	  if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	  if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	    # Hit end of buffer, return now.
-	    return Result::False
+	    return FALSE
 	  end
 	end
       end
     end
-    return Result::True
+    return TRUE
   end
 
   # Move the cursor forward by
@@ -151,17 +151,17 @@ module Word
   # case, and subsequent characters to lower case. Error
   # if you try and move past the end of the buffer.
   def capword(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
-    return Result::False unless Files.checkreadonly
+    return FALSE if n < 0
+    return FALSE unless Files.checkreadonly
 
     b = E.curb
     while n > 0
       n -= 1
       # Skip forward to start of word.
       while !inword
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
 
@@ -171,9 +171,9 @@ module Word
 	Line.putc(c.upcase)
 	b.lchange
       else
-	if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
-	  return Result::False
+	  return FALSE
 	end
       end
 
@@ -185,14 +185,14 @@ module Word
 	  Line.putc(c.downcase)
 	  b.lchange
 	else
-	  if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+	  if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	    # Hit end of buffer, return now.
-	    return Result::False
+	    return FALSE
 	  end
 	end
       end
     end
-    return Result::True
+    return TRUE
   end
 
   # Kills forward by "n" words. The rules for final
@@ -201,7 +201,7 @@ module Word
   # "kill lots of words" and have the command stop in a reasonable
   # way when it hits the end of the buffer.
   def delfword(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
+    return FALSE if n < 0
     w, b, dot, lp = E.get_context
     old_dot = dot.dup	# Save dot
     Line.kdelete	# Purge kill buffer
@@ -210,7 +210,7 @@ module Word
       n -= 1
       # Skip forward to start of word.
       while !inword
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
 	  w.dot = old_dot
 	  return b_to_r(Line.delete(size, true))
@@ -220,7 +220,7 @@ module Word
 
       # Skip forward to end of word.
       while inword
-        if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
 	  w.dot = old_dot
 	  return b_to_r(Line.delete(size, true))
@@ -243,13 +243,13 @@ module Word
   # be wierd. Normally this is bound to "M-Rubout" and
   # to "M-Backspace".
   def delbword(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
+    return FALSE if n < 0
     w, b, dot, lp = E.get_context
     Line.kdelete	# Purge kill buffer
 
     # Back up one character.  If we're at the start of the buffer,
     # do nothing and return success.
-    return Result::True unless Basic.backchar(false, 1, Kbd::RANDOM)
+    return TRUE unless Basic.backchar(false, 1, Kbd::RANDOM)
 
     size = 1
     fail = false
@@ -257,7 +257,7 @@ module Word
       n -= 1
       # Skip back to end of word.
       while !inword
-        if Basic.backchar(false, 1, Kbd::RANDOM) == Result::False
+        if Basic.backchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit start of buffer, return now.
 	  fail = true
 	  break
@@ -268,7 +268,7 @@ module Word
       # Skip back to start of word.
       unless fail
 	while inword
-	  if Basic.backchar(false, 1, Kbd::RANDOM) == Result::False
+	  if Basic.backchar(false, 1, Kbd::RANDOM) == FALSE
 	    # Hit start of buffer, return now.
 	    fail = true
 	    break
@@ -282,8 +282,8 @@ module Word
     # We skipped one space back past start of word, so skip
     # forward one space.
     unless fail
-      if Basic.forwchar(false, 1, Kbd::RANDOM) == Result::False
-	return Result::False
+      if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
+	return FALSE
       end
       size -= 1
     end

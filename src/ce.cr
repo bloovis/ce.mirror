@@ -23,18 +23,18 @@ require "./e"
 def quit(f : Bool, n : Int32, k : Int32) : Result
   # Check if there are any changed buffers.
   if Buffer.anycb
-    return Result::False if Echo.yesno("There are changed buffers.  Quit") != Result::True
+    return FALSE if Echo.yesno("There are changed buffers.  Quit") != TRUE
   end
   E.tty.close
   puts "Goodbye!"
   exit 0
-  return Result::True
+  return TRUE
 end
 
 # Kills of any keyboard macro that is in progress.
 def ctrlg(f : Bool, n : Int32, k : Int32) : Result
   # FIXME: end the macro here!
-  return Result::Abort
+  return ABORT
 end
 
 def self.makechart
@@ -62,7 +62,7 @@ end
 # If an argument is supplied, keys bound to "ins-self" will
 # also be displayed.
 def wallchart(f : Bool, n : Int32, k : Int32) : Result
-  return Result::False unless makechart
+  return FALSE unless makechart
   return b_to_r(Buffer.popsysbuf)
 end
 
@@ -70,11 +70,11 @@ end
 def ctlxlp(f : Bool, n : Int32, k : Int32) : Result
   if E.macro.recording?
     Echo.puts("Not now")
-    return Result::False
+    return FALSE
   else
     Echo.puts("[Start macro]")
     E.macro.start_recording
-    return Result::True
+    return TRUE
   end
 end
 
@@ -83,10 +83,10 @@ def ctlxrp(f : Bool, n : Int32, k : Int32) : Result
   if E.macro.recording?
     Echo.puts("[End macro]")
     E.macro.stop_recording
-    return Result::True
+    return TRUE
   else
     Echo.puts("Not now")
-    return Result::False
+    return FALSE
   end
 end
 
@@ -98,20 +98,20 @@ def ctlxe(f : Bool, n : Int32, k : Int32) : Result
   m = E.macro
   if m.recording? || m.reading?
     Echo.puts("Not now")
-    return Result::False
+    return FALSE
   end
 
   # Read and execute the command for each key in the macro.  Stop if a
   # command returns a non-true result, or if we reach the end
   # of the macro.
-  return Result::True if n <= 0
+  return TRUE if n <= 0
 
   # Run the macro n times.
-  s = Result::True
+  s = TRUE
   n.times do
     m.start_reading
     while true
-      s = Result::True
+      s = TRUE
       af = false
       an = 1
       c = m.read_int
@@ -128,10 +128,10 @@ def ctlxe(f : Bool, n : Int32, k : Int32) : Result
       # execute the command for this key.
       break if c == Kbd.ctlx(')')
       s = E.execute(c, af, an)
-      break if s != Result::True
+      break if s != TRUE
     end # while true
 
-    break if s != Result::True
+    break if s != TRUE
   end # n.times
 
   m.stop_reading

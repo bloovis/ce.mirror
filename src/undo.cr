@@ -152,7 +152,7 @@ class Undo
     b = w.buffer
     u = b.undo
     u.undoing = true
-    result = Result::True
+    result = TRUE
 
     # Set the "undo dot" to the current dot, in case
     # it doesn't get set in the following loop.
@@ -162,7 +162,7 @@ class Undo
       r = u.undo_stack.pop?
       if r.nil?
 	Echo.puts("Undo stack is empty")
-	result = Result::False
+	result = FALSE
 	break
       end
       #STDERR.puts("Undoing #{r.to_s}")
@@ -212,13 +212,13 @@ class Undo
     b = w.buffer
     u = b.undo
     u.undoing = true
-    result = Result::True
+    result = TRUE
 
     while true
       r = u.redo_stack.pop?
       if r.nil?
 	Echo.puts("Redo stack is empty")
-	result = Result::False
+	result = FALSE
 	break
       end
       #STDERR.puts("Redoing #{r.to_s}")

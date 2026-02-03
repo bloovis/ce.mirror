@@ -257,7 +257,7 @@ module RubyRPC
       return make_error_response(ERROR_PARAMS, message, id)
     end
     result, str = Echo.reply(prompt, nil)
-    if result == Result::Abort
+    if result == ABORT
       return make_normal_response(0, nil, id)
     else
       return make_normal_response(0, str, id)
@@ -583,7 +583,7 @@ module RubyRPC
     @@id += 2
     msg = make_rpc_request(method, flag ? 1 : 0, prefix, key, strings, id)
     send_message(msg)
-    result = Result::True
+    result = TRUE
 
     # Loop reading responses from the server.  There maybe one or more
     # method calls from the server before it sends a response for
@@ -636,7 +636,7 @@ module RubyRPC
   # successfully, and FALSE if an exception occurred.
   def rubystring(f : Bool, n : Int32, k : Int32) : Result
     result, string = Echo.reply("Ruby code: ", nil)
-    return result if result != Result::True
+    return result if result != TRUE
     return runruby(string)
   end
 
@@ -646,7 +646,7 @@ module RubyRPC
   # if there is no argument.
   def rubycommand(f : Bool, n : Int32, key : Int32) : Result
     result, name = Echo.reply("Ruby function: ", nil)
-    return result if result != Result::True
+    return result if result != TRUE
 
     # If this buffer has a mode, use its keymap;
     # otherwise use the global keymap.
@@ -660,7 +660,7 @@ module RubyRPC
     end
     if k.name_bound?(name)
       Echo.puts("#{name} is already defined")
-      return Result::False
+      return FALSE
     end
 
     # Bind the command to an unused key.  Eventually
@@ -671,7 +671,7 @@ module RubyRPC
 	  ->(f : Bool, n : Int32, k : Int32) {
              rubycall(name, f, n, key) },
 	  name)
-    return Result::True
+    return TRUE
   end
 
   # Creates key bindings for all RubyRPC commands.

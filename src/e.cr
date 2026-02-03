@@ -270,7 +270,7 @@ class E
       return status
     else
       Echo.puts "key #{Kbd.keyname(c)} not bound!"
-      return Result::Abort
+      return ABORT
     end
   end
 

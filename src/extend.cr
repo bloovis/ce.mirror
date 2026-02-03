@@ -10,7 +10,7 @@ module Extend
     end
 
     # Return immediately on Ctrl-G abort.
-    return result if result != Result::True
+    return result if result != TRUE
 
     return E.keymap.call_by_name(name, f, n, k)
   end

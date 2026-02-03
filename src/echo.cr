@@ -132,14 +132,14 @@ module Echo
     # If there's a string in the replyq, placed there by a Ruby
     # extension, use it.
     if ret = replyq_get
-      return {Result::True, ret}
+      return {TRUE, ret}
     end
 
     # If we're running a keyboard macro, read a string from it.
     m = E.macro
     if m.reading?
       ret = m.read_string
-      return {Result::True, ret} if ret
+      return {TRUE, ret} if ret
     end
 
     # Have to do it the normal way: prompt the user to enter a string.
@@ -258,13 +258,13 @@ module Echo
     end
 
     if aborted
-      return {Result::Abort, ret}
+      return {ABORT, ret}
     else
       if ret.size == 0
 	# If the user didn't enter anything, but there is a default,
 	# return the default.
 	ret = default || ret
-	return {Result::False, ret}
+	return {FALSE, ret}
       else
 	# Record the string in the macro, including the terminating
 	# carriage return.
@@ -273,7 +273,7 @@ module Echo
 	s = ret.readable
         tty.putline(row, leftcol, s)
 	tty.flush
-	return {Result::True, ret}
+	return {TRUE, ret}
       end
     end
   end
@@ -292,15 +292,15 @@ module Echo
     end
 
     # Return immediately on Ctrl-G abort.
-    return {result, bufn} if result == Result::Abort
+    return {result, bufn} if result == ABORT
 
     # Use old buffer name if no name specified.
-    if result == Result::False || bufn.size == 0
+    if result == FALSE || bufn.size == 0
       bufn = E.oldbufn
     end
 
     # Check for empty name.
-    return {bufn.size == 0 ? Result::False : Result::True, bufn}
+    return {bufn.size == 0 ? FALSE : TRUE, bufn}
   end
 
   # Returns true if the file *filename* is a directory,
@@ -401,10 +401,10 @@ module Echo
     end
 
     # Return immediately on Ctrl-G abort.
-    return {result, fname} if result == Result::Abort
+    return {result, fname} if result == ABORT
 
     # Check for empty name.
-    return {fname.size == 0 ? Result::False : Result::True, fname}
+    return {fname.size == 0 ? FALSE : TRUE, fname}
   end
 
   # Ask "yes" or "no" question.
@@ -415,11 +415,11 @@ module Echo
   def yesno(prompt : String) : Result
     loop do
       r, s = Echo.reply("#{prompt} [y/n]? ", nil)
-      return Result::Abort if r == Result::Abort
+      return ABORT if r == ABORT
       if s.size > 0
 	c = s[0].downcase
-	return Result::True if c == 'y'
-	return Result::False if c == 'n'
+	return TRUE if c == 'y'
+	return FALSE if c == 'n'
       end
     end
   end
@@ -446,7 +446,7 @@ module Echo
   # Prompts for a string, and echoes the response.
   def echo(f : Bool, n : Int32, k : Int32) : Result
     result, ret = Echo.reply("Echo: ", nil)
-    if result == Result::True
+    if result == TRUE
       Echo.puts(ret.readable)
     end
     return result

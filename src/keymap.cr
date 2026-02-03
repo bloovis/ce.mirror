@@ -8,10 +8,10 @@ FALSE = Result::False
 TRUE  = Result::True
 ABORT = Result::Abort
 
-# Convert true to Result::True, and false to Result::False
+# Convert true to TRUE, and false to FALSE
 # to false.
 def b_to_r(b : Bool) : Result
-  b ? Result::True : Result::False
+  b ? TRUE : FALSE
 end
 
 # Converts the name of a command method to a Proc object.
@@ -85,7 +85,7 @@ class KeyMap
       return @@n2p[name].call(f, n, key)
     else
       #STDERR.puts "No command bound to key #{bindkey}"
-      return Result::False
+      return FALSE
     end
   end
 
@@ -101,7 +101,7 @@ class KeyMap
       @@n2p[name].call(f, n, k)
     else
       Echo.puts("Unknown command #{name}")
-      return Result::False
+      return FALSE
     end
   end
 end

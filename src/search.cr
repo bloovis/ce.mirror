@@ -30,11 +30,11 @@ module Search
   # some do-it-yourself control expansion.
   def readpattern(prompt : String) : Tuple(Result, String)
     result, pattern = Echo.reply("#{prompt} [#{@@pat}]: ", @@pat)
-    if result == Result::True
+    if result == TRUE
       @@pat = pattern
-    elsif result == Result::False && pattern.size > 0
+    elsif result == FALSE && pattern.size > 0
       # User hit Enter, but wants to user the old pattern.
-      result = Result::True
+      result = TRUE
     end
     return {result, pattern}
   end
@@ -91,7 +91,7 @@ module Search
 	  dot.o = m.begin(0)
 	end
 	w.dot = dot
-	return Result::True
+	return TRUE
       end
       
       # Try again in next/previous line.
@@ -110,7 +110,7 @@ module Search
 
     # If we got here, the search failed.  Restore dot.
     w.dot = olddot
-    return Result::False
+    return FALSE
   end
 
   # Search forward using regular expression.
@@ -120,19 +120,19 @@ module Search
   # If not found, it just prints a message.
   def regsearch(prompt : String, dir : SearchDir) : Result
     result, pattern = readpattern(prompt)
-    return result if result != Result::True
+    return result if result != TRUE
     @@dir = dir
 
     # Compile the pattern into a regular expression.
     if Regex.error?(pattern)
       Echo.puts "Invalid regular expression"
-      return Result::False
+      return FALSE
     end
     @@regpat = Regex.new(pattern)
 
     # Search the current buffer for the pattern.
     result = doregsrch(dir)
-    Echo.puts "Not found" if result == Result::False
+    Echo.puts "Not found" if result == FALSE
     return result
   end
 
@@ -191,7 +191,7 @@ module Search
     w, b, dot, lp = E.get_context
     pats = [] of String
     @@pat.split_lines {|s| pats << s}
-    return Result::False if pats.size == 0
+    return FALSE if pats.size == 0
 
     # olddot saves the dot in case we have to restore it when `match` fails.
     # endpos is the ending position returned by `match` when it succeeds.
@@ -231,10 +231,10 @@ module Search
     end
     if endpos
       E.curw.dot = dot
-      return Result::True
+      return TRUE
     else
       E.curw.dot = olddot
-      return Result::False
+      return FALSE
     end
   end
 
@@ -246,7 +246,7 @@ module Search
     w, b, dot, lp = E.get_context
     pats = [] of String
     @@pat.split_lines {|s| pats << s}
-    return Result::False if pats.size == 0
+    return FALSE if pats.size == 0
 
     # sdot is a copy of dot, and will be used to move through
     # the buffer as we call `match`.  endpos is the ending position
@@ -278,9 +278,9 @@ module Search
     end
     if endpos
       E.curw.dot = endpos
-      return Result::True
+      return TRUE
     else
-      return Result::False
+      return FALSE
     end
   end
 
@@ -300,11 +300,11 @@ module Search
       if @@regpat
 	return doregsrch(dir)
       else
-	return Result::Abort
+	return ABORT
       end
     else
       Echo.puts "Search type #{dir} not implemented"
-      return Result::Abort
+      return ABORT
     end
   end
 
@@ -316,11 +316,11 @@ module Search
   # to go.
   def searchagain(f : Bool, n : Int32, k : Int32) : Result
     result = dosearch(@@dir)
-    if result == Result::False
+    if result == FALSE
       Echo.puts("Not found")
-    elsif result == Result::Abort
+    elsif result == ABORT
       Echo.puts("No last search")
-      result == Result::False
+      result == FALSE
     end
     return result
   end
@@ -331,7 +331,7 @@ module Search
   # If not found, it just prints a message.
   def forwsearch(f : Bool, n : Int32, k : Int32) : Result
     result, pattern = readpattern("Search")
-    return result if result != Result::True
+    return result if result != TRUE
     #Echo.puts "Result #{result}, pattern #{pattern}"
     @@dir = SearchDir::Forw
     return searchagain(f, n, k)
@@ -343,7 +343,7 @@ module Search
   # If not found, it just prints a message.
   def backsearch(f : Bool, n : Int32, k : Int32) : Result
     result, pattern = readpattern("Reverse search")
-    return result if result != Result::True
+    return result if result != TRUE
     @@dir = SearchDir::Back
     return searchagain(f, n, k)
   end
@@ -405,15 +405,15 @@ module Search
     # Prompt the user for the pattern to search for,
     # and for the replacement string.
     result, pattern = readpattern(oldprompt)
-    return result if result != Result::True
+    return result if result != TRUE
     result, news = Echo.reply(newprompt, nil)
-    return result if result == Result::Abort
+    return result if result == ABORT
 
     # If this is a regex search, compile the pattern.
     if dir == SearchDir::Regforw || dir == SearchDir::Regback
       if Regex.error?(pattern)
 	Echo.puts "Invalid regular expression"
-	return Result::False
+	return FALSE
       end
       @@regpat = Regex.new(pattern)
     end
@@ -427,7 +427,7 @@ module Search
     # or not.  The "!" case makes the check always true.
     ctrl_g = 'G' - '@'.ord
     rcnt = 0
-    while dosearch(dir) == Result::True
+    while dosearch(dir) == TRUE
       if query
 	E.disp.update  # if !inprof
 	c = E.kbd.getinp.chr
@@ -441,7 +441,7 @@ module Search
 	# from the MatchData.
         repl, plen = getrepl(dir, news)
 	rcnt += 1
-	return Result::False unless Line.replace(plen, repl)
+	return FALSE unless Line.replace(plen, repl)
 	break if c == '.'
       when ctrl_g
         ctrlg(false, 0, Kbd::RANDOM)
@@ -461,7 +461,7 @@ module Search
     else
       Echo.puts("[#{rcnt} replacements done]")
     end
-    return Result::True
+    return TRUE
   end
 
   # Replace-string function.  This is the same as query-replace,
@@ -501,7 +501,7 @@ module Search
   def foldcase(f : Bool, n : Int32, k : Int32) : Result
     @@casefold = f ? n != 0 : !@@casefold
     Echo.puts("[Case folding now " + (@@casefold ? "ON" : "OFF") + "]")
-    return Result::True
+    return TRUE
   end
 
   # The following code and tables for the searchparen command
@@ -657,7 +657,7 @@ module Search
 	if ch == chdec
 	  if count == 0
 	    w.dot = dot
-	    return Result::True
+	    return TRUE
 	  end
 	  count -= 1
 	elsif ch == chinc
@@ -667,7 +667,7 @@ module Search
     end
     Echo.puts("Not found")
     w.dot = olddot
-    return Result::False
+    return FALSE
   end
 
   # Creates key bindings for all Misc commands.

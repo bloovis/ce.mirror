@@ -267,7 +267,7 @@ class Line
   # case of replacement to what was there).
   def self.replace(plen : Int32, st : String) : Bool
     # Delete the characters to be replaced.
-    return false if Misc.backdel(false, plen, Kbd::RANDOM) != Result::True
+    return false if Misc.backdel(false, plen, Kbd::RANDOM) != TRUE
 
     # Insert the new characters.
     return Line.insertwithnl(st)

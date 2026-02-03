@@ -82,7 +82,7 @@ class Region
   def self.killregion(f : Bool, n : Int32, k : Int32) : Result
     region = Region.new
     if region.start.l == -1
-      return Result::False
+      return FALSE
     end
     Line.kdelete
     E.curw.dot = region.start.dup
@@ -96,7 +96,7 @@ class Region
   def self.copyregion(f : Bool, n : Int32, k : Int32) : Result
     region = Region.new
     if region.start.l == -1
-      return Result::False
+      return FALSE
     end
 
     # Purge the kill buffer.
@@ -123,7 +123,7 @@ class Region
       end
     end
     Echo.puts("[Region copied]")
-    return Result::True
+    return TRUE
   end
 
   # Adjusts the indentation of the lines in the region by the number of
@@ -131,9 +131,9 @@ class Region
   def self.indentregion(f : Bool, n : Int32, k : Int32) : Result
     region = Region.new
     if region.start.l == -1
-      return Result::False
+      return FALSE
     end
-    return Result::False unless Files.checkreadonly
+    return FALSE unless Files.checkreadonly
 
     # Get the first line in the region.
     w = E.curw
@@ -141,7 +141,7 @@ class Region
     w.dot = region.start
     w.dot.o = 0
     lp = b[region.start.l]
-    return Result::False unless lp
+    return FALSE unless lp
 
     # Loop through every line in the region.
     while w.dot.l != region.finish.l
@@ -165,7 +165,7 @@ class Region
       w.dot.l += 1
       w.dot.o = 0
     end
-    return Result::True
+    return TRUE
   end
 
   # Creates key bindings for all Region commands.

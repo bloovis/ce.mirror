@@ -80,7 +80,7 @@ module Files
 	# the middle of the window.
 	curw.line = [curw.dot.l - (curw.nrow // 2), 0].max
 	Echo.puts("[Old buffer]")
-	return Result::True
+	return TRUE
       end
     end
 
@@ -109,7 +109,7 @@ module Files
     else
       Echo.puts("Buffer is now read-write")
     end
-    return Result::True
+    return TRUE
   end
 
   # Saves the contents of the current buffer back into
@@ -118,16 +118,16 @@ module Files
   # file name.
   def filesave(f : Bool, n : Int32, k : Int32) : Result
     b = E.curb
-    return Result::True unless b.flags.changed?
+    return TRUE unless b.flags.changed?
     if b.filename == ""
       Echo.puts("No file name")
-      return Result::False
+      return FALSE
     end
     if b.writeout
       b.lchange(false)	# mark buffer as unchanged
-      return Result::True
+      return TRUE
     else
-      return Result::False
+      return FALSE
     end
   end
 
@@ -135,7 +135,7 @@ module Files
   # file already exists, uses it; others creates a new buffer.
   def filevisit(f : Bool, n : Int32, k : Int32) : Result
     result, fname = Echo.getfname("Visit file: ")
-    return result if result != Result::True
+    return result if result != TRUE
     return visit_file(fname)
   end
 
@@ -147,14 +147,14 @@ module Files
   # if the file exists and asks the user if this is OK.
   def filewrite(f : Bool, n : Int32, k : Int32) : Result
     result, fname = Echo.getfname("Write file: ")
-    return result if result != Result::True
+    return result if result != TRUE
     fname = tilde_expand(fname)
 
     # Check for existing file.
     b = E.curb
     if File.exists?(fname)
-      if Echo.yesno("Overwrite existing file") != Result::True
-	return Result::False
+      if Echo.yesno("Overwrite existing file") != TRUE
+	return FALSE
       end
     end
 
@@ -162,9 +162,9 @@ module Files
     b.filename = fname
     if b.writeout
       b.lchange(false)	# mark buffer as unchanged
-      return Result::True
+      return TRUE
     else
-      return Result::False
+      return FALSE
     end
   end
 

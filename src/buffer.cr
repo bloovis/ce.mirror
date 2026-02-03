@@ -108,8 +108,8 @@ class Buffer
     appendnl = false
     if lp.text.size != 0
       result = Echo.yesno("File doesn't end with a newline. Should I add one")
-      return false if result == Result::Abort
-      appendnl = result == Result::True
+      return false if result == ABORT
+      appendnl = result == TRUE
     end
 
     Echo.puts("[Writing...]")
@@ -345,7 +345,7 @@ class Buffer
   # looks good.
   def clear : Bool
     if @flags.changed?
-      if Echo.yesno("Discard changes") != Result::True
+      if Echo.yesno("Discard changes") != TRUE
 	return false
       end
     end
@@ -531,7 +531,7 @@ class Buffer
     b = @@blist[i]
     E.curw.usebuf(b)
 
-    return Result::True
+    return TRUE
   end
 
   # Attaches a buffer to a window. The
@@ -540,12 +540,12 @@ class Buffer
   # from some other window.
   def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
     result, bufn = Echo.getbufn
-    return result if result != Result::True
+    return result if result != TRUE
 
     # Search for a buffer.
-    return Result::False unless b = Buffer.find(bufn, true)
+    return FALSE unless b = Buffer.find(bufn, true)
     E.curw.usebuf(b)
-    return Result::True
+    return TRUE
   end
 
   # Display the buffer list. This is done
@@ -554,7 +554,7 @@ class Buffer
   # Then `popsysbuf` pops the data onto the screen. Bound to
   # "C-X C-B".
   def self.listbuffers(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False unless makelist
+    return FALSE unless makelist
     return b_to_r(popsysbuf)
   end
 

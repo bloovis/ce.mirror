@@ -44,13 +44,13 @@ module Misc
 	 text.screen_width(dot.o) + 1,
 	 percent, bytes])
     Echo.puts(s)
-    return Result::True
+    return TRUE
   end
 
   # Inserts *n* copies of the key *k* at the current location.
   def selfinsert(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
-    return Result::True if n == 0
+    return FALSE if n < 0
+    return TRUE if n == 0
 
     # Get the unmodified key code.
     c = k & Kbd::CHAR;
@@ -63,14 +63,14 @@ module Misc
 
     # Insert *n* copies of the character.
     Line.insert(c.chr.to_s * n)
-    return Result::True
+    return TRUE
   end
 
   # Opens up some blank space by inserting one or more newlines
   # and then backing up over them.
   def openline(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
-    return Result::True if n == 0
+    return FALSE if n < 0
+    return TRUE if n == 0
 
     n.times {Line.newline}
     return Basic.backchar(f, n, Kbd::RANDOM)
@@ -78,11 +78,11 @@ module Misc
 
   # Inserts *n* newlines at the current location.
   def insnl(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
-    return Result::True if n == 0
+    return FALSE if n < 0
+    return TRUE if n == 0
 
     n.times {Line.newline}
-    return Result::True
+    return TRUE
   end
 
   # Twiddles the two characters on either side of
@@ -93,24 +93,24 @@ module Misc
   # to "C-T".
   def twiddle(f : Bool, n : Int32, k : Int32) : Result
     w, b, dot, lp = E.get_context
-    return Result::False unless Files.checkreadonly
+    return FALSE unless Files.checkreadonly
 
     # If dot is at the end of the line, back up one character.
     if w.dot.o == lp.text.size
-      return Result::False if w.dot.o == 0
+      return FALSE if w.dot.o == 0
       w.dot.o -= 1
     end
 
     # Get characters to the right and left of the dot.
     cr = Line.getc
-    return Result::False if w.dot.o == 0
+    return FALSE if w.dot.o == 0
     w.dot.o -= 1
     cl = Line.getc
 
     # Put the characters into the line in reverse order.
     Line.putc(cr)
     Line.putc(cl)
-    return Result::True
+    return TRUE
   end
 
   # Inserts a newline followed by the correct number of
@@ -130,11 +130,11 @@ module Misc
 
       # Insert a newline if no numeric argument was provided.
       if !f
-	return Result::False unless Line.newline
+	return FALSE unless Line.newline
       end
     else
       # Current line is not all whitespace, so insert a newline.
-      return Result::False unless Line.newline
+      return FALSE unless Line.newline
     end
 
     # Adjust the indentation of the current line.
@@ -197,10 +197,10 @@ module Misc
     # If a numeric prefix was specified, zero out the kill buffer.
     Line.kdelete if f
 
-    if Basic.backchar(f, n, Kbd::RANDOM) == Result::True
+    if Basic.backchar(f, n, Kbd::RANDOM) == TRUE
       return b_to_r(Line.delete(n, f))
     else
-      return Result::False
+      return FALSE
     end
   end
 
@@ -251,14 +251,14 @@ module Misc
   # is really easy. All of the work is done by the
   # standard insert routines.
   def yank(f : Bool, n : Int32, k : Int32) : Result
-    return Result::False if n < 0
-    return Result::True if n == 0
+    return FALSE if n < 0
+    return TRUE if n == 0
 
     w, b, dot, lp = E.get_context
     n.times do
-      return Result::False unless Line.insertwithnl(Line.kbuf)
+      return FALSE unless Line.insertwithnl(Line.kbuf)
     end
-    return Result::True
+    return TRUE
   end
 
   # Creates key bindings for all Misc commands.
