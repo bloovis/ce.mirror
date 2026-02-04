@@ -174,6 +174,9 @@ module Files
     k.add(Kbd.ctlx_ctrl('s'), cmdptr(filesave), "file-save")
     k.add(Kbd.ctlx_ctrl('v'), cmdptr(filevisit), "file-visit")
     k.add(Kbd.ctlx_ctrl('w'), cmdptr(filewrite), "file-write")
+
+    k.add_dup(Kbd::F2, "file-save")
+    k.add_dup(Kbd::F3, "file-visit")
   end
 
 end

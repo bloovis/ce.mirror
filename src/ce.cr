@@ -149,7 +149,8 @@ begin
   k.add(Kbd.ctlx('('), cmdptr(ctlxlp), "start-macro")
   k.add(Kbd.ctlx(')'), cmdptr(ctlxrp), "end-macro")
   k.add(Kbd.ctlx('e'), cmdptr(ctlxe), "execute-macro")
-  k.add_dup('q', "quit")
+
+  k.add_dup(Kbd::F4, "quit")
 
   # Create some key bindings for other modules.
   Basic.bind_keys(k)
