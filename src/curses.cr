@@ -51,6 +51,9 @@ lib LibNCurses
   KEY_F20 = 0x11c
   KEY_RESIZE = 0x19a
 
+  # Hack to obtain curscr.
+  $curscr : Window
+  
   # General functions
   fun initscr : Window
   fun endwin : LibC::Int

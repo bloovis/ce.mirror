@@ -389,7 +389,7 @@ class Window
     tty = E.tty
     oldnrow = tty.nrow
     oldncol = tty.ncol
-    E.tty.getsize
+    E.tty.resize
     if tty.nrow != oldnrow || tty.ncol != oldncol
       # Find the bottom window and see if it can be resized
       # without making it too small.

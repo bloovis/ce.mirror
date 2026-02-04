@@ -123,7 +123,7 @@ class Terminal
   def resize
     initialize
     getsize
-    LibNCurses.wrefresh(@scr)
+    LibNCurses.wrefresh(LibNCurses.curscr)
   end
 
   # Write a character to the screen.
