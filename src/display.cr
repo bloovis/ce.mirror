@@ -10,9 +10,15 @@ class Display
   end
 
   def update
-    # Determine the actual screen column number of the dot.
+    # Determine the actual screen column number of the dot.  If the column is not
+    # visible, change the window's left column so that it is visible.
     w, b, dot, lp = E.get_context
     curcol = lp.text.screen_width(dot.o)
+    if curcol >= @tty.ncol + w.leftcol || curcol < w.leftcol
+      #STDERR.puts("Curcol #{curcol}, leftcol #{w.leftcol}, tty.ncol #{@tty.ncol}")
+      w.leftcol = [curcol - (@tty.ncol // 2), 0].max
+      #STDERR.puts("Changing leftcol to #{w.leftcol}")
+    end
 
     Window.each do |w|
       #STDERR.puts "update window for buffer #{w.buffer.name}: w.line #{w.line}, w.toprow #{w.toprow}, w.nrow #{w.nrow}"
@@ -20,7 +26,7 @@ class Display
       b = w.buffer
       bsize = b.size	# number of lines in buffer
 
-      # If the dot is not visible, reframe the window.
+      # If the dot line is not visible, reframe the window.
       dot = w.dot
       if dot.l < w.line || dot.l >= w.line + w.nrow
 	i = w.nrow // 2
@@ -40,7 +46,17 @@ class Display
 
       # Display visible lines.
       b.each_in_range(first, last) do |i, lp|
-        @tty.putline(i - first + w.toprow, 0, lp.text.detab.readable)
+        line = lp.text.detab.readable
+	#STDERR.puts("Line size #{line.size}, leftcol #{w.leftcol}")
+	if w.leftcol >= line.size
+	  line = ""
+	else
+	  line = line[w.leftcol..]
+	end
+	if line.size > @tty.ncol
+	  line = line[0...@tty.ncol-1] + "$"
+	end
+        @tty.putline(i - first + w.toprow, 0, line)
       end
 
       # Fill remainder with blank lines.
@@ -66,7 +82,7 @@ class Display
     w = E.curw
     dot = w.dot
     currow = dot.l - w.line + w.toprow 
-    @tty.move(currow, curcol)
+    @tty.move(currow, curcol - w.leftcol)
 
     # Refresh the display
     @tty.flush
