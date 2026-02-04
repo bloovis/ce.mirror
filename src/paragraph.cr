@@ -81,6 +81,70 @@ module Paragraph
     return result
   end
 
+
+  def fillpara(f : Bool, n : Int32, k : Int32) : Result
+    w, b, dot, lp = E.get_context
+    
+    # Get the position of the end of the paragraph.
+    gotoeop(false, 1, Kbd::RANDOM)
+    finish = w.dot.dup
+
+    # Get the position of the start of the paragraph.
+    gotobop(false, 1, Kbd::RANDOM)
+    start = w.dot.dup
+
+    # Get the starting line pointer.
+    r = Region.new(start, finish)
+    lp = b[start.l]
+    if lp.nil?
+      Echo.puts("Invalid line number #{start.l}!")
+      return FALSE
+    end
+
+    # Collect all the words in the region into a single array.
+    a = [] of String
+    l = start.l
+    while true
+      a.concat(lp.text.split)
+      break if l == finish.l
+      l += 1
+      lp = lp.next
+    end
+
+    # Move to the start of the paragraph and delete the entire
+    # paragraph.
+    w.dot = start
+    Line.delete(r.size, false)
+
+    # This is a list of characters that, if found at the end of a word,
+    # require two spaces following them.
+    doubles = ['.', '?', '!']
+
+    # Start adding words back to the buffer, making sure each line
+    # doesn't exceed the fill column size.
+    buf = ""
+    a.each do |s|
+      if buf == ""
+	space = ""
+      else
+	space = doubles.includes?(buf[-1]) ? "  " : " "
+      end
+      if buf.size + space.size + s.size > @@fillcol
+	Line.insert(buf)
+	Line.newline
+	buf = s
+      else
+	buf = buf + space + s
+      end
+    end
+    if buf != ""
+      Line.insert(buf)
+      Line.newline
+    end
+
+    result = TRUE
+  end
+
   # Creates key bindings for all Paragraph commands.
   def bind_keys(k : KeyMap)
     # The key binding ESC-[ can cause problems, because it is
@@ -90,7 +154,9 @@ module Paragraph
     # an ESC-{ binding for it too.
     k.add(Kbd.meta('['), cmdptr(gotobop), "back-paragraph")
     k.add_dup(Kbd.meta('{'), "back-paragraph")
+
     k.add(Kbd.meta(']'), cmdptr(gotoeop), "forw-paragraph")
+    k.add(Kbd.meta('j'), cmdptr(fillpara), "fill-paragraph")
   end
 
 end

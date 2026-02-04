@@ -5,13 +5,77 @@ class Region
   property finish : Pos		# ending position of region
   property size : Int32		# size of region in characters
 
-  # The `Region` constructor calculates the starting and ending positions,
-  # and size of the region between the current window's dot
-  # and mark.
-  def initialize
-    w, b, dot, lp = E.get_context
-    mark = w.mark
+  # This helper function examines the two positions *pos1* and *pos2*,
+  # and determines their proper order and the size of the region
+  # between the two positions.  It returns a tuple containing
+  # the starting position, the ending position, and the size.
+  protected def self.make_region(pos1 : Pos, pos2 : Pos) : Tuple(Pos, Pos, Int32)
+    # Get the number of lines in the buffer.
+    b = E.curb
     bsize = b.size
+
+    # Determine which is first: the mark or the dot?
+    if pos1.l < pos2.l
+      # Pos1 is before pos2.
+      start = pos1.dup
+      finish = pos2.dup
+    elsif pos1.l == pos2.l
+      # Pos2 and pos1 are one the same line.  This is the easy case:
+      # set the distance between the two offsets and return.
+      if pos2.o < pos1.o
+	start = pos2.dup
+	finish = pos1.dup
+	rsize = pos1.o - pos2.o
+      else
+	start = pos1.dup
+	finish = pos2.dup
+	rsize = pos2.o - pos1.o
+      end
+      return {start, finish, rsize}
+    else
+      # Pos1 is after pos2.
+      start = pos2.dup
+      finish = pos1.dup
+    end
+
+    # Save the starting line and offset, and get the pointer
+    # to the starting line.
+    startl = start.l
+    starto = start.o
+    lp = b[startl]
+
+    # lp should never be nil, but if it is, return
+    # an empty region with an invalid Pos.
+    if lp.nil?
+      Echo.puts "Invalid line number #{startl}"
+      start.l = -1
+      finish.l = -1
+      rsize = 0
+      return {start, finish, rsize}
+    end
+
+    # Calculate the size of the region.  Be careful
+    # not to go past the end of buffer.
+    rsize = lp.text.size - starto + 1	# +1 for newline
+    while startl + 1 < bsize
+      startl += 1
+      lp = lp.next
+      if startl == finish.l
+	rsize += finish.o
+	break
+      else
+	rsize += lp.text.size + 1
+      end
+    end
+    return {start, finish, rsize}
+  end
+
+  # The default `Region` constructor calculates the size of the region
+  # between the current window's dot and mark.
+  def initialize
+    w = E.curw
+    dot = w.dot
+    mark = w.mark
 
     # If there is no mark in current window, display an error message
     # and return a region that has invalid Pos members, i.e., pos.l is -1.
@@ -23,57 +87,15 @@ class Region
       return
     end
 
-    # Determine which is first: the mark or the dot?
-    if mark.l < dot.l
-      # Mark is before dot.
-      @start = mark.dup
-      @finish = dot.dup
-      startl = mark.l
-      starto = mark.o
-      lp = b[startl]
-      if lp.nil?
-	# lp should never be nil, but if it is, return
-	# an empty region with an invalid Pos.
-	Echo.puts "Invalid line number #{startl}"
-	@start.l = -1
-	@finish.l = -1
-	@size = 0
-	return
-      end
-    elsif mark.l == dot.l
-      # Dot and mark are one the same line.  This is the easy case:
-      # set the distance between the two offsets and return.
-      if dot.o < mark.o
-	@start = dot.dup
-	@finish = mark.dup
-	@size = mark.o - dot.o
-      else
-	@start = mark.dup
-	@finish = dot.dup
-	@size = dot.o - mark.o
-      end
-      return
-    else
-      # Mark is after dot.
-      @start = dot.dup
-      @finish = mark.dup
-      startl = dot.l
-      starto = dot.o
-    end
+    # Use the helper function to do the hard work.
+    @start, @finish, @size = Region.make_region(dot, mark)
+  end
 
-    # Get region size, i.e. number of characters between startl/starto (inclusive)
-    # and endpos (exclusive).
-    @size = lp.text.size - starto + 1	# +1 for newline
-    while startl + 1 < bsize
-      startl += 1
-      lp = lp.next
-      if startl == @finish.l
-	@size += @finish.o
-	return
-      else
-	@size += lp.text.size + 1
-      end
-    end
+  # This `Region` constructor calculates the size of the region
+  # between the positions *pos1* and *pos2*.
+  def initialize(pos1 : Pos, pos2 : Pos)
+    # Use the helper function to do the hard work.
+    @start, @finish, @size = Region.make_region(pos1, pos2)
   end
 
   # Kills the region. Move "." to the start, and kill the
