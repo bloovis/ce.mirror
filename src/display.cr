@@ -50,7 +50,7 @@ class Display
 	#STDERR.puts("Line size #{line.size}, leftcol #{w.leftcol}")
 	if w.leftcol >= line.size
 	  line = ""
-	else
+	elsif w.leftcol != 0
 	  line = line[w.leftcol..]
 	end
 	if line.size > @tty.ncol
