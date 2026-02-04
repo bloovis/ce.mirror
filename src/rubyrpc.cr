@@ -18,6 +18,8 @@ module RubyRPC
 
   def init_server : Bool
     @@id = 1
+
+    # Load the Ruby server.
     prog = "/usr/local/share/pe/server.rb"
     begin
       @@process = Process.new(prog,
@@ -27,12 +29,15 @@ module RubyRPC
                              error: Process::Redirect::Pipe,
 			     shell: false)
       dprint("Created process for #{prog}")
-      return true
     rescue IO::Error
       dprint("Unable to create process for #{prog}")
       @@process = nil
       return false
     end
+
+    # Load the local Ruby extension code.
+    loadscript("./.pe.rb")
+    return true
   end
 
   # Send a JSON message to the server in two pieces:
@@ -319,6 +324,7 @@ module RubyRPC
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing line for set_line", id)
     end
+    dot.o = 0
     Line.delete(lp.text.size, false)
     Line.insert(str)
     return make_normal_response(0, "", id)
@@ -629,6 +635,11 @@ module RubyRPC
     return call_server("exec", true, 1, Kbd::RANDOM, [line])
   end
 
+  # Loads a Ruby script file.
+  def loadscript(filename : String)
+    runruby("load '#{filename}'")
+  end
+ 
   # Commands
 
   # Prompts for a string, and evaluate the string using the

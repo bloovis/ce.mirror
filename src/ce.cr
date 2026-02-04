@@ -167,9 +167,6 @@ begin
   Extend.bind_keys(k)
   Paragraph.bind_keys(k)
 
-  # Start the Ruby process
-  Echo.puts("Unable to start Ruby server") unless RubyRPC.init_server
-
   # Load files specified on the command line.
   e.process_command_line
 
