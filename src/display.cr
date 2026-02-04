@@ -54,7 +54,7 @@ class Display
 	  line = line[w.leftcol..]
 	end
 	if line.size > @tty.ncol
-	  line = line[0...@tty.ncol-1] + "$"
+	  line = line[0...@tty.ncol-1] + "➤"
 	end
         @tty.putline(i - first + w.toprow, 0, line)
       end
