@@ -637,7 +637,9 @@ module RubyRPC
 
   # Loads a Ruby script file.
   def loadscript(filename : String)
-    runruby("load '#{filename}'")
+    if File.exists?(filename)
+      runruby("load '#{filename}'")
+    end
   end
  
   # Commands
