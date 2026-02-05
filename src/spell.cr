@@ -4,14 +4,9 @@
 module Spell
 
   @@process : Process | Nil = nil
-  @@debug = true
   @@regex = /[a-zA-Z']/	 # regex for recognizing "word" characters
 
   extend self
-
-  def dprint(s : String)
-    STDERR.puts(s) if @@debug
-  end
 
   # Returns true if the character at the dot
   # is considered to be part of a word.  This is different
@@ -35,7 +30,7 @@ module Spell
                              output: Process::Redirect::Pipe,
                              error: Process::Redirect::Pipe,
 			     shell: false)
-      dprint("Created process for ispell")
+      E.log("Created process for ispell")
     rescue IO::Error
       Echo.puts("Unable to create process for ispell")
       @@process = nil
@@ -47,7 +42,7 @@ module Spell
       f = p.output?
       if f
 	s = f.gets
-	dprint("ispell identified itself as '#{s}'")
+	E.log("ispell identified itself as '#{s}'")
       end
       return true
     else

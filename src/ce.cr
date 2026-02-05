@@ -21,6 +21,10 @@ require "./paragraph"
 require "./spell"
 require "./e"
 
+# Setting DEBUG to true enables logging, i.e. all calls to E.log
+# will send output to the file ce.log .
+DEBUG = false
+
 def quit(f : Bool, n : Int32, k : Int32) : Result
   # Check if there are any changed buffers.
   if Buffer.anycb
@@ -142,7 +146,13 @@ end
 # Here we capture any unhandled exceptions, and print
 # the exception information along with a backtrace before exiting.
 begin
+  # Create the main editor object.
   e = E.new
+
+  # If DEBUG is true, create the log file.
+  E.open_log("ce.log") if DEBUG
+
+  # Create the keymap and add our commands to it.
   k = e.keymap
   k.add(Kbd.ctlx_ctrl('c'), cmdptr(quit), "quit")
   k.add(Kbd.ctrl('g'), cmdptr(ctrlg), "abort")

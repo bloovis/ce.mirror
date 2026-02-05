@@ -2,7 +2,6 @@ require "json"
 
 module RubyRPC
   @@process : Process | Nil
-  @@debug = true
   @@id = 1
 
   # JSON-RPC error codes
@@ -11,10 +10,6 @@ module RubyRPC
   ERROR_EXCEPTION = -32000	# Server error - exception
 
   extend self
-
-  def dprint(s : String)
-    STDERR.puts(s) if @@debug
-  end
 
   def init_server : Bool
     @@id = 1
@@ -28,9 +23,9 @@ module RubyRPC
                              output: Process::Redirect::Pipe,
                              error: Process::Redirect::Pipe,
 			     shell: false)
-      dprint("Created process for #{prog}")
+      E.log("Created process for #{prog}")
     rescue IO::Error
-      dprint("Unable to create process for #{prog}")
+      E.log("Unable to create process for #{prog}")
       @@process = nil
       return false
     end
@@ -49,13 +44,13 @@ module RubyRPC
       f = p.input?
     end
     unless f
-      dprint("No server process, can't send RPC message")
+      E.log("No server process, can't send RPC message")
       return nil
     end
     nbytes = json.bytesize
     f.puts(nbytes.to_s)
     f.print(json)
-    dprint("====\nSent #{json}")
+    E.log("====\nSent #{json}")
   end
     
   # make_rpc_request - make a JSON request for a call to a Ruby command
@@ -189,11 +184,11 @@ module RubyRPC
     # Put each string in the strings array into the reply queue.
     strings = params["strings"]?
     if strings
-      dprint("handle_cmd: strings:")
+      E.log("handle_cmd: strings:")
       a = strings.as_a
       a.each do |s|
         str = s.as_s
-	dprint("  #{str}")
+	E.log("  #{str}")
 	Echo.replyq_put(str)
       end
     end
@@ -201,7 +196,7 @@ module RubyRPC
     # Call the MicroEMACS command `name`.  If the buffer has a mode,
     # try using its keymap first, then try the global keymap
     if name.nil?
-      dprint("Missing command name")
+      E.log("Missing command name")
       return false
     end
     b = E.curb
@@ -215,7 +210,7 @@ module RubyRPC
     # Send a response, unless it's a notification that expects no response,
     # as indicated by an id of 0 (i.e., the id was missing in the request).
     message = "handle_cmd: ran #{name}, result #{result}"
-    dprint(message)
+    E.log(message)
     response = make_normal_response(result.to_i, message, id)
     send_message(response)
     return true	# keep reading messages from the server
@@ -240,7 +235,7 @@ module RubyRPC
   def get_iscmd(id : Int32, str : String | Nil) : String
     if str.nil?
       message = "Missing command name for get_iscmd"
-      dprint(message)
+      E.log(message)
       return make_error_response(ERROR_PARAMS, message, id)
     end
 
@@ -258,7 +253,7 @@ module RubyRPC
   def get_reply(id : Int32, prompt : String | Nil) : String
     if prompt.nil?
       message = "Missing prompt for get_reply"
-      dprint(message)
+      E.log(message)
       return make_error_response(ERROR_PARAMS, message, id)
     end
     result, str = Echo.reply(prompt, nil)
@@ -291,10 +286,10 @@ module RubyRPC
   def handle_get(id : Int32, params : JSON::Any) : Bool
     name = get_string(params, "name")
     if name.nil?
-      dprint("Missing get name")
+      E.log("Missing get name")
       return false
     end
-    dprint("handle_get: name #{name}")
+    E.log("handle_get: name #{name}")
     string = get_string(params, "string")
 
     response = case name
@@ -349,20 +344,20 @@ module RubyRPC
     # otherwise use the global keymap.
     b = E.curb
     if b.modename.size == 0
-      dprint("set_bind: using global keymap instead of buffer #{b.name} for key #{key.to_s(16)}")
+      E.log("set_bind: using global keymap instead of buffer #{b.name} for key #{key.to_s(16)}")
       k = E.keymap
     else
-      dprint("set_bind: using buffer #{b.name} keymap for key #{key.to_s(16)}")
+      E.log("set_bind: using buffer #{b.name} keymap for key #{key.to_s(16)}")
       k = b.keymap
     end
 
     if !k.name_bound?(name)
-      dprint("set_bind: name #{name} is not bound")
+      E.log("set_bind: name #{name} is not bound")
       message = "No such command #{name}"
       Echo.puts(message)
       return make_error_response(ERROR_METHOD, message, id)
     end
-    dprint("set_bind: binding #{key} to #{name}")
+    E.log("set_bind: binding #{key} to #{name}")
     k.add_dup(key, name)
     return make_normal_response(0, "", id)
   end
@@ -399,7 +394,7 @@ module RubyRPC
     else
       E.curb.modename = str
     end
-    dprint("Setting buffer #{E.curb.name} modename to #{str}")
+    E.log("Setting buffer #{E.curb.name} modename to #{str}")
     return make_normal_response(0, "", id)
   end
 
@@ -439,7 +434,7 @@ module RubyRPC
     string = get_string(params, "string")
     int = get_int(params, "int")
     if name.nil?
-      dprint("Missing set name")
+      E.log("Missing set name")
       return false
     end
     response = case name
@@ -467,18 +462,18 @@ module RubyRPC
   def handle_call(obj : JSON::Any) : Bool
     method = get_string(obj, "method")
     unless method
-      dprint("Unable to get method from JSON")
+      E.log("Unable to get method from JSON")
       return false
     else
-      dprint("handle_call: method #{method}")
+      E.log("handle_call: method #{method}")
     end
     id = get_int(obj, "id")
-    dprint("handle_call: id #{id}")
+    E.log("handle_call: id #{id}")
 
     # There should always be a params object.
     params = obj["params"]?
     if params.nil?
-      dprint("Unable to get params from JSON")
+      E.log("Unable to get params from JSON")
       return false
     end
 
@@ -506,20 +501,20 @@ module RubyRPC
   def handle_error(obj : JSON::Any) : Bool
     id = obj["id"]?
     if id
-      dprint("id: #{id.as_i}")
+      E.log("id: #{id.as_i}")
     end
     params = obj["error"]?
     if params
       h = params.as_h
       code = h["code"].as_i?
-      dprint("code: #{code}") if code
+      E.log("code: #{code}") if code
       message = h["message"].as_s?
-      dprint("message: #{message}") if message
+      E.log("message: #{message}") if message
       if code == ERROR_EXCEPTION
 	set_popup(0, message)
       end
     else
-      dprint("Unable to get error from JSON")
+      E.log("Unable to get error from JSON")
       return false
     end
     return false
@@ -544,7 +539,7 @@ module RubyRPC
     id = get_int(obj, "id")
     result_code = get_int(obj, "result")
     string = get_string(obj, "string") || "<none>"
-    dprint("handle_result: id #{id}, expected_id #{expected_id}, result #{result_code}, string #{string}")
+    E.log("handle_result: id #{id}, expected_id #{expected_id}, result #{result_code}, string #{string}")
     return {id != expected_id, Result.new(result_code)}
   end
 
@@ -559,23 +554,23 @@ module RubyRPC
       f = p.output?
     end
     unless f
-      dprint("No server process, can't read RPC message")
+      E.log("No server process, can't read RPC message")
       return nil
     end
     s = f.gets
     if s.nil?
-      dprint("Unable to read line from server")
+      E.log("Unable to read line from server")
       return nil
     end
-    dprint("====\nReceived size line:\n#{s}")
+    E.log("====\nReceived size line:\n#{s}")
     len = s.to_i
-    dprint("got len #{len}")
+    E.log("got len #{len}")
 
     # Read the JSON payload.
     slice = Bytes.new(len)
     f.read(slice)
     jsonbuf = String.new(slice)
-    dprint("got json '#{jsonbuf}'")
+    E.log("got json '#{jsonbuf}'")
     return JSON.parse(jsonbuf)
   end
 
@@ -596,10 +591,10 @@ module RubyRPC
     # the method call we just sent it.
     keep_going = true
     while keep_going
-      dprint("call_server: waiting for a message")
+      E.log("call_server: waiting for a message")
       msg = read_rpc_message
       if msg.nil?
-        dprint("Couldn't read RPC message")
+        E.log("Couldn't read RPC message")
 	break
       end
 
@@ -614,11 +609,11 @@ module RubyRPC
       elsif is_call(msg)
 	keep_going = handle_call(msg)
       else
-	dprint("Unrecognized message")
+	E.log("Unrecognized message")
       end
     end
 
-    dprint("call_server: returning #{result} from method #{method}")
+    E.log("call_server: returning #{result} from method #{method}")
     return result
   end
 
@@ -626,7 +621,7 @@ module RubyRPC
   # parameters *f*, *n*, and *k*, and returning its result.
   # This is just the scaffold for a future working implementation.
   def rubycall(name : String, f : Bool, n : Int32, k : Int32) : Result
-    dprint("rubycall: calling #{name}")
+    E.log("rubycall: calling #{name}")
     return call_server(name, f, n, k, [""])
   end
 
@@ -665,10 +660,10 @@ module RubyRPC
     # otherwise use the global keymap.
     b = E.curb
     if b.modename.size == 0
-      dprint("rubycommand: using global keymap instead of buffer #{b.name}")
+      E.log("rubycommand: using global keymap instead of buffer #{b.name}")
       k = E.keymap
     else
-      dprint("rubycommand: using buffer #{b.name} keymap")
+      E.log("rubycommand: using buffer #{b.name} keymap")
       k = b.keymap
     end
     if k.name_bound?(name)
@@ -679,7 +674,7 @@ module RubyRPC
     # Bind the command to an unused key.  Eventually
     # the Ruby extension will call E.bind to bind
     # the method to a key.
-    dprint("rubycommand: binding #{key} to #{name}")
+    E.log("rubycommand: binding #{key} to #{name}")
     k.add(Kbd::RANDOM,
 	  ->(f : Bool, n : Int32, k : Int32) {
              rubycall(name, f, n, key) },

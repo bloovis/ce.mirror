@@ -10,6 +10,7 @@ end
 # and `curb` (the current buffer).
 class E
   @@instance : E?			# single instance of E
+  @@logfile : IO?			# log file handle
 
   property tty : Terminal
   property keymap : KeyMap
@@ -18,7 +19,7 @@ class E
   property lastflag : Eflags = Eflags::None	# flags for previous command
   property thisflag : Eflags = Eflags::None	# flags for currently running command
   property oldbufn = ""				# old buffer name
-  property macro : Macro
+  property macro : Macro			# keyboard macro
 
   # Use the following class methods to access the instance variables
   # of the single instance of `E`.
@@ -128,6 +129,27 @@ class E
   # Runs the execute method on the instance
   def self.execute(c : Int32, f : Bool, n : Int32) : Result
     return self.instance.execute(c, f, n)
+  end
+
+  # Open the specified log file for output.
+  # Returns true if successful, false otherwise.
+  def self.open_log(filename : String) : Bool
+    begin
+      @@logfile = File.open(filename, "w")
+      return true
+    rescue
+      @@logfile = nil
+      Echo.puts("Unable to open log file #{filename}")
+      return false
+    end
+  end
+
+  # Writes a string to the log file.
+  def self.log(s : String)
+    if f = @@logfile
+      f.puts(s)
+      f.flush
+    end
   end
 
   # Constructor.

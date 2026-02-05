@@ -39,6 +39,9 @@ class Macro
 
   def stop_recording
     @recording = false
+  end
+
+  def print
     @buf.each_with_index do |n, i|
       STDERR.puts("macro[#{i}] = #{Kbd.keyname(@buf[i])} (#{@buf[i].to_s(16)})")
     end
