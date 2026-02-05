@@ -55,6 +55,32 @@ module Spell
     end
   end
 
+  # Returns ispell's output file, or nil if the ispell
+  # process is dead.
+  private def ispell_output : IO | Nil
+    f = nil
+    if p = @@process
+      f = p.output?
+    end
+    if f.nil?
+      Echo.puts("Can't open ispell's output file handle")
+     end
+    return f
+  end
+
+  # Returns ispell's input file, or nil if the ispell
+  # process is dead.
+  private def ispell_input : IO | Nil
+    f = nil
+    if p = @@process
+      f = p.input?
+    end
+    if f.nil?
+      Echo.puts("Can't open ispell's input file handle")
+    end
+    return f
+  end
+
   # Finds the word under the cursor and returns it, leaving
   # the cursor past the end of the word.
   def getcursorword : String | Nil
@@ -130,6 +156,13 @@ module Spell
     prompt = "Replacement string or suggestion number (#{1} to #{suggestions.size}): "
     result, s = Echo.reply(prompt, nil)
     if result != TRUE
+      # User didn't enter a replacement, so tell ispell to accept this
+      # word in the future.
+      if result == FALSE
+	if fin = ispell_input
+	  fin.puts("@#{word}")
+	end
+      end
       Echo.puts(nomsg) if info
       return result
     end
@@ -168,36 +201,22 @@ module Spell
     end
 
     # Write the word to ispell.
-    f = nil
-    if p = @@process
-      f = p.input?
-    end
-    unless f
-      Echo.puts("Can't open spell's input file handle")
-      return ABORT
-    end
-    f.puts word
+    return ABORT unless fin = ispell_input
+    fin.puts word
 
     # Read the response from ispell.
-    f = nil
-    if p
-      f = p.output?
-    end
-    unless f    
-      Echo.puts("Can't open ispell's output file handle")
-      return ABORT
-    end
+    return ABORT unless fout = ispell_output
 
     # Read the response.  If it's non-blank, read more lines
     # until we find a blank line.
-    buf = f.gets
+    buf = fout.gets
     if buf.nil?
       Echo.puts("Can't read response from ispell")
       return ABORT
     end
     if buf.size > 0
       while true
-        s = f.gets
+        s = fout.gets
 	if s.nil?
 	  Echo.puts("Can't read blank line from ispell")
 	  return ABORT
