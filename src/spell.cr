@@ -5,11 +5,20 @@ module Spell
 
   @@process : Process | Nil = nil
   @@debug = true
+  @@regex = /[a-zA-Z']/	 # regex for recognizing "word" characters
 
   extend self
 
   def dprint(s : String)
     STDERR.puts(s) if @@debug
+  end
+
+  # Returns true if the character at the dot
+  # is considered to be part of a word.  This is different
+  # from Word.inword, because it considers only
+  # alphas and apostrpophes to be word characters.
+  def inword
+    return Line.getc.to_s =~ @@regex
   end
 
   # Opens a two-way pipe to the ispell program.  Returns true
@@ -51,20 +60,20 @@ module Spell
   def getcursorword : String | Nil
     s = ""
     # If we're not already in a word, return nil
-    return nil if !Word.inword
+    return nil if !inword
 
     # Scan back to the beginning of the word.
     dot = E.curw.dot
-    while dot.o > 0 && Word.inword
+    while dot.o > 0 && inword
       dot.o -= 1
     end
-    if !Word.inword
+    if !inword
       dot.o += 1
     end
 
     # Scan forward past the end of word, accumulating its
     # characters as we go.
-    while Word.inword
+    while inword
       s = s + Line.getc.to_s
       dot.o += 1
     end
@@ -187,15 +196,22 @@ module Spell
       return FALSE
     end
 
-    # Read the response.  If it's non-blank, read the next
-    # line, which WILL be blank.
+    # Read the response.  If it's non-blank, read more lines
+    # until we find a blank line.
     buf = f.gets
     if buf.nil?
       Echo.puts("Can't read from ispell")
       return FALSE
     end
     if buf.size > 0
-      f.gets
+      while true
+        s = f.gets
+	if s.nil?
+	  Echo.puts("Can't read from ispell")
+	  return FALSE
+	end
+	break if s == ""
+      end
     end
     #Echo.puts("ispell response to #{word} is '#{buf}'")
 

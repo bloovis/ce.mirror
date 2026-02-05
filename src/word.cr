@@ -1,12 +1,14 @@
 # The `Word` module contains some commands for dealing with words.
 module Word
 
+  @@regex = /\w/	 # regex for recognizing "word" characters
+
   extend self
 
   # Returns true if the character at the dot
   # is considered to be part of a word.
   def inword
-    return Line.getc.to_s =~ /\w/
+    return Line.getc.to_s =~ @@regex
   end
 
   # Commands

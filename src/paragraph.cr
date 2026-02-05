@@ -5,8 +5,9 @@ module Paragraph
   @@fillcol = 72
 
   # Compiled regular expression to match a line that is part
-  # of a paragraph.
-  @@regex = Regex.new("^\\s*\\w")
+  # of a paragraph, i.e. a line that starts with zero or more
+  # spaces, followed by a "word" character.
+  @@regex = /^\s*\w/
 
   extend self
 
