@@ -86,18 +86,17 @@ module Echo
     b.filename = ""
 
     # Find the largest name size.
-    namesize = 0
-    a.each { |name| namesize = [name.size, namesize].max }
+    namesize = a.map {|s| s.size}.max
 
     # Find out how many names will fit in a screen line.
-    cols = E.tty.ncol // (namesize + 1)
+    cols = E.tty.ncol // (namesize + 1)	# +1 for space separator
 
     # Construct lines of text using cols as the number of columns.
     s = ""
     col = 0
     a.each_with_index do |name, i|
       if col == cols - 1 || i == a.size - 1
-        s = s + " " + name
+        s = s + (col == 0 ? "" : " ") + name
 	b.addline(s)
 	s = ""
 	col = 0

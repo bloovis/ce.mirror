@@ -75,44 +75,70 @@ module Spell
   # contained in the line *rest*.
   private def get_replacement(word : String, rest : String) : Result
     #Echo.puts("Using /,\s*/ to split '#{rest}'")
-    # Pop up the system buffer showing the suggested replacements
+    # Split the ispell response into a list of suggestions.
     suggestions = rest.split(/,\s*/)
+
+    # Determine the size of the largest suggestion, adding 5
+    # for a prefix "NNN: ", where NNN is a suggestion number.
+    # There should not be more than 99 suggestions, but we'll
+    # allow for more just in case.
+    ssize = suggestions.map {|s| s.size + 5}.max
+
+    # Add a header line.
     b = Buffer.sysbuf
     b.clear
-    suggestions.each_with_index do |s,i|
-      b.addline("#{i}: #{s}")
+    b.addline("Suggested replacements for #{word}:")
+
+    # Find out how many suggestions will fit in a screen line.
+    cols = E.tty.ncol // (ssize + 1)	# +1 for space separator
+
+    # Construct lines of text using cols as the number of columns.
+    s = ""
+    col = 0
+    suggestions.each_with_index do |sugg, i|
+      sugg = "#{i+1}: " + sugg
+      if col == cols - 1 || i == suggestions.size - 1
+        s = s + (col == 0 ? "" : " ") + sugg
+	b.addline(s)
+	s = ""
+	col = 0
+      elsif col == 0
+        s = sugg.pad_right(ssize)
+	col = (col + 1) % cols
+      else
+	s = s + " " + sugg.pad_right(ssize)
+	col = (col + 1) % cols
+      end
     end
+
+    # Pop up the system buffer showing the suggested replacements
     return FALSE if !Buffer.popsysbuf
     E.disp.update
 
-    # Prompt the user to enter a response indicating an action to take.
-    # The actions are:
-    # * Ctrl-G or Q or empty string: do nothing
-    # * R: prompt the user for a replacement string
-    # * N (number): use ispell's N'th suggested replacement
-    prompt = "R=replace,N=use N'th suggestion: "
+    # Prompt the user to enter a response containing a replacement
+    # string, or the number of an ispell-suggested replacement.
+    nomsg = "No replacement done"
+    prompt = "Replacement string or suggestion number (#{1} to #{suggestions.size}): "
     result, s = Echo.reply(prompt, nil)
-    return result if result == ABORT
-    if s.upcase == "R"
-      result, s = Echo.reply("Replacement string: ", nil)
-      return result if result != TRUE
-      Line.replace(word.size, s)
-      Echo.puts("Replaced #{word} with #{s}")
-      return TRUE
+    if result != TRUE
+      Echo.puts(nomsg)
+      return FALSE
     end
     if s =~ /^\d+$/
       n = s.to_i
-      if n < 0 || n >= suggestions.size
-	Echo.puts("No replacement done")
+      if n < 1 || n > suggestions.size
+	Echo.puts(nomsg)
 	return FALSE
       end
-      s = suggestions[n]
+      s = suggestions[n-1]
+      Line.replace(word.size, s)
+      Echo.puts("Replaced #{word} with #{s}")
+      return TRUE
+    else
       Line.replace(word.size, s)
       Echo.puts("Replaced #{word} with #{s}")
       return TRUE
     end
-    Echo.puts("No replacement done")
-    return FALSE
   end
 
   # Runs ispell on the word under the curso.  If ispell
