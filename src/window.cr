@@ -373,6 +373,96 @@ class Window
     return TRUE
   end
 
+  # Enlarges the current window.  Find the window that loses space, and makes
+  # sure it is big enough.  If so, hacks the window descriptions.
+  def self.enlargewind(f : Bool, n : Int32, k : Int32) : Result
+    return shrinkwind(f, n, k) if n < 0
+    nwind = @@list.size
+    if nwind == 1
+      Echo.puts("Only one window")
+      return FALSE
+    end
+    curw = @@list[@@curi]
+
+    # If this is the last window, the one to adjust is
+    # the one above it.  Otherwise, the one to adjust is
+    # the one below it.
+    if @@curi == nwind - 1
+      above = true
+      adjw = @@list[@@curi - 1]
+    else
+      above = false
+      adjw = @@list[@@curi + 1]
+    end
+
+    if adjw.nrow <= n
+      Echo.puts("Impossible change")
+      return FALSE
+    end
+
+    if above
+      # We're shrinking the window above.  Move the top line
+      # of the current window up by n lines.
+      curw.line = [curw.line - n, 0].max
+      curw.toprow -= n
+    else
+      # We're shrinking the window below.  Move that window's
+      # top line down by n lines.
+      adjw.line = [adjw.line + n, adjw.buffer.size - 1].min
+      adjw.toprow += n
+    end
+
+    # Adjust the number of rows for both windows.
+    curw.nrow += n
+    adjw.nrow -= n
+    return TRUE
+  end
+
+  # Shrinks the current window. Finds the window that gains space.
+  # Hack at the window descriptions.
+  def self.shrinkwind(f : Bool, n : Int32, k : Int32) : Result
+    return enlargewind(f, n, k) if n < 0
+    nwind = @@list.size
+    if nwind == 1
+      Echo.puts("Only one window")
+      return FALSE
+    end
+    curw = @@list[@@curi]
+
+    # If this is the last window, the one to adjust is
+    # the one above it.  Otherwise, the one to adjust is
+    # the one below it.
+    if @@curi == nwind - 1
+      above = true
+      adjw = @@list[@@curi - 1]
+    else
+      above = false
+      adjw = @@list[@@curi + 1]
+    end
+
+    if curw.nrow <= n
+      Echo.puts("Impossible change")
+      return FALSE
+    end
+
+    if above
+      # We're growing the window above.  Move the top line
+      # of the current window down by n lines.
+      curw.line = [curw.line + n, curw.buffer.size - 1].min
+      curw.toprow += n
+    else
+      # We're growing the window below.  Move that window's
+      # top line up by n lines.
+      adjw.line = [adjw.line - n, 0].max
+      adjw.toprow -= n
+    end
+
+    # Adjust the number of rows for both windows.
+    curw.nrow -= n
+    adjw.nrow += n
+    return TRUE
+  end
+
   # Refreshes the display. A call is made to the
   # `getsize` method in the terminal handler, which tries
   # to reset "nrow" and "ncol". If the display
@@ -415,5 +505,7 @@ class Window
     k.add(Kbd.ctlx('1'), cmdptr(onlywind), "only-window")
     k.add(Kbd.ctlx('+'), cmdptr(balancewindows), "balance-windows")
     k.add(Kbd.ctrl('l'), cmdptr(refreshscreen), "refresh")
+    k.add(Kbd.ctlx_ctrl('z'), cmdptr(shrinkwind), "shrink-window")
+    k.add(Kbd.ctlx('z'), cmdptr(enlargewind), "enlarge-window")
   end
 end
