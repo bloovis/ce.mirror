@@ -45,6 +45,7 @@ class Buffer
   # Class variables.
   @@blist = [] of Buffer	# list of user-created buffers
   @@sysbuf : Buffer | Nil	# special "system" buffer
+  @@savetabs = true		# true if tabs are preserved when writing files
 
   def initialize(name : String, @filename = "")
     #STDERR.puts("Buffer.initialize: name #{name}, filename #{@filename}")
@@ -117,7 +118,11 @@ class Buffer
     begin
       File.open(@filename, "w") do |f|
         self.each do |lp|
-	  f.print(lp.text)
+	  if @@savetabs
+	    f.print(lp.text)
+	  else
+	    f.print(lp.text.detab)
+	  end
 	  if (lp != last_line) || appendnl
 	    f.print("\n")
 	  end
@@ -558,11 +563,24 @@ class Buffer
     return b_to_r(popsysbuf)
   end
 
+  # Sets the savetabs flag according to the numeric argument if present,
+  # or toggle the value if no argument present.  If savetabs is
+  # zero, tabs will will be changed to spaces when saving a file, by
+  # replacing each tab with the appropriate number of spaces (as
+  # determined by String.tabsize).
+  def self.setsavetabs(f : Bool, n : Int32, k : Int32) : Result
+    @@savetabs = f ? (n != 0) : !@@savetabs
+    Echo.puts("[Tabs will " + (@@savetabs ? "" : "not ") +
+	      "be preserved when saving a file]")
+    return TRUE
+  end
+
   # Binds keys for buffer commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd::F8, cmdptr(nextbuffer), "next-buffer")
     k.add(Kbd.ctlx('b'), cmdptr(usebuffer), "use-buffer")
     k.add(Kbd.ctlx_ctrl('b'), cmdptr(listbuffers), "display-buffers")
+    k.add(Kbd.meta('i'), cmdptr(setsavetabs), "set-save-tabs")
   end
 
   # Allow buffer to have the same methods as the linked list.
