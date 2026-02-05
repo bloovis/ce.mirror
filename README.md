@@ -29,7 +29,6 @@ I may add them as needed:
 * mark rings (I have never used this feature)
 * line numbers
 * frames (for multiple native windows)
-* spell checking
 * cscope support
 * upper- and lower-case a region (I have never used this feature)
 * incremental search (I have never used this feature)

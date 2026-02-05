@@ -261,6 +261,21 @@ module Misc
     return TRUE
   end
 
+  # Sets the tab size according to the numeric argument.
+  def settabsize(f : Bool, n : Int32, k : Int32) : Result
+    if f
+      if n < 2 || n > 32
+	Echo.puts("Illegal tab size #{n}")
+	return FALSE
+      end
+    else
+      n = 8 unless f	# reset to default if no argument
+    end
+    String.tabsize = n
+    Echo.puts("[Tab size set to #{n} characters]")
+    return TRUE
+  end
+
   # Creates key bindings for all Misc commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
@@ -273,6 +288,7 @@ module Misc
     k.add(Kbd.ctrl('y'), cmdptr(yank), "yank")
     k.add(Kbd.ctrl('d'), cmdptr(forwdel), "forw-del-char")
     k.add(Kbd.ctrl('h'), cmdptr(backdel), "back-del-char")
+    k.add(Kbd.meta_ctrl('i'), cmdptr(settabsize), "set-tab-size")
 
     # Create bindings for all ASCII printable characters and tab.
     ('!'.ord .. '~'.ord).each do |c|
