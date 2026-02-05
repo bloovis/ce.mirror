@@ -18,6 +18,7 @@ require "./rubyrpc"
 require "./extend"
 require "./macro"
 require "./paragraph"
+require "./spell"
 require "./e"
 
 def quit(f : Bool, n : Int32, k : Int32) : Result
@@ -166,6 +167,7 @@ begin
   RubyRPC.bind_keys(k)
   Extend.bind_keys(k)
   Paragraph.bind_keys(k)
+  Spell.bind_keys(k)
 
   # Load files specified on the command line.
   e.process_command_line
