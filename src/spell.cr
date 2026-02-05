@@ -82,7 +82,7 @@ module Spell
 
   # Asks the user for a replacement for *word*, using the suggestions
   # contained in the line *rest*.
-  private def get_replacement(word : String, rest : String) : Result
+  private def get_replacement(word : String, rest : String, info : Bool) : Result
     #Echo.puts("Using /,\s*/ to split '#{rest}'")
     # Split the ispell response into a list of suggestions.
     suggestions = rest.split(/,\s*/)
@@ -130,22 +130,22 @@ module Spell
     prompt = "Replacement string or suggestion number (#{1} to #{suggestions.size}): "
     result, s = Echo.reply(prompt, nil)
     if result != TRUE
-      Echo.puts(nomsg)
-      return FALSE
+      Echo.puts(nomsg) if info
+      return result
     end
     if s =~ /^\d+$/
       n = s.to_i
       if n < 1 || n > suggestions.size
-	Echo.puts(nomsg)
+	Echo.puts(nomsg) if info
 	return FALSE
       end
       s = suggestions[n-1]
       Line.replace(word.size, s)
-      Echo.puts("Replaced #{word} with #{s}")
+      Echo.puts("Replaced #{word} with #{s}") if info
       return TRUE
     else
       Line.replace(word.size, s)
-      Echo.puts("Replaced #{word} with #{s}")
+      Echo.puts("Replaced #{word} with #{s}") if info
       return TRUE
     end
   end
@@ -154,24 +154,16 @@ module Spell
   # thinks the word is misspelled, prompts the user for
   # replacement, and pops up the system buffer showing
   # the suggested replacements.
-  def spellword(f : Bool, n : Int32, key : Int32) : Result
+  def checkword(info : Bool) : Result
     if !open_ispell
       Echo.puts("Unable to open a pipe to ispell")
-      s = getcursorword
-      if s
-	return TRUE
-      else
-	Echo.puts("Didn't find a word")
-	return FALSE
-      end
+      return ABORT
     end
 
     # Get the word under the cursor, if any.
     word = getcursorword
-    if word
-      Echo.puts("Got word #{word}")
-    else
-      Echo.puts("No word under cursor")
+    if word.nil?
+      Echo.puts("No word under cursor") if info
       return FALSE
     end
 
@@ -181,8 +173,8 @@ module Spell
       f = p.input?
     end
     unless f
-      dprint("Can't open spell's input file handle")
-      return FALSE
+      Echo.puts("Can't open spell's input file handle")
+      return ABORT
     end
     f.puts word
 
@@ -193,22 +185,22 @@ module Spell
     end
     unless f    
       Echo.puts("Can't open ispell's output file handle")
-      return FALSE
+      return ABORT
     end
 
     # Read the response.  If it's non-blank, read more lines
     # until we find a blank line.
     buf = f.gets
     if buf.nil?
-      Echo.puts("Can't read from ispell")
-      return FALSE
+      Echo.puts("Can't read response from ispell")
+      return ABORT
     end
     if buf.size > 0
       while true
         s = f.gets
 	if s.nil?
-	  Echo.puts("Can't read from ispell")
-	  return FALSE
+	  Echo.puts("Can't read blank line from ispell")
+	  return ABORT
 	end
 	break if s == ""
       end
@@ -218,17 +210,17 @@ module Spell
     # A blank response means ispell doesn't know what to
     # do with the word.
     if buf.size == 0
-      Echo.puts("ispell doesn't recognize #{word} as a word")
+      Echo.puts("ispell doesn't recognize #{word} as a word") if info
       return FALSE
     end
 
     # Examine the response.
     case buf[0]
     when '*'
-      Echo.puts("#{word} is spelled correctly")
+      Echo.puts("#{word} is spelled correctly") if info
       return TRUE
     when '+'
-      Echo.puts("#{word} is spelled correctly via root #{buf[2..]}")
+      Echo.puts("#{word} is spelled correctly via root #{buf[2..]}") if info
       return TRUE
     when '#', '&', '?'
       # Ignore the first part of the response, which gives
@@ -243,29 +235,64 @@ module Spell
 	if m = regex.match(buf[1..])
 	  rest = m[1]?
 	  if rest
-	    return get_replacement(word, rest)
+	    return get_replacement(word, rest, info)
 	  else
-	    Echo.puts("Couldn't parse response '#{buf}'")
-	    return FALSE
+	    Echo.puts("Missing replacements in '#{buf}'")
+	    return ABORT
 	  end
 	else
 	  Echo.puts("Couldn't parse response '#{buf}'")
-	  return FALSE
+	  return ABORT
 	end
       else
 	Echo.puts("Invalid response '#{buf}'")
-        return FALSE
+        return ABORT
       end
     else
       Echo.puts("Unrecognized response '#{buf}'")
-      return FALSE
+      return ABORT
     end
     return TRUE
+  end
+
+  # Checks spelling in the word under the cursor.
+  def spellword(f : Bool, n : Int32, key : Int32) : Result
+    return checkword(true)
+  end
+
+  # Checks spelling in the current marked region.
+  def spellregion(f : Bool, n : Int32, key : Int32) : Result
+    w = E.curw
+    region = Region.new
+    return FALSE if region.start.l == -1	# invalid region
+    w.dot = region.start
+    status = TRUE
+    while true
+      # Abort if we're past the end of the region.
+      break if w.dot.cmp(region.finish) >= 0
+
+      # Scan forward to the next word.
+      while !inword
+	# Abort if we're at the end of the buffer
+	break TRUE if Basic.forwchar(false, 1, Kbd::RANDOM) != TRUE
+      end
+      break if !inword
+
+      # Abort if we're past the end of the region.
+      break if w.dot.cmp(region.finish) >= 0
+
+      # Check this word, and abort if checkword says to abort.
+      status = checkword(false)
+      break if status == ABORT
+    end
+    Echo.puts("Done")	# clear any existing prompt
+    return status
   end
 
   # Creates key bindings for all RubyRPC commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.meta('$'), cmdptr(spellword), "spell-word")
+    k.add(Kbd.ctlx('i'), cmdptr(spellregion), "spell-region")
   end
 
 end
