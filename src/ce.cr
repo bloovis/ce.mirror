@@ -31,7 +31,6 @@ def quit(f : Bool, n : Int32, k : Int32) : Result
     return FALSE if Echo.yesno("There are changed buffers.  Quit") != TRUE
   end
   E.tty.close
-  puts "Goodbye!"
   exit 0
   return TRUE
 end
