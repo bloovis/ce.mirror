@@ -20,6 +20,7 @@ require "./macro"
 require "./paragraph"
 require "./spell"
 require "./e"
+require "../version"
 
 # Setting DEBUG to true enables logging, i.e. all calls to E.log
 # will send output to the file ce.log .
@@ -41,7 +42,7 @@ def ctrlg(f : Bool, n : Int32, k : Int32) : Result
   return ABORT
 end
 
-def self.makechart
+def makechart
   # Populate the system buffer with the information about the
   # "normal" buffers.
   b = Buffer.sysbuf
@@ -142,6 +143,12 @@ def ctlxe(f : Bool, n : Int32, k : Int32) : Result
   return s
 end
 
+# Displays the version of ce on the echo line.
+def showversion(f : Bool, n : Int32, k : Int32) : Result
+  Echo.puts("CrystalEdit version #{VERSION}")
+  return TRUE
+end
+
 # Here we capture any unhandled exceptions, and print
 # the exception information along with a backtrace before exiting.
 begin
@@ -159,6 +166,7 @@ begin
   k.add(Kbd.ctlx('('), cmdptr(ctlxlp), "start-macro")
   k.add(Kbd.ctlx(')'), cmdptr(ctlxrp), "end-macro")
   k.add(Kbd.ctlx('e'), cmdptr(ctlxe), "execute-macro")
+  k.add(Kbd.meta_ctrl('v'), cmdptr(showversion), "display-version")
 
   k.add_dup(Kbd::F4, "quit")
 
