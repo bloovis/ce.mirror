@@ -289,6 +289,7 @@ module Misc
     k.add(Kbd.ctrl('d'), cmdptr(forwdel), "forw-del-char")
     k.add(Kbd.ctrl('h'), cmdptr(backdel), "back-del-char")
     k.add(Kbd.meta_ctrl('i'), cmdptr(settabsize), "set-tab-size")
+    k.add_dup(Kbd::DEL, "forw-del-char")
 
     # Create bindings for all ASCII printable characters and tab.
     ('!'.ord .. '~'.ord).each do |c|
