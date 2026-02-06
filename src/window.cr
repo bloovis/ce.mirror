@@ -463,6 +463,34 @@ class Window
     return TRUE
   end
 
+  # Repositions dot in the current window to line *n*.  If *n* is
+  # positive, it is that line.  If it is negative it is that line from the
+  # bottom.  If it is 0 the window is centered.  With no argument it
+  # defaults to 1.
+  def self.reposition(f : Bool, n : Int32, k : Int32) : Result
+    w = E.curw
+    dot = w.dot
+    if n > 0
+      line = dot.l - n + 1
+    elsif n == 0
+      line = dot.l - (w.nrow // 2)
+    else
+      line = dot.l - n - w.nrow
+    end
+
+    # Make sure line is within the buffer bounds.
+    if line < 0
+      line = 0
+    else
+      bsize = w.buffer.size
+      if line >= bsize
+	line = bsize - 1
+      end
+    end
+    w.line = line
+    return TRUE
+  end
+
   # Refreshes the display. A call is made to the
   # `getsize` method in the terminal handler, which tries
   # to reset "nrow" and "ncol". If the display
@@ -507,5 +535,6 @@ class Window
     k.add(Kbd.ctrl('l'), cmdptr(refreshscreen), "refresh")
     k.add(Kbd.ctlx_ctrl('z'), cmdptr(shrinkwind), "shrink-window")
     k.add(Kbd.ctlx('z'), cmdptr(enlargewind), "enlarge-window")
+    k.add(Kbd.meta('!'), cmdptr(reposition), "reposition-window")
   end
 end
