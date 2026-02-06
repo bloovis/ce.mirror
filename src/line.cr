@@ -65,7 +65,9 @@ class Line
     end
 
     # Insert the new line to the old one.
-    b.insert_after(lp, lp1)
+    b.insert_after(lp, lp1)	# This clears the line number cache
+    b.add_cache(dot.l, lp)	# Restore line number cache entry for current line
+    b.add_cache(dot.l + 1, lp1)	# Add a line number cache entry for the new line
 
     # Mark the buffer as changed.
     b.changed
@@ -169,7 +171,8 @@ class Line
     #STDERR.puts "Line.delnewline: joined line = '#{prevl.text}'"
 
     # Unlink the next line.
-    b.delete(nextl)
+    b.delete(nextl)		# This clears the line number cache
+    b.add_cache(dot.l, prevl)	# Restore line number cache entry for current line
 
     # Adjust dot, mark, and undo dot in all windows that have the same buffer.
     oldpos = dot.dup

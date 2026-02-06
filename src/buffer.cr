@@ -225,8 +225,9 @@ class Buffer
   # Returns the `n`th line in the buffer, or nil if `n` is too large.
   # `n` is zero-based, not 1-based.
   #
-  # This is inefficient right now, but we can improve the algorithm
-  # in the future by caching one or more line number => line associations.
+  # The hard way to do this is inefficient because it requires scanning the
+  # entire linked list of lines.  We use a cache of line pointers indexed
+  # by line number to avoid having do it the hard way every time.
   def [](n : Int32) : Pointer(Line) | Nil
     # Is the line already in the cache?
     if lp = @lcache[n]?
@@ -316,28 +317,41 @@ class Buffer
     end
   end
 
-  # Clear the line number and size caches
-  def clear_caches
+  # Clears the line number cache.    If *sizeadjust* is zero, clears
+  # the size cache.  If the size cache is valid, and *sizeadjust* is
+  # non-zero, adds *sizeadjust* to the size cache.
+  def clear_caches(sizeadjust : Int32)
     @lcache.clear
-    @scache = -1
+    if sizeadjust == 0
+      @scache = -1
+    elsif @scache != -1
+      @scache += sizeadjust
+    end
   end
 
   # Deletes the line *lp* from the line list.
   def delete(lp : Pointer(Line))
     @list.delete(lp)
-    clear_caches
+    clear_caches(-1)
+  end
+
+  # Adds an entry to the line cache assocating line number *n*
+  # with line pointer *lp*.
+  def add_cache(n : Int32, lp : Pointer(Line))
+    @lcache[n] = lp
+    #STDERR.puts("add_cache: n #{n}, lp #{lp}, text '#{lp.text}'")
   end
 
   # Inserts the line *lp1* after the line *lp* in the list.
   def insert_after(lp : Pointer(Line), lp1 : Pointer(Line))
     @list.insert_after(lp, lp1)
-    clear_caches
+    clear_caches(1)
   end
 
   # Appends the string *s* to the buffer as a separate line.
   def addline(s : String)
     @list.push(Line.alloc(s))
-    clear_caches
+    clear_caches(1)
   end
 
   # This routine blows away all of the text
@@ -367,7 +381,7 @@ class Buffer
     @leftcol = 0
 
     # Clear the line number and size caches.
-    clear_caches
+    clear_caches(0)
 
     # Update all windows viewing this buffer.
     Window.each do |w|
