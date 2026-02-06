@@ -491,6 +491,44 @@ class Window
     return TRUE
   end
 
+  # Moves the current window down by *n* lines.
+  # mvupwind does all the work.
+  def self.mvdnwind(f : Bool, n : Int32, k : Int32) : Result
+    return mvupwind(f, -n, Kbd::RANDOM)
+  end
+
+  # Moves the current window up by *n*
+  # lines. Recomputes the new top line of the window.
+  # Look to see if "." is still on the screen. If it is,
+  # you win. If it isn't, then move "." to center it
+  # in the new framing of the window.
+  def self.mvupwind(f : Bool, n : Int32, k : Int32) : Result
+    w = E.curw
+    dot = w.dot
+    bsize = w.buffer.size
+
+    # Calculate the new top line by subtracting n (which can
+    # be negative), making sure it stays within the buffer bounds.
+    line = w.line - n
+    if line < 0
+      line = 0
+    elsif line >= bsize
+      line = bsize - 1
+    end
+    w.line = line
+
+    # If the dot is still visible, we're done.
+    if dot.l >= line && dot.l < line + w.nrow
+      return TRUE
+    end
+
+    # Reframe the window, trying to put the dot in the
+    # center row.
+    dot.l = [line + (w.nrow // 2), bsize - 1].min
+    dot.o = 0
+    return TRUE
+  end
+
   # Refreshes the display. A call is made to the
   # `getsize` method in the terminal handler, which tries
   # to reset "nrow" and "ncol". If the display
@@ -536,5 +574,7 @@ class Window
     k.add(Kbd.ctlx_ctrl('z'), cmdptr(shrinkwind), "shrink-window")
     k.add(Kbd.ctlx('z'), cmdptr(enlargewind), "enlarge-window")
     k.add(Kbd.meta('!'), cmdptr(reposition), "reposition-window")
+    k.add(Kbd.ctlx_ctrl('n'), cmdptr(mvdnwind), "down-window")
+    k.add(Kbd.ctlx_ctrl('p'), cmdptr(mvupwind), "up-window")
   end
 end
