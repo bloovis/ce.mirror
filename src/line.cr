@@ -68,7 +68,7 @@ class Line
     b.insert_after(lp, lp1)
 
     # Mark the buffer as changed.
-    b.lchange
+    b.changed
 
     # Adjust dot, mark, and undo dot in all windows that have the same buffer.
     oldpos = dot.dup
@@ -107,7 +107,7 @@ class Line
     lp.text = lp.text.insert(dot.o, s)
 
     # Mark the buffer as changed.
-    b.lchange
+    b.changed
 
     # Adjust dot, mark, and undo dot in all windows that have the same buffer.
     oldpos = dot.dup
@@ -160,7 +160,7 @@ class Line
     end
 
     # Mark the buffer as changed.
-    b.lchange
+    b.changed
 
     # Append the next line to the current line.
     prevsize = prevl.text.size
@@ -227,7 +227,7 @@ class Line
 	n -= 1
       else
 	# Mark the buffer as changed.
-	b.lchange
+	b.changed
 
 	# Save undo information
 	deleted_text = text[dot.o, chars]

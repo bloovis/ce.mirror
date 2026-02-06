@@ -172,7 +172,7 @@ class Buffer
     end
 
     # Mark the buffer as unchanged.
-    lchange(false)
+    changed(false)
 
     # For all windows that are viewing this buffer, set
     # the dot to the top of the buffer, and invalidate the mark.
@@ -308,7 +308,7 @@ class Buffer
 
   # Sets the changed flag for the buffer if *state* is true (default
   # if not specified), or clears the changed flag if *state* is false.
-  def lchange(state : Bool = true)
+  def changed(state : Bool = true)
     if state
       @flags = @flags | Bflags::Changed
     else

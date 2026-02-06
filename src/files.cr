@@ -124,7 +124,7 @@ module Files
       return FALSE
     end
     if b.writeout
-      b.lchange(false)	# mark buffer as unchanged
+      b.changed(false)	# mark buffer as unchanged
       return TRUE
     else
       return FALSE
@@ -161,7 +161,7 @@ module Files
     # Change the buffer filename and write the file.
     b.filename = fname
     if b.writeout
-      b.lchange(false)	# mark buffer as unchanged
+      b.changed(false)	# mark buffer as unchanged
       return TRUE
     else
       return FALSE

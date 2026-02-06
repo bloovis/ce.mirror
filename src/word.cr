@@ -97,7 +97,6 @@ module Word
 	c = Line.getc
 	if c.lowercase?
 	  Line.putc(c.upcase)
-	  b.lchange
 	else
 	  if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	    # Hit end of buffer, return now.
@@ -135,7 +134,6 @@ module Word
 	c = Line.getc
 	if c.uppercase?
 	  Line.putc(c.downcase)
-	  b.lchange
 	else
 	  if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	    # Hit end of buffer, return now.
@@ -171,7 +169,6 @@ module Word
       c = Line.getc
       if c.lowercase?
 	Line.putc(c.upcase)
-	b.lchange
       else
 	if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	  # Hit end of buffer, return now.
@@ -185,7 +182,6 @@ module Word
 	c = Line.getc
 	if c.uppercase?
 	  Line.putc(c.downcase)
-	  b.lchange
 	else
 	  if Basic.forwchar(false, 1, Kbd::RANDOM) == FALSE
 	    # Hit end of buffer, return now.

@@ -179,7 +179,6 @@ class Region
       # plus the part of the line after the leading whitespace.
       Line.delete(offset, false)
       Line.insert(String.indent(new_indent))
-      b.lchange
 
       # Move the next line.  Stop if we're at the line buffer line.
       break if lp == b.last_line
