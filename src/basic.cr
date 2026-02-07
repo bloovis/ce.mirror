@@ -16,9 +16,8 @@ module Basic
 
     # Move the dot to halfway point in the window, or to the end
     # the buffer if the halfway point is past the end.
-    dot.l = w.line + (w.nrow // 2)
     bsize = w.buffer.size
-    dot.l = bsize - 1 if dot.l >= bsize
+    dot.l = [w.line + (w.nrow // 2), bsize - 1].min
     dot.o = 0
   end
 
@@ -42,27 +41,19 @@ module Basic
     return TRUE
   end
 
-  # Goes to the beginning of the
-  # buffer. Setting WFHARD is conservative,
-  # but almost always the case.
+  # Goes to the beginning of the buffer.
   def gotobob(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
     w.dot.l = 0
     w.dot.o = 0
-    w.flags |= Wflags::Hard
     return TRUE
   end
 
   # Goes to the end of the buffer.
-  # Setting WFHARD is conservative, but
-  # almost always the case.
   def gotoeob(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
     b = w.buffer
-    last = b.size - 1
-    if last < 0
-      last = 0
-    end
+    last = [b.size - 1, 0].max
     lp = b[last]
     if lp
       w.dot.l = last
@@ -70,7 +61,6 @@ module Basic
     else
       raise "Nil line in gotoeob!"
     end
-    w.flags |= Wflags::Hard
     return TRUE
   end
 
@@ -84,8 +74,7 @@ module Basic
     # (80% of the screen size is what ITS EMACS seems to use).
     w = E.curw
     nrow = w.nrow
-    page = w.nrow - (w.nrow // 5)
-    page = 1 if page <= 0
+    page = [w.nrow - (w.nrow // 5), 1].max
     if !f
       n = page		# Default scroll
     elsif n < 0
@@ -98,9 +87,6 @@ module Basic
     w.line += n
     bsize = w.buffer.size
     w.line = bsize - 1 if w.line >= bsize
-
-    # This is a hard update (i.e., entire window must be redrawn).
-    w.flags |= Wflags::Hard
 
     checkdot(w)
     return TRUE
@@ -116,8 +102,7 @@ module Basic
     # (80% of the screen size is what ITS EMACS seems to use).
     w = E.curw
     nrow = w.nrow
-    page = w.nrow - (w.nrow // 5)
-    page = 1 if page <= 0
+    page = [w.nrow - (w.nrow // 5), 1].max
     if !f
       n = page		# Default scroll
     elsif n < 0
@@ -127,11 +112,7 @@ module Basic
     end
       
     # Move the current line number up, but not past the start of the buffer.
-    w.line -= n
-    w.line = 0 if w.line < 0
-
-    # This is a hard update (i.e., entire window must be redrawn).
-    w.flags |= Wflags::Hard
+    w.line = [w.line - n, 0].max
 
     checkdot(w)
     return TRUE
@@ -281,7 +262,6 @@ module Basic
 
     dot.o = getgoal(lp)
     w.dot = dot
-    w.flags |= Wflags::Move
     return ret
   end
 
@@ -324,7 +304,6 @@ module Basic
 
     dot.o = getgoal(lp)
     w.dot = dot
-    w.flags |= Wflags::Move
     return ret
   end
 

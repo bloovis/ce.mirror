@@ -1,15 +1,6 @@
 require "./buffer"
 require "./pos"
 
-@[Flags]
-enum Wflags
-  Force		# Force reframe
-  Move		# Movement from line to line
-  Edit		# Editing within a line
-  Hard		# Do a full display update
-  Mode		# Update mode line
-end
-
 class Window
   getter   buffer : Buffer	# buffer attached to this window
   property line : Int32		# buffer line number of the window's top line
@@ -20,8 +11,6 @@ class Window
   property toprow : Int32	# top screen row of window
   property nrow : Int32		# number of screen rows in window
   property leftcol : Int32	# left column of window
-  property force : Int32	# if non-zero, force dot to be displayed at this row
-  property flags : Wflags	# flags that give hints to the display updater
 
   @@list = [] of Window		# list of all windows
   @@curi = -1			# index to @@list of current window
@@ -36,8 +25,6 @@ class Window
     @toprow = 0
     @nrow = 0
     @leftcol = 0
-    @force = 0
-    @flags = Wflags::None
 
     # Bump the window count of the buffer.
     #STDERR.puts("Window.initialize: calling add_wind(1)")
@@ -245,7 +232,6 @@ class Window
     w2 = Window.new(w.buffer)
     w2.dot = w.dot.dup
     w2.mark = w.mark.dup
-    w2.force = w.force
     w2.leftcol = w.leftcol
 
     # Calculate the sizes of the upper and lower windows.
