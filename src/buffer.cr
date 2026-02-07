@@ -459,8 +459,8 @@ class Buffer
     namesize = [Buffer.buffers.map {|b| b.name.size}.max, bhdrsize].max
 
     # Populate the system buffer with information about all buffers.
-    b.addline("C W  S          Size " + bhdr.pad_right(namesize)       + " File")
-    b.addline("- -  -          ---- " + bhdrdashes.pad_right(namesize) + " ----")
+    b.addline("C W  S         Size " + bhdr.pad_right(namesize)       + " File")
+    b.addline("- -  -         ---- " + bhdrdashes.pad_right(namesize) + " ----")
     Buffer.each do |b2|
       #STDERR.puts("makelist: b2 name #{b2.name}, nwind #{b2.nwind}")
       # Don't include system buffers in the list.
@@ -482,7 +482,7 @@ class Buffer
       end
       s = s +
 	  b2.nwind.to_s.pad_right(2) + " " +
-	  (b2.flags.system? ? "Y " : "N ") +
+	  (b2.flags.system? ? "* " : "  ") +
 	  bytes.to_s.pad_left(12) + " " +
 	  b2.name.pad_right(namesize) + " " + b2.filename
       b.addline(s)
