@@ -34,10 +34,7 @@ class Display
 	# We have set i to the row on which we want the dot
 	# to be shown in the window.  Given that, figure out
 	# which line should be shown at the top of the window
-	w.line = dot.l - i
-	if w.line < 0
-	  w.line = 0
-	end
+	w.line = [dot.l - i, 0].max
       end
 
       # Figure out how many lines are actually visible.
@@ -46,13 +43,21 @@ class Display
 
       # Display visible lines.
       b.each_in_range(first, last) do |i, lp|
+        # Remove tabs and make control characters readable.
         line = lp.text.detab.readable
 	#STDERR.puts("Line size #{line.size}, leftcol #{w.leftcol}")
+
+	# If the entire line is invisible given the current left column,
+	# make it blank.  Otherwise, trim off the left part of the
+	# line that is invisible.
 	if w.leftcol >= line.size
 	  line = ""
 	elsif w.leftcol != 0
 	  line = line[w.leftcol..]
 	end
+
+	# If the line won't fit on the screen, change the character at the right
+	# margin to an arrow to indicate that there is more to the right.
 	if line.size > @tty.ncol
 	  line = line[0...@tty.ncol-1] + "➤"
 	end
@@ -65,7 +70,8 @@ class Display
         @tty.eeol
       end
 
-      # Mode line
+      # Construct the mode line, displaying the buffer changed flag,
+      # the mode name (if non-blank), the buffer name, and the filename.
       @tty.move(w.toprow + w.nrow, 0)
       @tty.color(Terminal::CMODE)
       @tty.eeol

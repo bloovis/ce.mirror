@@ -322,11 +322,7 @@ class Window
     @@curi = 0
 
     # Reframe the window to avoid moving dot, if possible.
-    if w.dot.l - w.toprow < 0
-      w.line = 0
-    else
-      w.line -= w.toprow
-    end
+    w.line = [w.line - w.toprow, 0].max
     w.toprow = 0
     w.nrow = E.tty.nrow - 2	# 2 = mode line + echo line
     return TRUE
