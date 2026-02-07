@@ -152,7 +152,7 @@ class Buffer
 	  nline = 0
 	  lastline = "\n"	# Pretend there's a blank line if file is empty
 	  while s = f.gets(chomp: false)
-	    l = Line.alloc(s.chomp)
+	    l = Line.alloc(s.chomp.scrub)
 	    lastline = s
 	    @list.push(l)
 	    nline += 1
