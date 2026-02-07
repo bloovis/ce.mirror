@@ -1,5 +1,12 @@
 require "json"
 
+# The `RubyRPC` module contains methods for implementing Ruby
+# extensions in the editor in a manner identical to that used
+# in MicroEMACS.  It communicates with the Ruby
+# server `/usr/local/share/pe/server.rb` via JSON, specifically
+# the JSON-RPC protocol defined in <https://www.jsonrpc.org/specification>.
+# Further information about Ruby extensions can be found
+# in the MicroEMACS documentation.
 module RubyRPC
   @@process : Process | Nil
   @@id = 1
@@ -11,6 +18,10 @@ module RubyRPC
 
   extend self
 
+  # Initializes the Ruby server (`server.rb`), and if that is successful,
+  # loads the Ruby file `.pe.rb`, which contains the directory-local
+  # Ruby extensions.  Returns true if the server initialized successfully,
+  # or false otherwise.
   def init_server : Bool
     @@id = 1
 
@@ -35,7 +46,7 @@ module RubyRPC
     return true
   end
 
-  # Send a JSON message to the server in two pieces:
+  # Sends a JSON message to the server in two pieces:
   # * a line containing the size of the JSON payload in decimal
   # * the JSON payload itself
   def send_message(json : String)
@@ -53,8 +64,7 @@ module RubyRPC
     E.log("====\nSent #{json}")
   end
     
-  # make_rpc_request - make a JSON request for a call to a Ruby command
-  #
+  # Constructs a JSON string for a call to a Ruby command to be sent to the server.
   # * *method*: name of command
   # * *flag*: 1 if command was preceded by a C-u numeric prefix
   # * *prefix*: numeric prefix (undefined if flag is 0)
@@ -63,9 +73,11 @@ module RubyRPC
   # * *id*: unique request ID
   #
   # Example JSON:
+  # ```
   #   {"jsonrpc": "2.0",
   #     "method": "stuff",
   #      "params": {"flag": 1, "prefix": 42, "key": 9, "strings": ["a string"]  }, "id": 1}
+  # ```
   def make_rpc_request(method : String, flag : Int32, prefix : Int32, key,
 		       strings : Array(String), id : Int32) : String
     string = JSON.build do |json|
@@ -92,14 +104,15 @@ module RubyRPC
     return string
   end
 
-  # make_error_response - make a JSON object for an error response.
-  #
+  # Constructs a JSON string for an error response to be sent to the server.
   # * *code*: error code
   # * *message*: error message
   # * *id*: unique request ID
   #
   # Example JSON:
+  # ```
   #   {"id":4,"error":{"code":-32602,"message":"Invalid parameter"}}
+  # ```
   def make_error_response(code : Int32, message : String, id : Int32) : String
     string = JSON.build do |json|
       json.object do
@@ -115,14 +128,15 @@ module RubyRPC
     end
   end
 
-  # make_normal_response - make a JSON object for a non-error response.
-  #
-  # result: result code
-  # string: additional optional string result
-  # id: unique request ID
+  # Constructs a JSON string for a non-error response to be sent to the server.
+  # * *result*: result code
+  # * *string*: additional optional string result
+  # * *id*: unique request ID
   #
   # Example JSON:
+  # ```
   #   {"id":4,"result":0,"string":"success: id 4, method callback"}
+  # ```
   def make_normal_response(result : Int32, string : String | Nil, id : Int32) : String
     string = JSON.build do |json|
       json.object do
@@ -134,7 +148,7 @@ module RubyRPC
     end
   end
 
-  # Get a string member from a JSON object, or returns nil
+  # Gets a string member *name* from the JSON object *obj*, or returns nil
   # if the member is not found.
   def get_string(obj : JSON::Any, name : String) : String | Nil
     s = obj[name]?
@@ -145,7 +159,7 @@ module RubyRPC
     end
   end
 
-  # Get an integer member from a JSON object, or returns 0
+  # Gets an integer member *name* from the JSON object *obj*, or returns 0
   # if the member is not found.
   def get_int(obj : JSON::Any, name : String) : Int32
     id = obj[name]?
@@ -156,25 +170,27 @@ module RubyRPC
     end
   end
 
-  # Returns true if the JSON object is a method call message.
+  # Returns true if the JSON object *obj* is a method call message.
   def is_call(obj : JSON::Any)
     return !obj["method"]?.nil?
   end
 
-  # Returns true if the JSON object is a result message.
+  # Returns true if the JSON object *obj* is a result message.
   def is_result(obj : JSON::Any)
     return !obj["result"]?.nil?
   end
 
-  # Returns true if the JSON object is an error message.
+  # Returns true if the JSON object *obj* is an error message.
   def is_error(obj : JSON::Any)
     return !obj["error"]?.nil?
   end
 
-  # Processes a request to run a MicroEMACS command.
+  # Processes a request from the server to run an editor command.
   # Returns true if we should keep reading messages from the
   # server, or returns false if there's an error and we
   # should stop reading messages from the server.
+  # * *id*: the ID associated with the request
+  # * *params*: the params JSON object from request
   def handle_cmd(id : Int32, params : JSON::Any) : Bool
     name = get_string(params, "name")
     flag = get_int(params, "flag")
@@ -193,7 +209,7 @@ module RubyRPC
       end
     end
 
-    # Call the MicroEMACS command `name`.  If the buffer has a mode,
+    # Call the editor command `name`.  If the buffer has a mode,
     # try using its keymap first, then try the global keymap
     if name.nil?
       E.log("Missing command name")
@@ -217,9 +233,9 @@ module RubyRPC
   end
 
   # These functions handle requests from the Ruby server to perform
-  # "get" operations on virtual variables in MicroEMACS.  Some of these
+  # "get" operations on virtual variables in the editor.  Some of these
   # operations do more that getting a variable, e.g., testing
-  # that a particular MicroEMACS command exists.
+  # that a particular editor command exists.
 
   def get_line(id : Int32) : String
     w, b, dot, lp = E.get_context
@@ -281,8 +297,12 @@ module RubyRPC
     return make_normal_response(key, "", id)
   end
 
-  # The Ruby server uses a "get" message to ask MicroEMACS to return
-  # some internal values.
+  # Handles a request from the Ruby server get a virtual variable from the editor.
+  # The variables can be real ones, like the current line or line number.
+  # They can also be pseudo-variables that perform actions, like prompting
+  # the user to enter a reply, or waiting for a keystroke.
+  # * *id*: the ID associated with the request
+  # * *params*: the params JSON object from request
   def handle_get(id : Int32, params : JSON::Any) : Bool
     name = get_string(params, "name")
     if name.nil?
@@ -310,7 +330,7 @@ module RubyRPC
   end
 
   # These functions handle requests from the Ruby server to perform
-  # "set" operations on virtual variables in MicroEMACS.  Some of these
+  # "set" operations on virtual variables in the editor.  Some of these
   # operations do more that setting a variable, e.g., inserting a
   # string
 
@@ -422,13 +442,13 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
-  # handle_set - handle a set command
-  #
-  # The Ruby server uses a "set" message to ask MicroEMACS to perform
-  # tasks that are not commands.  These can set variables
-  # like the current line number or the current line, but
-  # can also perform other actions, like prompting the
-  # user for a replay, or inserting text.
+  # Handles a request from the Ruby server to set a virtual variable
+  # in the editor. These can be real variables
+  # like the current line number or the current line.  They can
+  # also be pseudo-variables that perform actions, like inserting text
+  # or popping up an error window.
+  # * *id*: the ID associated with the request
+  # * *params*: the params JSON object from request
   def handle_set(id : Int32, params : JSON::Any) : Bool
     name = get_string(params, "name")
     string = get_string(params, "string")
@@ -454,11 +474,11 @@ module RubyRPC
     return true
   end
 
-  # Handles an RPC method call from the Ruby server.
+  # Handles a JSON method call object *obj* from the Ruby server.
   # There are three types of method calls we can receive:
-  # * cmd - run a MicroEMACS command
-  # * set - set a MicroEMACS virtual variable
-  # * get - get a MicroEMACS virtual variable
+  # * cmd - run an editor command
+  # * set - set an editor virtual variable
+  # * get - get an editor virtual variable
   def handle_call(obj : JSON::Any) : Bool
     method = get_string(obj, "method")
     unless method
@@ -493,11 +513,8 @@ module RubyRPC
     return true
   end
 
-  # handle_error - parse an error object
-  #
-  # Parse an error object from the server.
-  #
-  # Return false to tell the caller that we can stop reading messages.
+  # Parses a JSON error object *obj* from the server. Returns false to tell the caller
+  # that we can stop reading messages, or true to continue reading messages.
   def handle_error(obj : JSON::Any) : Bool
     id = obj["id"]?
     if id
@@ -520,14 +537,10 @@ module RubyRPC
     return false
   end
 
-  # handle_result - parse a result object
-  #
-  # Parse a result object from the server, and store the result
-  # code to *resultp*.
-  #
-  # Returns a tuple containing:
-  # * flag saying whether we should keep reading messages
-  # * result code
+  # Parses a JSON result object *obj* from the server, whose ID is expected
+  # to be *expected_id*.  Returns a tuple containing:
+  # * a flag saying whether we should keep reading messages
+  # * a result code extracted from the JSON
   #
   # The flag is true if we didn't see the expected result message (i.e, the
   # the ID didn't match the method call we just made), meaning we
@@ -546,7 +559,8 @@ module RubyRPC
   # Reads the JSON payload in two pieces:
   # * a line containing the size of the JSON payload in decimal
   # * the JSON payload itself
-  # Return the JSON object representing it, or NULL if there's an error.
+  #
+  # Returns the JSON object representing it, or nil if there's an error.
   def read_rpc_message : JSON::Any | Nil
     # Read the line containing the size of the JSON in bytes.
     f = nil
@@ -574,9 +588,11 @@ module RubyRPC
     return JSON.parse(jsonbuf)
   end
 
-  # Asks the Ruby server to run a method, which must have the signature
-  # of a MicroEMACS command as written in Ruby. Returns the result code
+  # Asks the Ruby server to run a method, and returns the result code
   # it sends back.
+  # * *method*: the name of the Ruby method to call
+  # * *flag*, *prefix*, *key*: normal parameters for an editor command
+  # * *strings*: an array of strings to be passed to non-command Ruby methods.
   def call_server(method : String, flag : Bool, prefix : Int32,
 		  key : Int32, strings : Array(String)) : Result
     # Send the message, and bump the ID for the next message.
@@ -618,14 +634,14 @@ module RubyRPC
   end
 
   # Runs the Ruby command *name*, passing in the usual command
-  # parameters *f*, *n*, and *k*, and returning its result.
+  # parameters *f*, *n*, and *k*, and returns its result.
   # This is just the scaffold for a future working implementation.
   def rubycall(name : String, f : Bool, n : Int32, k : Int32) : Result
     E.log("rubycall: calling #{name}")
     return call_server(name, f, n, k, [""])
   end
 
-  # Evaluates a line of Ruby code
+  # Evaluates the Ruby code string *line*, returns the result.
   def runruby(line : String) : Result
     return call_server("exec", true, 1, Kbd::RANDOM, [line])
   end
@@ -648,7 +664,7 @@ module RubyRPC
     return runruby(string)
   end
 
-  # Defines a new MicroEMACS command that invokes a Ruby function.
+  # Defines a new editor command that invokes a Ruby function.
   # The Ruby function *name* takes a single parameter, which
   # is the numeric argument to the command, or nil
   # if there is no argument.

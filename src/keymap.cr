@@ -1,14 +1,22 @@
+# `Result` encodes the three possible values that can be returned by a command.
 enum Result
+  # The command failed.
   False
+
+  # The command succeeded.
   True
+
+  # The user aborted the command, probably with Ctrl-G, or the
+  # editor decided to abort the command due to a fatal error of some sort.
   Abort
 end
 
+# Aliases for `Result` codes to save typing.
 FALSE = Result::False
 TRUE  = Result::True
 ABORT = Result::Abort
 
-# Convert true to TRUE, and false to FALSE
+# Converts true to TRUE, and false to FALSE
 # to false.
 def b_to_r(b : Bool) : Result
   b ? TRUE : FALSE
@@ -23,13 +31,14 @@ end
 class KeyMap
   @@unbound = -1	# negative key values are used for unbound commands
 
+  # An alias for the method signature of a command.
   alias CmdProc = Proc(Bool, Int32, Int32, Result)	# cmd(f, n, k) returns Result
 
   # The name-to-proc table is global.
   @@n2p        = {} of String => CmdProc	# name => command method
 
-  # The key-to-name table is either in the main editor keymap (E.keymap)
-  # or in a buffer's keymap (E.curb.keymap) if the buffer has a mode.
+  # The key-to-name table is either in the main editor keymap (`E#keymap`)
+  # or in a buffer's keymap (`Buffer#keymap`) if the buffer has a mode.
   property k2n = {} of Int32  => String		# key  => name
 
   def initialize
@@ -41,7 +50,7 @@ class KeyMap
   end
 
   # Adds a mapping for the key *key* to the command *proc*, whose
-  # name is *name*.  If the key is KRANDOM, the command is actually
+  # name is *name*.  If the key is `Kbd::RANDOM`, the command is actually
   # not bound to a key, so use a unique magic negative number for the key.
   def add(key : Int32 | Char, proc : CmdProc, name : String)
     if @@n2p.has_key?(name)

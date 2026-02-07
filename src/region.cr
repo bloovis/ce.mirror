@@ -1,9 +1,16 @@
-# The `Region` class contains some commands for dealing with regions.
+# The `Region` class contains information about a region, i.e., the portion
+# of a buffer between two `Pos` positions.  It also contains some commands
+# for dealing with regions.
 class Region
 
-  property start : Pos		# starting position of region
-  property finish : Pos		# ending position of region
-  property size : Int32		# size of region in characters
+  # Starting position of the region.
+  property start : Pos
+
+  # Ending position of the region.
+  property finish : Pos
+
+  # The size of the region in characters.
+  property size : Int32
 
   # This helper function examines the two positions *pos1* and *pos2*,
   # and determines their proper order and the size of the region
@@ -98,7 +105,9 @@ class Region
     @start, @finish, @size = Region.make_region(pos1, pos2)
   end
 
-  # Kills the region. Move "." to the start, and kill the
+  # Commands.
+
+  # This command kills the region. Move "." to the start, and kill the
   # characters. If an argument is provided, don't put the
   # characters in the kill buffer.
   def self.killregion(f : Bool, n : Int32, k : Int32) : Result
@@ -111,7 +120,7 @@ class Region
     return b_to_r(Line.delete(region.size, !f))
   end
 
-  # Copy all of the characters in the
+  # This command copies all of the characters in the
   # region to the kill buffer. Don't move dot
   # at all. This is a bit like a kill region followed
   # by a yank.
@@ -148,7 +157,7 @@ class Region
     return TRUE
   end
 
-  # Adjusts the indentation of the lines in the region by the number of
+  # This command adjusts the indentation of the lines in the region by the number of
   # spaces in the argument *n*, which can be negative to unindent.
   def self.indentregion(f : Bool, n : Int32, k : Int32) : Result
     region = Region.new
@@ -189,7 +198,7 @@ class Region
     return TRUE
   end
 
-  # Creates key bindings for all Region commands.
+  # Creates key bindings for all `Region` commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('w'), cmdptr(killregion), "kill-region")
     k.add(Kbd.meta('w'), cmdptr(copyregion), "copy-region")

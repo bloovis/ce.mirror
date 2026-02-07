@@ -3,6 +3,7 @@
 # mark. Only moves between lines, which might make the
 # current buffer framing bad, are hard.
 module Basic
+  # The current goal column for moving up and down a line.
   @@curgoal = 0
 
   extend self
@@ -92,7 +93,7 @@ module Basic
     return TRUE
   end
 
-  # This command is like "forwpage",
+  # This command is like `forwpage`,
   # but it goes backwards. The "5", like above,
   # is the overlap between the two windows. The
   # hard update is done because the top line in
@@ -118,7 +119,7 @@ module Basic
     return TRUE
   end
 
-  # Move cursor backwards. Do the
+  # Moves cursor backwards. Does the
   # right thing if the count is less than
   # 0. Error if you try to move back
   # from the beginning of the buffer.
@@ -155,7 +156,7 @@ module Basic
     return TRUE
   end
 
-  # Move cursor forwards. Do the
+  # Moves the cursor forwards. Does the
   # right thing if the count is less than
   # 0. Error if you try to move forward
   # from the end of the buffer.
@@ -191,7 +192,7 @@ module Basic
   end
 
   # Set the current goal column,
-  # which is saved in the external variable "curgoal",
+  # which is saved in the class variable `@@curgoal`,
   # to the current cursor column. The column is never off
   # the edge of the screen; it's more like display then
   # show position.
@@ -265,7 +266,7 @@ module Basic
     return ret
   end
 
-  # This function is like "forwline", but
+  # This function is like `forwline`, but
   # goes backwards. The scheme is exactly the same.
   # Check for arguments that are less than zero and
   # call your alternate. Figure out the new line and

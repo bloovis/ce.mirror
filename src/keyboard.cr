@@ -26,16 +26,32 @@
 class Kbd
 
   # Prefix characters.
-  METACH = 0x1B			# M- prefix,   Control-[, ESC
-  CTMECH = 0x1C			# C-M- prefix, Control-\
-  EXITCH = 0x1D			# Exit level,  Control-]
-  CTRLCH = 0x1E			# C- prefix,   Control-^
-  HELPCH = 0x1F			# Help key,    Control-_
+
+  # M- prefix,   Control-[, ESC
+  METACH = 0x1B
+
+  # C-M- prefix, Control-\
+  CTMECH = 0x1C
+
+  # Exit level,  Control-]
+  EXITCH = 0x1D
+
+  # C- prefix,   Control-^
+  CTRLCH = 0x1E
+
+  # Help key,    Control-_
+  HELPCH = 0x1F
 
   # Flags that are ORed with a keycode to indicate prefixes.
-  CTRL = 0x10000000		# Control flag.
-  META = 0x20000000		# Meta flag.
-  CTLX = 0x40000000		# Control-X flag.
+
+  # Control flag.
+  CTRL = 0x10000000
+
+  # Meta flag.
+  META = 0x20000000
+
+  # Control-X flag.
+  CTLX = 0x40000000
 
   # Mask for basic keycode.
   CHAR = 0x01FFFFF
@@ -44,6 +60,7 @@ class Kbd
   ASCIIMASK = 0x7f
 
   # Our internal special key values.
+
   RANDOM = 0x80
   UP     = 0x81
   DOWN   = 0x82
@@ -94,7 +111,7 @@ class Kbd
     s.upcase.ord | CTLX
   end
 
-  # Returns the internal value of Ctrl-X Ctrl-*s" sequence.
+  # Returns the internal value of Ctrl-X Ctrl-*s* sequence.
   def self.ctlx_ctrl(s : Char) : Int32
     s.upcase.ord | CTLX | CTRL
   end
@@ -201,7 +218,7 @@ class Kbd
     @ctrl_z =  tty.ctrl('z')
   end
 
-  # Get the raw keycode from the Terminal, or from the
+  # Gets the raw keycode from the Terminal, or from the
   # profile file if one is currently active.
   def getinp
     @tty.getc

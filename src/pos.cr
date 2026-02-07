@@ -1,7 +1,10 @@
 # `Pos` represents a position in a buffer:
 # a zero-based line number, and the offset within that line.
 class Pos
+  # The position's line number.
   property l : Int32
+
+  # The position's offset within the line.
   property o : Int32
 
   def initialize(l=0, o=0)

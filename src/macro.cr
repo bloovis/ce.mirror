@@ -15,48 +15,58 @@ class Macro
 
   # Methods for recording.
 
+  # Starts recording a macro.  Clears the previous contents of the macro.
   def start_recording
     @recording = true
     @buf = [] of Int32
   end
 
+  # Writes *key* to the macro.
   def write_key(key : Int32)
     return unless @recording
     @buf << key
   end
 
+  # Writes the Ctrl-U numeric prefix *n* to the macro.
   def write_prefix(n : Int32)
     return unless @recording
     @buf << Kbd.ctrl('u')
     @buf << n
   end
 
+  # Writes the string *s* to the macro.
   def write_string(s : String)
     return unless @recording
     s.each_char {|c| @buf << c.ord}
     @buf << 0
   end
 
+  # Stops recording a macro.
   def stop_recording
     @recording = false
   end
 
+  # Prints the contents of the macro to STDERR.
   def print
     @buf.each_with_index do |n, i|
       STDERR.puts("macro[#{i}] = #{Kbd.keyname(@buf[i])} (#{@buf[i].to_s(16)})")
     end
   end
 
+  # Returns true if the macro is currently being recorded.
   def recording? : Bool
     return @recording
   end
 
   # Methods for playback.
 
+  # Starts reading the macro.  Rewinds the read index to 0.
   def start_reading
     @read_index = 0
   end
 
+  # Returns an Int32 value from the macro, or nil if
+  # the end of the macro has been reached.
   def read_int : Int32 | Nil
     if @read_index < 0 || @read_index >= @buf.size
       return nil
@@ -67,6 +77,8 @@ class Macro
     end
   end
 
+  # Returns a string from the macro, or nil if
+  # the end of the macro has been reached.
   def read_string : String | Nil
     if @read_index < 0 || @read_index >= @buf.size
       return nil
@@ -82,10 +94,12 @@ class Macro
     return str
   end
 
+  # Stops reading the macro.
   def stop_reading
     @read_index = -1
   end
 
+  # Returns true if the macro is currently being read.
   def reading?
     @read_index >= 0
   end

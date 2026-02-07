@@ -131,7 +131,7 @@ class Window
 
   # Class methods.
 
-  # Append the window *w* to the list of windows.  
+  # Appends the window *w* to the list of windows.  
   # If this is the first window, make it the current one.
   def self.add_to_list(w : Window)
     if @@curi == -1
@@ -139,7 +139,6 @@ class Window
     end
     @@list << w
   end
-
 
   # Returns the current Window.
   def self.current : Window
@@ -512,12 +511,12 @@ class Window
   end
 
   # Refreshes the display. A call is made to the
-  # `getsize` method in the terminal handler, which tries
-  # to reset "nrow" and "ncol". If the display
+  # `Terminal#getsize` method in the terminal handler, which tries
+  # to reset `Terminal#nrow` and `Terminal#ncol`. If the display
   # changed size, arrange that everything is redone, then
-  # call `update` to fix the display. We do this so the
+  # call `Display#update` to fix the display. We do this so the
   # new size can be displayed. In the normal case the
-  # call to `update` in event loop refreshes the screen,
+  # call to `Display#update` in `E#event_loop` refreshes the screen,
   # and all of the windows need not be recomputed.
   # Note that when you get to the "display unusable"
   # message, the screen will be messed up. If you make

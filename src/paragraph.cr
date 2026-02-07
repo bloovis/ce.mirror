@@ -1,5 +1,4 @@
 # The `Paragraph` module contains commands for dealing with paragraphs.
-
 module Paragraph
 
   @@fillcol = 72
@@ -11,10 +10,12 @@ module Paragraph
 
   extend self
 
+  # Returns the current paragraph fill column.
   def fillcol
     @@fillcol
   end
 
+  # Sets the paragraph fill column to *n*.
   def fillcol=(n : Int32)
     if n > 0
       @@fillcol = n
@@ -83,6 +84,7 @@ module Paragraph
   end
 
 
+  # Fills the current paragraph according to the current fill column.
   def fillpara(f : Bool, n : Int32, k : Int32) : Result
     w, b, dot, lp = E.get_context
     

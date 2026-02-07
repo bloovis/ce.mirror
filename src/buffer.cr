@@ -4,6 +4,7 @@ require "./util"
 require "./undo"
 
 @[Flags]
+# `Bflags` defines flags used in the `flags` property of a `Buffer` object.
 enum Bflags
   Changed
   Backup
@@ -25,16 +26,16 @@ class Buffer
   property scache : Int32	# Cache of buffer size
   property undo : Undo		# Undo stack
 
-  # These properties are only used when a window is attached or detached
-  # from this buffer.  When the last window is detached, we save that
+  # The `dot`, `mark` and `leftcol` properties are only used when a window is attached
+  # or detached from this buffer.  When the last window is detached, we save that
   # window's values, so that the next time a window is attached, we
   # copy them to that window.  See `Window#add_wind` for details.
   property dot : Pos		# current cursor position in buffer
   property mark : Pos		# mark position
   property leftcol : Int32	# left column of window
 
-  # These properties are used to implement a Mode feature, which
-  # allows key bindings to be associated with a buffer, rather
+  # The `keymap` and `modename` properties are used to implement a Mode feature,
+  # which allows key bindings to be associated with a buffer, rather
   # than being global.
   property keymap : KeyMap	# set of key bindings
   property modename : String	# if empty, keymap is not used

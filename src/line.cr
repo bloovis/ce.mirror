@@ -21,6 +21,7 @@ class Line
 
   include LinkedList::Node
 
+  # The text of a line.
   property text : String
 
   def initialize(@text : String)
@@ -320,19 +321,24 @@ end
 
 # These hacks allows a pointer to Line have the some of the same methods as
 # the thing it points to.
+
 struct Pointer(T)
+ # Returns the text of a line.
  def text : String
    self.value.text
  end
 
+ # Sets the text of a line.
  def text=(s : String)
    self.value.text = s
  end
 
+ # Returns a pointer to the next line.
  def next : Pointer(T)
    self.value.next
  end
 
+ # Returns a pointer to the previous line.
  def previous : Pointer(T)
    self.value.previous
  end

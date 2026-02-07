@@ -2,13 +2,17 @@ require "./tabs"
 require "./terminal"
 require "./window"
 
+# The `Display` object is responsible for updating the screen if/when
+# anything changes in the visible windows.
 class Display
 
+  # The `Terminal` object associated with this display.
   property tty : Terminal
 
   def initialize(@tty)
   end
 
+  # Updates the ncurses screen with the contents of the windows, plus the mode line.
   def update
     # Determine the actual screen column number of the dot.  If the column is not
     # visible, change the window's left column so that it is visible.

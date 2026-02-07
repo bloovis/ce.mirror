@@ -145,7 +145,7 @@ module Misc
 
   # Indents according to Ruby conventions.  Inserts a newline, then enough tabs
   # and spaces to match the indentation of the previous line.  If the previous
-  # line starts with a block-start keyword, indent by two spaces. If a
+  # line starts with a block-start keyword, increase indentation by two spaces. If a
   # two-C-U argument was specified, reduce indentation by two spaces.
   # Otherwise retain the same indentation.
   def rubyindent(f : Bool, n : Int32, k : Int32) : Result
