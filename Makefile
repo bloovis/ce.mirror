@@ -4,3 +4,9 @@ ce : $(wildcard src/*.cr)
 
 % : %.cr
 	crystal build --no-color --error-trace $<
+
+.PHONY: docs viewdocs
+docs:
+	crystal docs
+viewdocs:
+	xdg-open docs/index.html

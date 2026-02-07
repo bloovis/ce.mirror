@@ -23,6 +23,31 @@ Then copy the resulting binary file `ce` to some place in your PATH.
 `ce` requires no external shards (Crystal libraries).  It does require
 the `ncurses-dev` or `ncurses-devel` packages for your Linux distro.
 
+To make nicely formatted API documentation for the classes and methods
+in `ce`, use this command:
+
+```
+make docs
+```
+
+or this command:
+
+```
+crystal docs
+```
+
+To view the API documentation, use this command:
+
+```
+make viewdocs
+```
+
+or this command:
+
+```
+xdg-open docs/index.html
+```
+
 ## Usage
 
 For the most part, you can use the MicroEMACS documentation as a guide
@@ -36,7 +61,7 @@ I may add them as needed:
 * the ability to name macros or save them in text form
 * profiles (loadable macros in text form)
 * mark rings (I have never used this feature)
-* line numbers
+* line numbers in the display
 * frames (for multiple native windows)
 * cscope support
 * upper- and lower-case a region (I have never used this feature)
