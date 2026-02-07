@@ -6,38 +6,58 @@ require "./util"
 # plus markers for the start and end of undo groups.
 # The records are stored in two stacks: an undo stack
 # and a redo stack.  An undo operation pops a record
-# off the undo stack, replays the operation# specified
+# off the undo stack, replays the operation specified
 # by the records, then pushes the record onto the redo stack.
 class Undo
+  # There are only two kinds of Undo records: Insert and Delete.
   enum Kind
     Insert
     Delete
   end
 
   @[Flags]
+  # The record at the start of an undo group is marked
+  # with the Start flag, and the record at the end of a
+  # group is marked with the Finish flag.
   enum Uflags
     Start
     Finish
   end
 
+  # `Record` holds the information for a single undo operation.
   class Record
+    # The kind of undo record (Insert or Delete)
     getter kind : Undo::Kind
+
+    # The flags for this record (Start, Finish, or None).
     property flags : Uflags
+
+    # The position associated with this record.
     property pos : Pos
+
+    # The string being inserted or deleted.
     property s : String
 
     def initialize(@kind, @flags, @pos, @s)
     end
 
+    # Provides a human-readable version of an undo record.
     def to_s : String
       return "kind #{@kind}, flags #{flags}, pos (#{@pos.l},#{@pos.o}), s '#{@s.readable}'"
     end
   end
 
-  property undo_stack : Array(Record)	# Stack of undo records
-  property redo_stack : Array(Record)	# Stack of redo records
-  property undoing : Bool		# True if we're in the middle of an undo
-  @count : Int32			# Count of records seen since a group start
+  # Stack of undo records
+  property undo_stack : Array(Record)
+
+  # Stack of redo records
+  property redo_stack : Array(Record)
+  
+  # True if we're in the middle of an undo operation
+  property undoing : Bool
+
+  # Count of records seen since a group start
+  @count : Int32
 
   def initialize
     @undo_stack = [] of Record
@@ -134,6 +154,7 @@ class Undo
     #print
   end
 
+  # Prints the contents of the undo and redo stacks to STDERR.
   def print
     STDERR.puts "Undo stack:"
     @undo_stack.each {|r| STDERR.puts "  " + r.to_s}
@@ -143,7 +164,7 @@ class Undo
 
   # Commands.
 
-  # Pops one or more undo records from the undo stack
+  # This command pops one or more undo records from the undo stack
   # and carries out their changes. Keeps popping and
   # undoing until a start-group record (which is also
   # processed) is found.
@@ -203,7 +224,7 @@ class Undo
     return result
   end
 
-  # Pops one or more undo records from the redo stack
+  # This command pops one or more undo records from the redo stack
   # and carries out their changes.  Keeps popping and
   # undoing until an end-group record (which is processed)
   # is found.

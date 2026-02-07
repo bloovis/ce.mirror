@@ -266,9 +266,9 @@ class Line
   end
 
   # Replaces *plen* characters BEFORE dot with string *st*.
-  # Control-J characters in st are interpreted as newlines.
-  # There is a casehack disable flag (normally it likes to match
-  # case of replacement to what was there).
+  # Control-J characters in *st* are interpreted as newlines.
+  # In MicroEMACS there was also a casehack disable flag, but
+  # this is not used in CrystalEdit.
   def self.replace(plen : Int32, st : String) : Bool
     # Delete the characters to be replaced.
     return false if Misc.backdel(false, plen, Kbd::RANDOM) != TRUE

@@ -2,7 +2,7 @@ require "./curses"
 require "./keyboard"
 
 
-# We have to set the locale so that Ncurses will work correctly
+# We have to set the locale so that ncurses will work correctly
 # with UTF-8 string.
 lib Locale
   # LC_CTYPE is probably 0 (at least in glibc)
@@ -10,26 +10,34 @@ lib Locale
   fun setlocale(category : Int32, locale : LibC::Char*) : LibC::Char*
 end
 
-# `Terminal` provides an abstraction layer over Ncurses, for writing
+# `Terminal` provides an abstraction layer over ncurses, for writing
 # to the screen and accepting keyboard input.
 class Terminal
-  # Number of rows and columns in this terminal.
+  # Number of rows in this terminal.
   property nrow : Int32
+
+  # Number of columns in this terminal.
   property ncol : Int32
 
-  # Current row and column of cursor.
+  # Current row of cursor.
   property row : Int32
+
+  # Current column of cursor.
   property col : Int32
 
-  # Handle to the Ncurses window.
+  # Handle to the ncurses window.
   property scr : LibNCurses::Window
 
-  # Colors
+  # No color.
   CNONE = 0
+
+  # Color of normal text.
   CTEXT = 1
+
+  # Color of mode line.
   CMODE = 2
 
-  # Map Ncurses special key values to our own internal key values.
+  # Map ncurses special key values to our own internal key values.
   @@keymap = {
      LibNCurses::KEY_UP => Kbd::UP,
      LibNCurses::KEY_DOWN => Kbd::DOWN,
@@ -55,7 +63,7 @@ class Terminal
      LibNCurses::KEY_F12 => Kbd::F12
   }
 
-  # Initialize our instance variables but don't initialize ncurses yet.
+  # Initializse our instance variables but doesn't initialize ncurses yet.
   def initialize
     Locale.setlocale(Locale::LC_CTYPE, "")
     @scr = LibNCurses.initscr
@@ -66,7 +74,7 @@ class Terminal
     @col = -1
   end
 
-  # Initialize the display and keyboard.
+  # Initializes the display and the keyboard using ncurses.
   def open
     LibNCurses.noecho           # turn off input echoing
     LibNCurses.raw		# don't let Ctrl-C generate a signal
@@ -79,7 +87,7 @@ class Terminal
     getsize
   end
 
-  # Restore the display and keyboard to their original, pre-open state.
+  # Restores the display and keyboard to their original, pre-open state.
   def close
     LibNCurses.echo
     LibNCurses.nocbreak
@@ -87,70 +95,72 @@ class Terminal
     LibNCurses.endwin
   end
 
-  # Save the current terminal size in nrow and ncol.
+  # Saves the current terminal size in `@nrow` and `@ncol`.
   def getsize
     @nrow = LibNCurses.getmaxy(@scr)
     @ncol = LibNCurses.getmaxx(@scr)
   end
 
-  # Move the cursor.
+  # Moves the cursor to the location *row* and *column* (zero-based).
   def move(row : Int32, col : Int32)
     LibNCurses.wmove(@scr, row, col)
     @row = row
     @col = col
   end
 
-  # Erase to end of line.
+  # Erases to end of line.
   def eeol
     LibNCurses.wclrtoeol(@scr)
   end
 
-  # Erase to end of screen.
+  # Erases to end of screen.
   def eeop
     LibNCurses.wclrtobot(@scr)
   end
 
   # Set the color.  There are two possibilities:
-  #   - CTEXT for normal color
-  #   - CMODE for inverted video used on the mode line
+  # * `CTEXT` for normal color
+  # * `CMODE` for inverted video used on the mode line
   def color(color)
     LibNCurses.wbkgdset(@scr, ' '.ord | (color == CMODE ?
 					    LibNCurses::A_REVERSE :
 					    LibNCurses::A_NORMAL))
   end
 
-  # Refresh the display after a terminal resize.
+  # Refreshes the display after a terminal resize.
   def resize
     initialize
     getsize
     LibNCurses.wrefresh(LibNCurses.curscr)
   end
 
-  # Write a character to the screen.
+  # Writes a character to the screen at the current location.
   def putc(c : Char)
     LibNCurses.waddstr(@scr, c.to_s)
   end
 
-  # Write a string to the screen, but don't erase to end of line afterwards.
+  # Writes a string to the screen at the current location, but don't erase to
+  # end of line afterwards.
   def puts(s : String)
     LibNCurses.waddstr(@scr, s)
   end
 
-  # Write a string to the screen, then erase to the end of the line.
+  # Writes a string to the screen at the location *row* and *column*
+  # (zero-based), then erases to the end of the line.
   def putline(row  : Int32, col : Int32, s : String)
     move(row, col)
     puts(s)
     eeol
   end
 
-  # Make the physical screen match the virtual screen.
+  # Makes the physical screen match the virtual screen in ncurses.
   def flush
     LibNCurses.wrefresh(@scr)
   end
 
-  # Read a character from the keyboard with little processing,
+  # Reads a character from the keyboard with little processing,
   # besides converting special functions keys to our own representation.
-  # The Kbd module cooks the characters more by handling prefixes.
+  # The `Kbd` module cooks the characters more by handling prefixes.
   def getc : Int32
     while (result = LibNCurses.wget_wch(@scr, out c)) == LibNCurses::ERR
     end
@@ -177,7 +187,7 @@ class Terminal
     end
   end
 
-  # Return the ASCII value of a Ctrl-modified key.
+  # Returns the ASCII value of a Ctrl-modified key.
   def ctrl(c : Char) : Int32
     return c.ord & 0x1f
   end

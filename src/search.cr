@@ -1,17 +1,33 @@
-# `Search` contains routines for searching/replacing text.
-
+# The `Search` module contains commands for searching/replacing text.
 module Search
 
   # Current search direction/type.
   enum SearchDir
+    # Used for incremental search (not implemented).
     Begin
+
+    # Forward non-regex search.
     Forw
+
+    # Backwards non-regex search.
     Back
+
+    # Used for incremental search (not implemented).
     Prev
+
+    # Used for incremental search (not implemented).
     Next
+
+    # No previous search.
     Nopr
+
+    # Used for incremental search (not implemented).
     Accm
+
+    # Forward regular expression search.
     Regforw
+
+    # Backwards regular expression search.
     Regback
   end
 
@@ -40,16 +56,13 @@ module Search
   end
 
   # This routine does the real work of a regular expression
-  # forward search. The pattern is sitting in the class
-  # variable `@@pat`, and the compiled pattern is in `@@regpat`.
-  # If found, dot is updated, the window system
-  # is notified of the change, and TRUE is returned. If the
-  # string isn't found, FALSE is returned.
+  # forward search. The pattern is sitting in the variable `@@pat`, and
+  # the compiled pattern is in `@@regpat`. If found, dot is updated,
+  # and TRUE is returned. If the string isn't found, FALSE is returned.
   #
-  # A copy of the line where the pattern was found is kept
-  # around until the next search is performed, so that that
-  # pointers to the pattern in regpat will still be valid
-  # if regsub is called.  The copy is freed on the next search.
+  # After a successful search, it stores the resulting `Regex::MatchData`
+  # in the variable `@@regmatch`, so that that the pattern groups
+  # can be used for subsequent substitutions.
   def doregsrch(dir : SearchDir) : Result
     w, b, dot, lp = E.get_context
     forward = dir == SearchDir::Regforw
@@ -284,7 +297,7 @@ module Search
     end
   end
 
-  # Performs a search of the type specified by dir.
+  # Performs a search of the type specified by *dir*.
   # If the search succeeds, return TRUE.
   # If the search fails, return FALSE.
   # If there is an error that prevents the search from being
@@ -325,9 +338,9 @@ module Search
     return result
   end
 
-  # Searches forward. Gets a search string from the user, and searches for it,
-  # starting at ".". If found, "." gets moved to just after the
-  # matched characters, and display does all the hard stuff.
+  # This command searches forward using a non-regex patter. It gets a search
+  # string from the user, and searches for it, starting at ".". If found,
+  # "." gets moved to just after the matched characters.
   # If not found, it just prints a message.
   def forwsearch(f : Bool, n : Int32, k : Int32) : Result
     result, pattern = readpattern("Search")
@@ -337,9 +350,9 @@ module Search
     return searchagain(f, n, k)
   end
 
-  # Searches backward. Gets a search string from the user, and searches for it,
-  # starting at ".". If found, "." gets moved to just after the
-  # matched characters, and display does all the hard stuff.
+  # This command searches backward using a non-regex pattern. It gets a search
+  # string from the user, and searches for it, starting at ".". If found,
+  # "." gets moved to just after the matched characters.
   # If not found, it just prints a message.
   def backsearch(f : Bool, n : Int32, k : Int32) : Result
     result, pattern = readpattern("Reverse search")
@@ -348,17 +361,17 @@ module Search
     return searchagain(f, n, k)
   end
 
-  # Searches forwards using a regular expression.
-  # Gets a search string, which must be a regular expression, from the user,
-  # and search for it, starting at ".". If found, "." is left pointing
+  # This command searches forward using a regular expression.
+  # It gets a search string, which must be a regular expression, from the user,
+  # and searches for it, starting at ".". If found, "." is left pointing
   # after the last character of the string that was matched.
   def forwregsearch(f : Bool, n : Int32, k : Int32) : Result
     return regsearch("Regexp-search", SearchDir::Regforw)
   end
 
-  # Searches backwards using a regular expression.
-  # Gets a search string, which must be a regular expression, from the user,
-  # and search for it, starting at ".". If found, "." is left pointing
+  # This command searches backwards using a regular expression.
+  # It gets a search string, which must be a regular expression, from the user,
+  # and searches for it, starting at ".". If found, "." is left pointing
   # at the first character of the string that was matched.
   def backregsearch(f : Bool, n : Int32, k : Int32) : Result
     return regsearch("Reverse regexp-search", SearchDir::Regback)
@@ -385,14 +398,19 @@ module Search
     return {repl, plen}
   end
 
-  # Helper function for all search and replace functions:
-  #   If query is true, prompts the user for each replacement:
-  #     A space or a comma replaces the string, a period replaces and quits,
-  #	an n doesn't replace, a C-G quits.
-  #   If `query` is false, replace all strings with no prompting.
-  #   The `f` parameter is a case-fold hack flag, passed to Line.replace.
-  #   The `dir` parameter indicates the kind of operation (normal
-  #     or regular expression).
+  # Helper function for all search and replace commands.
+  #
+  # If *query* is true, prompts the user for each replacement.
+  # A space or a comma replaces the string, a period replaces and quits,
+  # an `n` doesn't replace, a C-G quits.
+  #
+  # If *query* is false, replace all strings with no prompting.
+  # 
+  # The *f* parameter is a case-fold hack flag, passed to `Line.replace`
+  # (was used in MicroEMACS, not used in CrystalEdit).
+  #
+  # The *dir* parameter indicates the kind of operation (normal
+  #  or regular expression, forward or backwards).
   def searchandreplace(f : Bool, query : Bool, dir : SearchDir) : Result
     if dir == SearchDir::Regforw || dir == SearchDir::Regback
       oldprompt = "Regexp"
@@ -464,14 +482,14 @@ module Search
     return TRUE
   end
 
-  # Replace-string function.  This is the same as query-replace,
-  # with the difference that it does not prompt for confirmation
-  # on each string.
+  # This command does a non-regex search and replace operation, but does not
+  # prompt for confirmation on each string.
   def replstring(f : Bool, n : Int32, k : Int32) : Result
     return searchandreplace(f, false, SearchDir::Forw)
   end
 
-  # Replaces strings selectively.  Does a search and replace operation.
+  # This command does a non-regex search and replace operation, and prompts
+  # for the user to hit a key for confirmation on each string.
   # A space or a comma replaces the string, a period replaces and quits,
   # an n doesn't replace, a C-G quits.  If an argument is given,
   # don't query, just do all replacements.
@@ -479,21 +497,21 @@ module Search
     return searchandreplace(f, true, SearchDir::Forw)
   end
 
-  # Replaces strings unconditionally, using a regular expression as the pattern
-  # and a regular expression subsitution string as the replacement.
+  # This command replaces strings unconditionally, using a regular expression
+  # as the pattern, and a regular expression subsitution string as the replacement.
   # Otherwise similar to replace-string.
   def regrepl(f : Bool, n : Int32, k : Int32) : Result
     return searchandreplace(f, false, SearchDir::Regforw)
   end
 
-  # Replaces strings selectively, using a regular expression as the pattern
-  # and a regular expression subsitution string as the replacement.
+  # This command replaces strings selectively, using a regular expression as
+  # the pattern, and a regular expression subsitution string as the replacement.
   # Otherwise similar to query-replace.
   def regqueryrepl(f : Bool, n : Int32, k : Int32) : Result
     return searchandreplace(f, true, SearchDir::Regforw)
   end
 
-  # Sets the casefold flag according to the numeric argument.
+  # This command sets the casefold flag according to the numeric argument.
   # If zero, searches do not fold case (i.e. searches
   # will be exact).  If non-zero, searches will fold case (i.e.
   # upper case letters match their corresponding lower case letters).
@@ -508,7 +526,7 @@ module Search
   # were written in C by Walter Bright for MicroEMACS.  I have translated
   # them into Crystal.
 
-  # State transition table indexes for searchparen command.
+  # State transition table indexes for search-paren command.
   enum Trans
     Bslash
     Fslash
@@ -523,7 +541,7 @@ module Search
   # Current state.
   @@state = 0
 
-  # Forward state diagram.
+  # Forward state diagram for search-paren command.
   FORWARD_TRANS = [
   # bs  fsl quo dqu sta nl  oth ign
    [0,  1,  4,  6,  0,  0,  0,  0], # 0: normal
@@ -537,7 +555,7 @@ module Search
    [8,  8,  8,  8,  8,  0,  8,  1]  # 8: C++ comment
   ]
 
-  # Backwards state diagram.
+  # Backwards state diagram for search-paren command.
   BACKWARDS_TRANS = [
   # bsl fsl quo dqu sta nl  oth ign
    [0,  1,  4,  6,  0,  0,  0,  0], # 0: normal
@@ -554,7 +572,7 @@ module Search
       ['(', ')'], ['<', '>'], ['[', ']'], ['{', '}']
   ]
 
-  # Sets the new state based on the character 'ch',
+  # Sets the new state based on the character *ch*,
   # and returns true if we are ignoring characters
   # in the old state.
   def searchignore(ch : Char, forward : Bool) : Bool
@@ -579,7 +597,7 @@ module Search
     return trans[lss][Trans::Ignore.to_i] != 0
   end
 
-  # Searches for a matching character: a paren or bracket.
+  # This command searches for a matching character: a paren or bracket.
   def searchparen(f : Bool, n : Int32, k : Int32) : Result
     # Examine the character at the dot to determine whether to
     # search forward or backwards.
@@ -670,7 +688,7 @@ module Search
     return FALSE
   end
 
-  # Creates key bindings for all Misc commands.
+  # Creates key bindings for all Search commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctrl('s'), cmdptr(forwsearch), "forw-search")
     k.add(Kbd.ctrl('r'), cmdptr(backsearch), "back-search")

@@ -1,6 +1,5 @@
 # The `Spell` module implements spell-checking commands
-# using ispell's interactive mode.
-
+# using ispell's interactive mode (`ispell -a`)
 module Spell
 
   @@process : Process | Nil = nil
@@ -10,8 +9,8 @@ module Spell
 
   # Returns true if the character at the dot
   # is considered to be part of a word.  This is different
-  # from Word.inword, because it considers only
-  # alphas and apostrpophes to be word characters.
+  # from `Word.inword`, because it considers only
+  # alphas and apostrophes to be word characters.
   def inword
     return Line.getc.to_s =~ @@regex
   end
@@ -101,8 +100,10 @@ module Spell
     return s
   end
 
-  # Asks the user for a replacement for *word*, using the suggestions
-  # contained in the line *rest*.
+  # Asks the user for a replacement for *word*, using the comma-separated
+  # suggestions contained in the line *rest*.  The *info* parameter
+  # is true if `get_replacement` should display information about what
+  # it's doing on the echo line.
   private def get_replacement(word : String, rest : String, info : Bool) : Result
     #Echo.puts("Using /,\s*/ to split '#{rest}'")
     # Split the ispell response into a list of suggestions.
@@ -178,10 +179,12 @@ module Spell
     end
   end
 
-  # Runs ispell on the word under the curso.  If ispell
+  # Runs ispell on the word under the cursor.  If ispell
   # thinks the word is misspelled, prompts the user for
   # replacement, and pops up the system buffer showing
-  # the suggested replacements.
+  # the suggested replacements.  The *info* parameter
+  # is true if `checkword` should display information
+  # about what it's doing on the echo line.
   def checkword(info : Bool) : Result
     if !open_ispell
       Echo.puts("Unable to open a pipe to ispell")
@@ -269,12 +272,14 @@ module Spell
     return TRUE
   end
 
-  # Checks spelling in the word under the cursor.
+  # Commands.
+
+  # This command checks spelling in the word under the cursor.
   def spellword(f : Bool, n : Int32, key : Int32) : Result
     return checkword(true)
   end
 
-  # Checks spelling in the current marked region.
+  # This command checks spelling in the current marked region.
   def spellregion(f : Bool, n : Int32, key : Int32) : Result
     w = E.curw
     region = Region.new
@@ -303,7 +308,7 @@ module Spell
     return status
   end
 
-  # Creates key bindings for all RubyRPC commands.
+  # Creates key bindings for all Spell commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.meta('$'), cmdptr(spellword), "spell-word")
     k.add(Kbd.ctlx('i'), cmdptr(spellregion), "spell-region")

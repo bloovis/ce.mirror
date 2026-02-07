@@ -1,16 +1,40 @@
 require "./buffer"
 require "./pos"
 
+# The `Window` class contains information about an Editor window.
+# The screen is divided horizontally into one or more windows.
+# Each window consists of one or more lines of text, with
+# a mode line in inverse video just below.  Each window has
+# a `Buffer` associated with it, which contains the text
+# that is being displayed.
 class Window
-  getter   buffer : Buffer	# buffer attached to this window
-  property line : Int32		# buffer line number of the window's top line
-  property dot : Pos		# current cursor position in buffer
-  property mark : Pos		# mark position
-  property udot : Pos		# special undo position
-  property savep : Pos		# saved line position for search
-  property toprow : Int32	# top screen row of window
-  property nrow : Int32		# number of screen rows in window
-  property leftcol : Int32	# left column of window
+  # The buffer attached to this window.
+  getter   buffer : Buffer
+
+  # The line number in the buffer of the window's top row.
+  property line : Int32	
+
+  # The current cursor position in the buffer.
+  property dot : Pos
+
+  # The mark position in the buffer.
+  property mark : Pos
+
+  # The special undo position in the buffer.
+  property udot : Pos
+
+  # The saved line position for searches.
+  property savep : Pos
+
+  # The top screen row of the window.
+  property toprow : Int32
+
+  # The number of screen rows the in window.
+  property nrow : Int32
+
+  # The left column of the window (allows for left and right
+  # scrolling for the display of long lines).
+  property leftcol : Int32
 
   @@list = [] of Window		# list of all windows
   @@curi = -1			# index to @@list of current window
@@ -50,7 +74,7 @@ class Window
     end
   end
 
-  # Returns next window in list, or nil if this the last window
+  # Returns the next window in the list, or nil if this the last window.
   def next : Window | Nil
     i = @@list.index[self]
     if i.nil?
@@ -63,7 +87,7 @@ class Window
     end
   end
 
-  # Returns previous window in list, or nil if this the last window
+  # Returns the previous window in the list, or nil if this the last window.
   def previous : Window | Nil
     i = @@list.index[self]
     if i.nil?
@@ -104,8 +128,8 @@ class Window
   # values of dot and mark come from the buffer
   # if the use count is 0. Otherwise, they come
   # from some other window.  This routine
-  # differs from `usebuffer` in that it isn't a user command,
-  # but expects a buffer pointer, instead of prompting the
+  # differs from `Buffer.usebuffer` in that it isn't a user command,
+  # but expects a buffer object, instead of prompting the
   # user for a buffer name.
   def usebuf(b : Buffer)
     # Save the current buffer's name.
@@ -140,7 +164,7 @@ class Window
     @@list << w
   end
 
-  # Returns the current Window.
+  # Returns the current window.
   def self.current : Window
     if @@curi >= 0 && @@curi < @@list.size
       return @@list[@@curi]
@@ -149,7 +173,7 @@ class Window
     end
   end
 
-  # Sets the current Window.
+  # Sets the current window.
   def self.current= (w : Window)
     i = @@list.index(w)
     if i
@@ -159,7 +183,7 @@ class Window
     end
   end
 
-  # Yields each Window to the passed-in block.
+  # Yields each window to the passed-in block.
   def self.each
     @@list.each do |window|
       yield window
@@ -171,7 +195,7 @@ class Window
   # one window. Picks the uppermost window that
   # isn't the current window. An LRU algorithm
   # might be better. Returns a pointer, or
-  # NULL on error.
+  # nil on error.
   def self.popup : Window | Nil
     # If there's only one window, split it.
     if @@list.size == 1
@@ -192,7 +216,7 @@ class Window
 
   # Commands.
 
-  # Makes the next window the current window, or does nothing
+  # This command makes the next window the current window, or does nothing
   # if there is only one window.
   def self.nextwind(f : Bool, n : Int32, k : Int32) : Result
     if @@curi == @@list.size - 1
@@ -203,7 +227,7 @@ class Window
     return TRUE
   end
 
-  # Makes the previous window the current window, or does nothing
+  # This command makes the previous window the current window, or does nothing
   # if there is only one window.
   def self.prevwind(f : Bool, n : Int32, k : Int32) : Result
     if @@curi == 0
@@ -214,7 +238,7 @@ class Window
     return TRUE
   end
 
-  # Split the current window. A window
+  # This command splits the current window. A window
   # smaller than 3 lines cannot be split.
   # The only other error that is possible is
   # a "malloc" failure allocating the structure
@@ -327,7 +351,7 @@ class Window
     return TRUE
   end
 
-  # Adjusts windows so that they all have approximately
+  # This command adjusts windows so that they all have approximately
   # the same height.
   def self.balancewindows(f : Bool, n : Int32, k : Int32) : Result
     nwind = @@list.size
@@ -354,8 +378,9 @@ class Window
     return TRUE
   end
 
-  # Enlarges the current window.  Find the window that loses space, and makes
-  # sure it is big enough.  If so, hacks the window descriptions.
+  # This command enlarges the current window.  Find the window that
+  # loses space, and makes sure it is big enough.  If so, modifies
+  # the window's properties.
   def self.enlargewind(f : Bool, n : Int32, k : Int32) : Result
     return shrinkwind(f, n, k) if n < 0
     nwind = @@list.size
@@ -399,8 +424,8 @@ class Window
     return TRUE
   end
 
-  # Shrinks the current window. Finds the window that gains space.
-  # Hack at the window descriptions.
+  # This command shrinks the current window. Finds the window that gains space,
+  # and modifies its properties.
   def self.shrinkwind(f : Bool, n : Int32, k : Int32) : Result
     return enlargewind(f, n, k) if n < 0
     nwind = @@list.size
@@ -444,7 +469,7 @@ class Window
     return TRUE
   end
 
-  # Repositions dot in the current window to line *n*.  If *n* is
+  # This command repositions dot in the current window to line *n*.  If *n* is
   # positive, it is that line.  If it is negative it is that line from the
   # bottom.  If it is 0 the window is centered.  With no argument it
   # defaults to 1.
@@ -472,13 +497,13 @@ class Window
     return TRUE
   end
 
-  # Moves the current window down by *n* lines.
+  # This command moves the current window down by *n* lines.
   # mvupwind does all the work.
   def self.mvdnwind(f : Bool, n : Int32, k : Int32) : Result
     return mvupwind(f, -n, Kbd::RANDOM)
   end
 
-  # Moves the current window up by *n*
+  # This command moves the current window up by *n*
   # lines. Recomputes the new top line of the window.
   # Look to see if "." is still on the screen. If it is,
   # you win. If it isn't, then move "." to center it
@@ -510,7 +535,7 @@ class Window
     return TRUE
   end
 
-  # Refreshes the display. A call is made to the
+  # This command refreshes the display. A call is made to the
   # `Terminal#getsize` method in the terminal handler, which tries
   # to reset `Terminal#nrow` and `Terminal#ncol`. If the display
   # changed size, arrange that everything is redone, then
