@@ -20,10 +20,11 @@ module Misc
     bytes_at_dot = 0
     b.each_line do |n,l|
       nlines += 1
+      text = l.text
       if l == lp
-	bytes_at_dot = bytes + dot.o
+	bytes_at_dot = bytes + text[0,dot.o].bytesize
       end
-      bytes += l.text.size + 1
+      bytes += text.bytesize + 1
       true # tell each_line to continue
     end
     bytes -= 1	# adjust for last line

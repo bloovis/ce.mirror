@@ -33,17 +33,14 @@ class Buffer
   property mark : Pos		# mark position
   property leftcol : Int32	# left column of window
 
-  # This properties are used to implement a Mode feature, which
+  # These properties are used to implement a Mode feature, which
   # allows key bindings to be associated with a buffer, rather
-  # than being global.  The Mode has two pieces:
-  # * keymap: the set of key bindings
-  # * modename: the name of the mode.  If empty, the keymap
-  #   is not used.
-  property keymap : KeyMap
-  property modename : String
+  # than being global.
+  property keymap : KeyMap	# set of key bindings
+  property modename : String	# if empty, keymap is not used
 
   # Class variables.
-  @@blist = [] of Buffer	# list of user-created buffers
+  @@blist = [] of Buffer	# list of all buffers
   @@sysbuf : Buffer | Nil	# special "system" buffer
   @@savetabs = true		# true if tabs are preserved when writing files
 
@@ -88,12 +85,14 @@ class Buffer
     # Create an empty line number cache.
     @lcache = LineCache.new
 
-    # Create the size cache
+    # Create the size cache.
     @scache = -1
 
     # Add buffer to the list.
     @@blist.push(self)
   end
+
+  # Instance methods.
 
   # Writes the buffer to its associated file.  Returns true
   # on success, false otherwise.
@@ -138,8 +137,6 @@ class Buffer
     return status
   end
 
-  # Instance methods.
-
   # Clears the buffer, and reads the file `filename` into the buffer.
   # Returns true if successful, false otherwise
   def readin(@filename) : Bool
@@ -150,24 +147,29 @@ class Buffer
       Echo.puts("[New file]")
       @list.push(Line.alloc(""))
     else
-      File.open(@filename) do |f|
-        nline = 0
-	lastline = "\n"	# Pretend there's a blank line if file is empty
-	while s = f.gets(chomp: false)
-	  l = Line.alloc(s.chomp)
-	  lastline = s
-	  @list.push(l)
-	  nline += 1
-	end
+      begin
+	File.open(@filename) do |f|
+	  nline = 0
+	  lastline = "\n"	# Pretend there's a blank line if file is empty
+	  while s = f.gets(chomp: false)
+	    l = Line.alloc(s.chomp)
+	    lastline = s
+	    @list.push(l)
+	    nline += 1
+	  end
 
-	# If the last line ended in a newline, append
-	# a blank line to the buffer, to give the user a place to
-	# start adding new text.
-	if lastline && lastline.size > 0 && lastline[-1] == '\n'
-	  @list.push(Line.alloc(""))
-	end
+	  # If the last line ended in a newline, append
+	  # a blank line to the buffer, to give the user a place to
+	  # start adding new text.
+	  if lastline && lastline.size > 0 && lastline[-1] == '\n'
+	    @list.push(Line.alloc(""))
+	  end
 
-	Echo.puts("[Read #{nline} line" + (nline == 1 ? "" : "s") + "]")
+	  Echo.puts("[Read #{nline} line" + (nline == 1 ? "" : "s") + "]")
+	end
+      rescue ex
+	Echo.puts("Cannot open #{@filename} for reading")
+        @list.push(Line.alloc(""))	# Add a blank line as a stand-in
       end
     end
 
@@ -189,7 +191,8 @@ class Buffer
     return true
   end
 
-  # Returns the number of lines in the buffer.
+  # Returns the number of lines in the buffer.  Uses the size cache (@scache)
+  # if it's valid; otherwise does it the hard way.
   def size : Int32
     # Is the size already in the cache?
     if @scache != -1
@@ -201,25 +204,6 @@ class Buffer
     @list.each {|l| n += 1}
     @scache = n
     return n
-  end
-
-  # Same as `size`, for Ruby compatibility.
-  def length : Int32
-    size
-  end
-
-  # Returns the zero-based line number of line `lp` .  If the line
-  # is not found, returns the number of lines in the buffer,
-  # which is not a valid line number.
-  def lineno(lp : Pointer(Line) | Nil) : Int32
-    return size unless lp
-    lnno = -1
-    f = @list.find {|l| lnno += 1; l == lp}
-    if f
-      return lnno
-    else
-      return lnno + 1
-    end
   end
 
   # Returns the `n`th line in the buffer, or nil if `n` is too large.
@@ -267,7 +251,8 @@ class Buffer
   end
 
   # Iterates over each line in the buffer, yielding both the zero-based
-  # line number and the line itself.
+  # line number and the line itself.  If the block returns false,
+  # abort the iteration.
   def each_line
     n = 0
     @list.each do |l|
@@ -281,13 +266,13 @@ class Buffer
   # Aborts the iteration if the block returns false.  Line numbers
   # are zero-based.
   def each_in_range(low : Int32, high : Int32)
-    n = 0
-    @list.each do |l|
-      return if n > high
-      if n >= low
-        return if !yield n, l
-      end
-      n += 1
+    lp = self[low]
+    return unless lp
+    while low <= high
+      yield low, lp
+      break if lp == self.last_line
+      lp = lp.next
+      low += 1
     end
   end
 
@@ -360,7 +345,7 @@ class Buffer
   # to save the user the grief of losing text. The
   # window chain is nearly always wrong if this gets
   # called; the caller must arrange for the updates
-  # that are required. Return TRUE if everything
+  # that are required. Return true if everything
   # looks good.
   def clear : Bool
     if @flags.changed?
@@ -422,7 +407,7 @@ class Buffer
     @@blist.each {|b| yield b}
   end
 
-  # Returns the secret system buffer, creating it first if necessary.
+  # Returns the special system buffer, creating it first if necessary.
   def self.sysbuf : Buffer
     if @@sysbuf.nil?
       if b = Buffer.new("*sysbuf*")
@@ -438,10 +423,9 @@ class Buffer
     return b
   end
 
-  # This routine rebuilds the
-  # text in the special secret buffer
+  # This routine rebuilds the text in the special buffer
   # that holds the buffer list. It is called
-  # by the list buffers command. Return TRUE
+  # by the `listbuffers` command. Return TRUE
   # if everything works. Return FALSE if there
   # is an error (if there is no memory).
   def self.makelist : Bool
@@ -466,11 +450,10 @@ class Buffer
       # Don't include system buffers in the list.
       #next if b2.flags.system?
 
-      # Calculate number of bytes in this buffer.  FIXME: this
-      # actually calculates characters, not bytes.
+      # Calculate number of bytes in this buffer.
       bytes = 0
       b2.each_line do |n,l|
-	bytes += l.text.size + 1
+	bytes += l.text.bytesize + 1
 	true # tell each_line to continue
       end
       bytes -= 1	# adjust for last line
@@ -491,7 +474,7 @@ class Buffer
   end
 
   # Pops the special buffer onto the screen. This is used
-  # by the "listbuffers" command and by other commands.
+  # by the `listbuffers` command and by other commands.
   # Returns a status.
   def self.popsysbuf : Bool
     b = sysbuf
@@ -508,7 +491,8 @@ class Buffer
       w.buffer = b
     end
 
-    # Update all windows that are using the system buffer.
+    # Update each window that is using the system buffer by resetting
+    # its top line to 0, its dot to (0,0), and its mark to undefined.
     Window.each do |w|
       if w.buffer == b
 	w.line = 0
@@ -522,8 +506,8 @@ class Buffer
   end
 
   # Looks through the list of buffers and returns true if there
-  # are any changed buffers. Special buffers like the buffer list
-  # buffer don't count.  Returns false if there are no changed buffers.
+  # are any changed buffers. System buffers (*sysbuf* is the only one so far),
+  # don't count.  Returns false if there are no changed buffers.
   def self.anycb : Bool
     Buffer.each do |b|
       if b.flags.changed? && !b.flags.system?
@@ -553,10 +537,8 @@ class Buffer
     return TRUE
   end
 
-  # Attaches a buffer to a window. The
-  # values of dot and mark come from the buffer
-  # if the use count is 0. Otherwise, they come
-  # from some other window.
+  # Attaches a buffer to a window. The values of dot and mark come from the
+  # buffer if the use count is 0. Otherwise, they come from some other window.
   def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
     result, bufn = Echo.getbufn
     return result if result != TRUE
@@ -569,7 +551,7 @@ class Buffer
 
   # Display the buffer list. This is done
   # in two parts. The `makelist` routine figures out
-  # the text, and puts it in the special sysbuf buffer.
+  # the text, and puts it in the special *sysbuf* buffer.
   # Then `popsysbuf` pops the data onto the screen. Bound to
   # "C-X C-B".
   def self.listbuffers(f : Bool, n : Int32, k : Int32) : Result
@@ -578,7 +560,7 @@ class Buffer
   end
 
   # Sets the savetabs flag according to the numeric argument if present,
-  # or toggle the value if no argument present.  If savetabs is
+  # or toggles the value if no argument present.  If savetabs is
   # zero, tabs will will be changed to spaces when saving a file, by
   # replacing each tab with the appropriate number of spaces (as
   # determined by String.tabsize).
