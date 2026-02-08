@@ -76,12 +76,12 @@ class Terminal
 
   # Initializes the display and the keyboard using ncurses.
   def open
-    LibNCurses.noecho           # turn off input echoing
-    LibNCurses.raw		# don't let Ctrl-C generate a signal
+    LibNCurses.keypad(@scr, true)     # turn on keypad mode
     LibNCurses.nonl             # turn off newline translation
     LibNCurses.cbreak           # provide unbuffered input
+    LibNCurses.noecho           # turn off input echoing
+    LibNCurses.raw		# don't let Ctrl-C generate a signal
     #LibNCurses.stdscr.intrflush(false) # turn off flush-on-interrupt
-    LibNCurses.keypad(@scr, true)     # turn on keypad mode
 
     # Get number of rows and columns.
     getsize
