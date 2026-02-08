@@ -200,6 +200,7 @@ module Word
   # way when it hits the end of the buffer.
   def delfword(f : Bool, n : Int32, k : Int32) : Result
     return FALSE if n < 0
+    return FALSE unless Files.checkreadonly
     w, b, dot, lp = E.get_context
     old_dot = dot.dup	# Save dot
     Line.kdelete	# Purge kill buffer
@@ -242,6 +243,7 @@ module Word
   # to "M-Backspace".
   def delbword(f : Bool, n : Int32, k : Int32) : Result
     return FALSE if n < 0
+    return FALSE unless Files.checkreadonly
     w, b, dot, lp = E.get_context
     Line.kdelete	# Purge kill buffer
 

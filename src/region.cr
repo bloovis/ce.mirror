@@ -21,14 +21,14 @@ class Region
     b = E.curb
     bsize = b.size
 
-    # Determine which is first: the mark or the dot?
+    # Determine which is first: pos1 or pos2?
     if pos1.l < pos2.l
       # Pos1 is before pos2.
       start = pos1.dup
       finish = pos2.dup
     elsif pos1.l == pos2.l
-      # Pos2 and pos1 are one the same line.  This is the easy case:
-      # set the distance between the two offsets and return.
+      # Pos2 and pos1 are on the same line.  This is the easy case:
+      # set the distance between the two offsets.
       if pos2.o < pos1.o
 	start = pos2.dup
 	finish = pos1.dup
