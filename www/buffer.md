@@ -56,11 +56,11 @@ If the end of the buffer list is reached, switch
 to the first buffer in the list.  The list of buffers can be displayed
 with **C-X C-B**. 
 
-**[unbound]** (**back-buffer**)
+**F10** (**back-buffer**)
 
 This command is similar to **forw-buffer**, except that it
 switches the buffer being displayed to the previous buffer
-in the buffer list. TODO.
+in the buffer list.
 
 **C-X K** (**kill-buffer**)
 

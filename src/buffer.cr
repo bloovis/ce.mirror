@@ -582,6 +582,24 @@ class Buffer
     return TRUE
   end
 
+  # This command makes the previous buffer in the buffer list the current buffer.
+  def self.prevbuffer(f : Bool, n : Int32, k : Int32) : Result
+    # Get the index of the current buffer.
+    i = @@blist.index(E.curb)
+    if i.nil?
+      raise "Unknown buffer in Buffer.prevbuffer!"
+    end
+    if i == 0
+      i = @@blist.size - 1
+    else
+      i -= 1
+    end
+    b = @@blist[i]
+    E.curw.usebuf(b)
+
+    return TRUE
+  end
+
   # This command attaches a buffer to a window. The values of dot and mark come from the
   # buffer if the use count is 0. Otherwise, they come from some other window.
   def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
@@ -619,6 +637,7 @@ class Buffer
   # Binds keys for buffer commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd::F8, cmdptr(nextbuffer), "forw-buffer")
+    k.add(Kbd::F10, cmdptr(prevbuffer), "back-buffer")
     k.add(Kbd.ctlx('b'), cmdptr(usebuffer), "use-buffer")
     k.add(Kbd.ctlx_ctrl('b'), cmdptr(listbuffers), "display-buffers")
     k.add(Kbd.meta('i'), cmdptr(setsavetabs), "set-save-tabs")
