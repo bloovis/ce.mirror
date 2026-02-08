@@ -16,7 +16,7 @@ This command sets the current fill column to its argument
 decimal number preceding the command).  If no argument is present,
 the column of the current location of the cursor (the dot) is used instead.
 The fill column is used by the **fill-paragraph** command.
-The default fill column is 72.  TODO.
+The default fill column is 72.
 
 **M-[** (**back-paragraph**)
 

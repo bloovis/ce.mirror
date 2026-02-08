@@ -7,7 +7,7 @@ module Misc
   # and control characters.
   def getcolpos : Int32
     w, b, dot, lp = E.get_context
-    return Display.screen_size(lp.text, dot.o)
+    return lp.text.screen_width(dot.o)
   end
 
   # Shows information about the dot: the character, the line number,

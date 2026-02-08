@@ -22,7 +22,9 @@ module Paragraph
     end
   end
 
-  # Goes back to the beginning of the current paragraph.
+  # Commands.
+
+  # This command goes back to the beginning of the current paragraph.
   def gotobop(f : Bool, n : Int32, k : Int32) : Result
     result = TRUE	# we always return this
     return gotoeop(f, -n, Kbd::RANDOM) if n < 0
@@ -53,7 +55,7 @@ module Paragraph
     return result
   end
 
-  # Goes to the end of the current paragraph.
+  # This command goes to the end of the current paragraph.
   def gotoeop(f : Bool, n : Int32, k : Int32) : Result
     result = TRUE	# we always return this
     return gotobop(f, -n, Kbd::RANDOM) if n < 0
@@ -83,8 +85,7 @@ module Paragraph
     return result
   end
 
-
-  # Fills the current paragraph according to the current fill column.
+  # This command fills the current paragraph according to the current fill column.
   def fillpara(f : Bool, n : Int32, k : Int32) : Result
     w, b, dot, lp = E.get_context
     
@@ -148,6 +149,13 @@ module Paragraph
     result = TRUE
   end
 
+  # This command sets the fill column to *n*, or if *n* is not
+  # provied, sets it to the current column of the dot.
+  def setfillcol(f : Bool, n : Int32, k : Int32) : Result
+    Paragraph.fillcol = f ? n : Misc.getcolpos
+    return TRUE
+  end
+
   # Creates key bindings for all Paragraph commands.
   def bind_keys(k : KeyMap)
     # The key binding ESC-[ can cause problems, because it is
@@ -160,6 +168,7 @@ module Paragraph
 
     k.add(Kbd.meta(']'), cmdptr(gotoeop), "forw-paragraph")
     k.add(Kbd.meta('j'), cmdptr(fillpara), "fill-paragraph")
+    k.add(Kbd::RANDOM, cmdptr(setfillcol), "set-fill-column")
   end
 
 end

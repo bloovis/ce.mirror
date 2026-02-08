@@ -67,7 +67,7 @@ in the buffer list.
 This command prompts for a buffer name, and then destroys
 the buffer with that name. It will ask for permission to destroy the
 buffer if the text has been changed since it was written to the associated
-file. You cannot delete a buffer that is being displayed.  TODO.
+file. You cannot delete a buffer that is being displayed.
 
 **C-X C-Q** (**toggle-readonly**)
 
