@@ -346,6 +346,8 @@ module Echo
 	  if f.starts_with?(basename)
 	    if dirname == "/"
 	      fullname = "/" + f	# Avoid multiple /
+	    elsif dirname == "."
+	      fullname = f		# Eliminate ./
 	    else
 	      fullname = dirname + "/" + f
 	    end
