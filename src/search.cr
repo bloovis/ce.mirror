@@ -461,6 +461,7 @@ module Search
 	rcnt += 1
 	return FALSE unless Line.replace(plen, repl)
 	break if c == '.'
+	query = false if c == '!'
       when ctrl_g
         ctrlg(false, 0, Kbd::RANDOM)
 	break
