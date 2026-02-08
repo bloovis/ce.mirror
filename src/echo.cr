@@ -284,8 +284,8 @@ module Echo
 
   # Prompts for a buffer name, and returns a tuple containing
   # the Result and the name entered by the user
-  def getbufn : Tuple(Result, String)
-    result, bufn = reply_with_completions("Use buffer [#{E.oldbufn}]: ", nil, true) do |s|
+  def getbufn(prompt : String) : Tuple(Result, String)
+    result, bufn = reply_with_completions(prompt, nil, true) do |s|
       # Return the names of all buffers that start with s.
       Buffer.buffers.map {|b| b.name}.select {|name| name.starts_with?(s)}
     end

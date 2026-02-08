@@ -380,7 +380,7 @@ class Buffer
   # that are required. Return true if everything
   # looks good.
   def clear : Bool
-    if @flags.changed?
+    if @flags.changed? && !@flags.system?
       if Echo.yesno("Discard changes") != TRUE
 	return false
       end
@@ -458,6 +458,7 @@ class Buffer
       if b = Buffer.new("*sysbuf*")
 	@@sysbuf = b
 	b.flags = Bflags::System
+	@@blist.delete(b)	# Remove it from the buffer list
 	return b
       end
     end
@@ -603,12 +604,54 @@ class Buffer
   # This command attaches a buffer to a window. The values of dot and mark come from the
   # buffer if the use count is 0. Otherwise, they come from some other window.
   def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
-    result, bufn = Echo.getbufn
+    result, bufn = Echo.getbufn("Use buffer [#{E.oldbufn}]: ")
     return result if result != TRUE
 
     # Search for a buffer.
     return FALSE unless b = Buffer.find(bufn, true)
     E.curw.usebuf(b)
+    return TRUE
+  end
+
+  # This command disposes of a buffer, by name.
+  # Asks for the name,  and looks it up (don't get too
+  # upset if it isn't there at all!). Gets quite upset
+  # if the buffer is being displayed. Clears the buffer (ask
+  # if the buffer has been changed).  Bound to "C-X K".
+  def self.killbuffer(f : Bool, n : Int32, k : Int32) : Result
+    if @@blist.size == 1
+      Echo.puts("Can't kill the only buffer")
+      return FALSE
+    end
+    result, bufn = Echo.getbufn("Kill buffer: ")
+    return result if result != TRUE
+
+    # Search for a buffer.
+    b = Buffer.find(bufn, false)
+    if b.nil?
+      Echo.puts("[Buffer not found]")
+      return TRUE
+    end
+
+    # Can't delete it if it's on screen
+    if b.nwind != 0
+      Echo.puts("Buffer is being displayed")
+      return FALSE
+    end
+
+    # Clear the buffer.  Return FALSE if the buffer
+    # was changed and the user said don't discard it.
+    if !b.clear
+      return FALSE
+    end
+
+    # Find the buffer's index in the list, then remove
+    # it from the list.
+    i = @@blist.index(b)
+    if i.nil?
+      raise "Unknown buffer in Buffer.killbuffer!"
+    end
+    @@blist.delete_at(i)
     return TRUE
   end
 
@@ -639,6 +682,7 @@ class Buffer
     k.add(Kbd::F8, cmdptr(nextbuffer), "forw-buffer")
     k.add(Kbd::F10, cmdptr(prevbuffer), "back-buffer")
     k.add(Kbd.ctlx('b'), cmdptr(usebuffer), "use-buffer")
+    k.add(Kbd.ctlx('k'), cmdptr(killbuffer), "kill-buffer")
     k.add(Kbd.ctlx_ctrl('b'), cmdptr(listbuffers), "display-buffers")
     k.add(Kbd.meta('i'), cmdptr(setsavetabs), "set-save-tabs")
   end
