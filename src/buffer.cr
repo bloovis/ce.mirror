@@ -17,33 +17,64 @@ end
 alias LineCache = Hash(Int32, Pointer(Line))
 
 class Buffer
+  # Linked list of lines.
   property list : LinkedList(Line)
+
+  # Flags (defined in `Bflags`).
   property flags : Bflags
+
+  # Name (not filename)
   property name : String
+
+  # File name (blank if not set).
   property filename : String
-  property nwind : Int32	# Number of windows using this buffer
-  property lcache : LineCache	# Cache of line numbers
-  property scache : Int32	# Cache of buffer size
-  property undo : Undo		# Undo stack
+
+  # Number of windows using this buffer.
+  property nwind : Int32
+
+  # Cache of line numbers.
+  property lcache : LineCache
+
+  # Cache of buffer size.
+  property scache : Int32
+
+  # Undo/redo stacks.
+  property undo : Undo
 
   # The `dot`, `mark` and `leftcol` properties are only used when a window is attached
   # or detached from this buffer.  When the last window is detached, we save that
   # window's values, so that the next time a window is attached, we
   # copy them to that window.  See `Window#add_wind` for details.
-  property dot : Pos		# current cursor position in buffer
-  property mark : Pos		# mark position
-  property leftcol : Int32	# left column of window
+  
+  # Current cursor position in buffer.
+  property dot : Pos
+
+  # Current mark position in buffer (not set if mark.l is -1)
+  property mark : Pos
+
+  # Left screen column of window.
+  property leftcol : Int32
 
   # The `keymap` and `modename` properties are used to implement a Mode feature,
   # which allows key bindings to be associated with a buffer, rather
   # than being global.
-  property keymap : KeyMap	# set of key bindings
-  property modename : String	# if empty, keymap is not used
+
+  # Set of key bindings specific to this buffer.
+  property keymap : KeyMap
+
+  # Name of mode; if empty, keymap is not used.
+  property modename : String
 
   # Class variables.
-  @@blist = [] of Buffer	# list of all buffers
-  @@sysbuf : Buffer | Nil	# special "system" buffer
-  @@savetabs = true		# true if tabs are preserved when writing files
+
+  # List of all buffers.
+  @@blist = [] of Buffer
+
+  # Special "system" buffer.
+  @@sysbuf : Buffer | Nil
+
+  # True if tabs are preserved when writing files.
+  @@savetabs = true
 
   def initialize(name : String, @filename = "")
     #STDERR.puts("Buffer.initialize: name #{name}, filename #{@filename}")
@@ -533,7 +564,7 @@ class Buffer
 
   # Commands.
 
-  # Makes the next buffer in the buffer list the current buffer.
+  # This command makes the next buffer in the buffer list the current buffer.
   def self.nextbuffer(f : Bool, n : Int32, k : Int32) : Result
     # Get the index of the current buffer.
     i = @@blist.index(E.curb)
@@ -551,7 +582,7 @@ class Buffer
     return TRUE
   end
 
-  # Attaches a buffer to a window. The values of dot and mark come from the
+  # This command attaches a buffer to a window. The values of dot and mark come from the
   # buffer if the use count is 0. Otherwise, they come from some other window.
   def self.usebuffer(f : Bool, n : Int32, k : Int32) : Result
     result, bufn = Echo.getbufn
@@ -563,7 +594,7 @@ class Buffer
     return TRUE
   end
 
-  # Display the buffer list. This is done
+  # This command displays the buffer list. This is done
   # in two parts. The `makelist` routine figures out
   # the text, and puts it in the special *sysbuf* buffer.
   # Then `popsysbuf` pops the data onto the screen. Bound to
@@ -573,7 +604,7 @@ class Buffer
     return b_to_r(popsysbuf)
   end
 
-  # Sets the savetabs flag according to the numeric argument if present,
+  # This command sets the savetabs flag according to the numeric argument if present,
   # or toggles the value if no argument present.  If savetabs is
   # zero, tabs will will be changed to spaces when saving a file, by
   # replacing each tab with the appropriate number of spaces (as

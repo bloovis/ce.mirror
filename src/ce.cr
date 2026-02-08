@@ -26,6 +26,8 @@ require "../version"
 # will send output to the file ce.log .
 DEBUG = false
 
+# This command exits the editor.  If there are changed buffers,
+# it prompts the user for confirmation.
 def quit(f : Bool, n : Int32, k : Int32) : Result
   # Check if there are any changed buffers.
   if Buffer.anycb
@@ -36,15 +38,16 @@ def quit(f : Bool, n : Int32, k : Int32) : Result
   return TRUE
 end
 
-# Kills of any keyboard macro that is in progress.
+# This command kills off any keyboard macro recording that is in progress.
+# It is also a general purpose abort method that can be called
+# from other commands.
 def ctrlg(f : Bool, n : Int32, k : Int32) : Result
-  # FIXME: end the macro here!
+  E.macro.stop_recording
   return ABORT
 end
 
+# Populates the system buffer with the information about all buffers.
 def makechart
-  # Populate the system buffer with the information about the
-  # "normal" buffers.
   b = Buffer.sysbuf
   b.clear
   lines = [] of String
@@ -58,20 +61,16 @@ def makechart
   return true
 end
 
-# This function creates a table, listing all
+# This command creates a table, listing all
 # of the command keys and their current bindings, and stores
-# the table in the standard pop-op buffer (the one used by the
-# directory list command, the buffer list command, etc.). This
-# lets MicroEMACS produce its own wall chart. The bindings to
-# "ins-self" are only displayed if there is an argument.
-# If an argument is supplied, keys bound to "ins-self" will
-# also be displayed.
+# the table in the system pop-op buffer. This
+# lets the editor produce its own wall chart.
 def wallchart(f : Bool, n : Int32, k : Int32) : Result
   return FALSE unless makechart
   return b_to_r(Buffer.popsysbuf)
 end
 
-# Starts recording a macro.
+# This command starts recording a macro.
 def ctlxlp(f : Bool, n : Int32, k : Int32) : Result
   if E.macro.recording?
     Echo.puts("Not now")
@@ -83,7 +82,7 @@ def ctlxlp(f : Bool, n : Int32, k : Int32) : Result
   end
 end
 
-# Stops recording a macro.
+# This command stops recording a macro.
 def ctlxrp(f : Bool, n : Int32, k : Int32) : Result
   if E.macro.recording?
     Echo.puts("[End macro]")
@@ -95,8 +94,8 @@ def ctlxrp(f : Bool, n : Int32, k : Int32) : Result
   end
 end
 
-# Executes the current (un-named) macro. The command argument is the
-# number of times to loop. Quit as soon as a command gets an error.
+# This command executes the current (un-named) macro. The command argument is the
+# number of times to loop. Quits as soon as a command gets an error.
 # Returns TRUE if all ok, else FALSE.
 def ctlxe(f : Bool, n : Int32, k : Int32) : Result
   # Can't do it if we're recording or already reading the macro.
@@ -143,13 +142,13 @@ def ctlxe(f : Bool, n : Int32, k : Int32) : Result
   return s
 end
 
-# Displays the version of ce on the echo line.
+# This command displays the version of ce on the echo line.
 def showversion(f : Bool, n : Int32, k : Int32) : Result
   Echo.puts("CrystalEdit version #{VERSION}")
   return TRUE
 end
 
-# Here we capture any unhandled exceptions, and print
+# The main program of the editor. We capture any unhandled exceptions, and print
 # the exception information along with a backtrace before exiting.
 begin
   # Create the main editor object.
