@@ -487,15 +487,7 @@ class Window
     end
 
     # Make sure line is within the buffer bounds.
-    if line < 0
-      line = 0
-    else
-      bsize = w.buffer.size
-      if line >= bsize
-	line = bsize - 1
-      end
-    end
-    w.line = line
+    w.line = w.buffer.clamp(line)
     return TRUE
   end
 
