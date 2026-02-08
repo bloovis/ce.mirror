@@ -17,8 +17,7 @@ module Basic
 
     # Move the dot to halfway point in the window, or to the end
     # the buffer if the halfway point is past the end.
-    bsize = w.buffer.size
-    dot.l = [w.line + (w.nrow // 2), bsize - 1].min
+    dot.l = w.buffer.clamp(w.line + (w.nrow // 2))
     dot.o = 0
   end
 
@@ -102,6 +101,7 @@ module Basic
     # Compute how much to scroll to get to next page
     # (80% of the screen size is what ITS EMACS seems to use).
     w = E.curw
+    b = w.buffer
     nrow = w.nrow
     page = [w.nrow - (w.nrow // 5), 1].max
     if !f
@@ -113,7 +113,7 @@ module Basic
     end
       
     # Move the current line number up, but not past the start of the buffer.
-    w.line = [w.line - n, 0].max
+    w.line = b.clamp(w.line - n)
 
     checkdot(w)
     return TRUE

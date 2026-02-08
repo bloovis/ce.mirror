@@ -28,7 +28,6 @@ class Display
       #STDERR.puts "update window for buffer #{w.buffer.name}: w.line #{w.line}, w.toprow #{w.toprow}, w.nrow #{w.nrow}"
 
       b = w.buffer
-      bsize = b.size	# number of lines in buffer
 
       # If the dot line is not visible, reframe the window.
       dot = w.dot
@@ -38,12 +37,12 @@ class Display
 	# We have set i to the row on which we want the dot
 	# to be shown in the window.  Given that, figure out
 	# which line should be shown at the top of the window
-	w.line = [dot.l - i, 0].max
+	w.line = b.clamp(dot.l - i)
       end
 
       # Figure out how many lines are actually visible.
       first = w.line
-      last = [first + w.nrow, bsize].min - 1
+      last = b.clamp(first + w.nrow - 1)
 
       # Display visible lines.
       b.each_in_range(first, last) do |i, lp|

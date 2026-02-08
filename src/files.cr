@@ -78,7 +78,7 @@ module Files
 
 	# Frame the window so that the dot is near
 	# the middle of the window.
-	curw.line = [curw.dot.l - (curw.nrow // 2), 0].max
+	curw.line = b.clamp(curw.dot.l - (curw.nrow // 2))
 	Echo.puts("[Old buffer]")
 	return TRUE
       end

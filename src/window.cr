@@ -341,11 +341,12 @@ class Window
 
     # Replace the window list with the current window.
     w = @@list[@@curi]
+    b = w.buffer
     @@list = [w]
     @@curi = 0
 
     # Reframe the window to avoid moving dot, if possible.
-    w.line = [w.line - w.toprow, 0].max
+    w.line = b.clamp(w.line - w.toprow)
     w.toprow = 0
     w.nrow = E.tty.nrow - 2	# 2 = mode line + echo line
     return TRUE
@@ -369,7 +370,7 @@ class Window
 	# Shrink this window.  Move the top line number down
 	# by the amount being shrunk to avoid scrolling the window.
 	n = w.nrow - size	# No. of rows to remove
-	w.line = [w.line + n, w.buffer.size - 1].min
+	w.line = w.buffer.clamp(w.line + n)
       end
       w.toprow = toprow
       w.nrow = size
@@ -389,6 +390,7 @@ class Window
       return FALSE
     end
     curw = @@list[@@curi]
+    b = curw.buffer
 
     # If this is the last window, the one to adjust is
     # the one above it.  Otherwise, the one to adjust is
@@ -409,12 +411,12 @@ class Window
     if above
       # We're shrinking the window above.  Move the top line
       # of the current window up by n lines.
-      curw.line = [curw.line - n, 0].max
+      curw.line = b.clamp(curw.line - n)
       curw.toprow -= n
     else
       # We're shrinking the window below.  Move that window's
       # top line down by n lines.
-      adjw.line = [adjw.line + n, adjw.buffer.size - 1].min
+      adjw.line = adjw.buffer.clamp(adjw.line + n)
       adjw.toprow += n
     end
 
@@ -454,12 +456,12 @@ class Window
     if above
       # We're growing the window above.  Move the top line
       # of the current window down by n lines.
-      curw.line = [curw.line + n, curw.buffer.size - 1].min
+      curw.line = curw.buffer.clamp(curw.line + n)
       curw.toprow += n
     else
       # We're growing the window below.  Move that window's
       # top line up by n lines.
-      adjw.line = [adjw.line - n, 0].max
+      adjw.line = adjw.buffer.clamp(adjw.line - n)
       adjw.toprow -= n
     end
 
@@ -511,26 +513,20 @@ class Window
   def self.mvupwind(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
     dot = w.dot
-    bsize = w.buffer.size
+    b = w.buffer
 
     # Calculate the new top line by subtracting n (which can
     # be negative), making sure it stays within the buffer bounds.
-    line = w.line - n
-    if line < 0
-      line = 0
-    elsif line >= bsize
-      line = bsize - 1
-    end
-    w.line = line
+    w.line = b.clamp(w.line - n)
 
     # If the dot is still visible, we're done.
-    if dot.l >= line && dot.l < line + w.nrow
+    if dot.l >= w.line && dot.l < w.line + w.nrow
       return TRUE
     end
 
     # Reframe the window, trying to put the dot in the
     # center row.
-    dot.l = [line + (w.nrow // 2), bsize - 1].min
+    dot.l = b.clamp(w.line + (w.nrow // 2))
     dot.o = 0
     return TRUE
   end

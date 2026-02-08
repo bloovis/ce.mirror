@@ -380,6 +380,19 @@ class Buffer
     return true
   end
 
+  # Forces a line number to fall within the valid line
+  # number range (0 to buffer size - 1).
+  def clamp(line : Int32) : Int32
+    last = self.size - 1
+    if line < 0
+      return 0
+    elsif line > last
+      return last
+    else
+      return line
+    end
+  end
+
   # Class methods.
 
   # Searches for a buffer with the name `name`.
