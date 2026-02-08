@@ -133,10 +133,16 @@ module Files
 
   # Prompts for a file, then opens that file.  If a buffer with that
   # file already exists, uses it; others creates a new buffer.
+  # If a numeric argument is provided, mark the buffer as read-only.
   def filevisit(f : Bool, n : Int32, k : Int32) : Result
     result, fname = Echo.getfname("Visit file: ")
     return result if result != TRUE
-    return visit_file(fname)
+    result = visit_file(fname)
+    if f
+      b = E.curb
+      b.flags = b.flags | Bflags::ReadOnly
+    end
+    return result
   end
 
 
