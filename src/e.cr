@@ -189,9 +189,8 @@ class E
     else
       pos = Pos.new(0, 0)
       ARGV.each do |arg|
-        if arg.starts_with?("+")
-	  # Move to the specified line in the next file being read.
-	  pos.l = arg[1..].to_i - 1
+        if arg =~ /^\+(\d+)/
+	  pos.l = $1.to_i - 1
 	  pos.o = 0
 	else
 	  filename = arg
