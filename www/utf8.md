@@ -39,4 +39,4 @@ separated by spaces.  `ce` will then insert the corresponding UTF-8
 characters into the current buffer.
 
 As an example, entering the string `e0 e1 e2` would insert the characters
-`àáâ` into the buffer.  TODO.
+`àáâ` into the buffer.

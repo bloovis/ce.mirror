@@ -53,7 +53,7 @@ The next character after the **C-Q** is stripped of
 any special meaning. It is simply inserted into the current buffer.
 Any argument specified on the **C-Q**
 command is used as the insert
-repeat count.  TODO.
+repeat count.
 
 **C-T** (**twiddle**)
 

@@ -60,7 +60,7 @@ class String
       n -= 1
       if c == '\t'
 	width += @@tabsize - (width % @@tabsize)
-      elsif c.ord >= 0x01 && c.ord <= 0x1a
+      elsif c.ord >= 0x00 && c.ord <= 0x1a
 	width += 2
       else
 	width += 1	# FIXME: should be unicode width!

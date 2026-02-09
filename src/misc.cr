@@ -296,6 +296,28 @@ module Misc
     return TRUE
   end
 
+  # This command reads a character from the keyboard (or macro), and
+  # insert it into the buffer. All the characters
+  # are taken literally, with the exception of the newline,
+  # which always has its line splitting meaning. The character
+  # is always read, even if it is inserted 0 times, for
+  # regularity.
+  def quote(f : Bool, n : Int32, k : Int32) : Result
+    m = E.macro
+    if m.reading?
+      c = m.read_int
+      if c.nil?
+	return ctrlg(false, 0, Kbd::RANDOM)
+      end
+    else
+      c = E.kbd.getinp
+    end
+    return FALSE if n < 0
+    return TRUE if n == 0
+    Line.insert(c.chr.to_s * n)
+    return TRUE
+  end
+
   # Creates key bindings for all Misc commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
@@ -311,6 +333,7 @@ module Misc
     k.add(Kbd.meta_ctrl('i'), cmdptr(settabsize), "set-tab-size")
     k.add_dup(Kbd::DEL, "forw-del-char")
     k.add(Kbd.meta_ctrl('u'), cmdptr(unicode), "unicode")
+    k.add(Kbd.ctrl('q'), cmdptr(quote), "quote")
 
     # Create bindings for all ASCII printable characters and tab.
     ('!'.ord .. '~'.ord).each do |c|
