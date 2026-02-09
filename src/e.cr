@@ -298,6 +298,9 @@ class E
   # Enters a loop waiting for the user to hit a key, and responds by executing
   # the command bound to that key.
   def event_loop
+    # Start the Ruby process
+    Echo.puts("Unable to start Ruby server") unless RubyRPC.init_server
+
     # Repeatedly get keys, perform some actions.
     # Most keys skip to the next page, PGUP skips
     # the previous page, q quits.

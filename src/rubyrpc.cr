@@ -17,6 +17,12 @@ module RubyRPC
   ERROR_PARAMS    = -32602	# Invalid params
   ERROR_EXCEPTION = -32000	# Server error - exception
 
+  # Server filename.
+  SERVER_FILENAME = "/usr/local/share/pe/server.rb"
+
+  # Ruby extension in current directory.
+  EXTENSION_FILENAME = "./.pe.rb"
+
   extend self
 
   # Loads the Ruby server (`server.rb`), and if that is successful,
@@ -38,7 +44,7 @@ module RubyRPC
     @@id = 1
 
     # Load the Ruby server.
-    prog = "/usr/local/share/pe/server.rb"
+    prog = SERVER_FILENAME
     begin
       @@process = Process.new(prog,
 			     nil,
@@ -56,8 +62,21 @@ module RubyRPC
     end
 
     # Load the local Ruby extension code.
-    loadscript("./.pe.rb")
+    if File.exists?(EXTENSION_FILENAME)
+      loadscript(EXTENSION_FILENAME)
+    end
     return true
+  end
+
+  # Initializes the Ruby server if there is a Ruby extension
+  # named `.pe.rb` in the current directory.  Returns true
+  # if .pe.rb doesn't exist, or if the server was loaded successfully.
+  def init_server : Bool
+    if File.exists?(EXTENSION_FILENAME)
+      return load_server
+    else
+      return true
+    end
   end
 
   # Returns the server's input file, or nil if the server
