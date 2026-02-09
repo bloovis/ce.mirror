@@ -8,6 +8,7 @@ require "json"
 # Further information about Ruby extensions can be found
 # in the MicroEMACS documentation.
 module RubyRPC
+  @@tried = false
   @@process : Process | Nil
   @@id = 1
 
@@ -18,11 +19,22 @@ module RubyRPC
 
   extend self
 
-  # Initializes the Ruby server (`server.rb`), and if that is successful,
+  # Loads the Ruby server (`server.rb`), and if that is successful,
   # loads the Ruby file `.pe.rb`, which contains the directory-local
   # Ruby extensions.  Returns true if the server initialized successfully,
   # or false otherwise.
-  def init_server : Bool
+  def load_server : Bool
+    # Don't need to do anything if we've already loaded the server.
+    if @@process
+      return true
+    end
+
+    # If we've already tried to load the server, it must have failed,
+    # so don't try again.
+    if @@tried
+      return false
+    end
+    @@tried = true
     @@id = 1
 
     # Load the Ruby server.
@@ -36,7 +48,9 @@ module RubyRPC
 			     shell: false)
       E.log("Created process for #{prog}")
     rescue IO::Error
-      E.log("Unable to create process for #{prog}")
+      msg = "Unable to load #{prog}"
+      E.log(msg)
+      Echo.puts(msg)
       @@process = nil
       return false
     end
@@ -46,17 +60,36 @@ module RubyRPC
     return true
   end
 
-  # Sends a JSON message to the server in two pieces:
-  # * a line containing the size of the JSON payload in decimal
-  # * the JSON payload itself
-  def send_message(json : String)
+  # Returns the server's input file, or nil if the server
+  # can't be loaded.
+  def input_file : IO?
+    return nil if !load_server
     f = nil
     if p = @@process
       f = p.input?
     end
+    return f
+  end
+
+  # Returns the server's output file, or nil if the server
+  # can't be loaded.
+  def output_file : IO?
+    return nil if !load_server
+    f = nil
+    if p = @@process
+      f = p.output?
+    end
+    return f
+  end
+
+  # Sends a JSON message to the server in two pieces:
+  # * a line containing the size of the JSON payload in decimal
+  # * the JSON payload itself
+  def send_message(json : String)
+    f = input_file
     unless f
       E.log("No server process, can't send RPC message")
-      return nil
+      return
     end
     nbytes = json.bytesize
     f.puts(nbytes.to_s)
@@ -563,10 +596,7 @@ module RubyRPC
   # Returns the JSON object representing it, or nil if there's an error.
   def read_rpc_message : JSON::Any | Nil
     # Read the line containing the size of the JSON in bytes.
-    f = nil
-    if p = @@process
-      f = p.output?
-    end
+    f = output_file
     unless f
       E.log("No server process, can't read RPC message")
       return nil
@@ -637,20 +667,24 @@ module RubyRPC
   # parameters *f*, *n*, and *k*, and returns its result.
   # This is just the scaffold for a future working implementation.
   def rubycall(name : String, f : Bool, n : Int32, k : Int32) : Result
+    return FALSE if !load_server
     E.log("rubycall: calling #{name}")
     return call_server(name, f, n, k, [""])
   end
 
   # Evaluates the Ruby code string *line*, returns the result.
   def runruby(line : String) : Result
+    return FALSE if !load_server
     return call_server("exec", true, 1, Kbd::RANDOM, [line])
   end
 
   # Loads a Ruby script file.
-  def loadscript(filename : String)
+  def loadscript(filename : String) : Result
+    return FALSE if !load_server
     if File.exists?(filename)
-      runruby("load '#{filename}'")
+      return runruby("load '#{filename}'")
     end
+    return FALSE
   end
  
   # Commands
