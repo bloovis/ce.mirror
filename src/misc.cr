@@ -4,7 +4,7 @@ module Misc
   extend self
 
   # Returns the current column position of dot, taking into account tabs
-  # and control characters.
+  # and control characters.  The column is zero-based.
   def getcolpos : Int32
     w, b, dot, lp = E.get_context
     return lp.text.screen_width(dot.o)
@@ -277,6 +277,25 @@ module Misc
     return TRUE
   end
 
+  # Prompts for a string of hex numbers separated by spaces.
+  # Treats each hex number as a Unicode character, convert
+  # it to UTF-8, and insert into the current buffer.
+  def unicode(f : Bool, n : Int32, k : Int32) : Result
+    result, s = Echo.reply("Enter Unicode characters in hex: ", nil)
+    return result if result != TRUE
+    chars = [] of Char
+    s.split.each do |hex|
+      if c = hex.to_i?(16)
+	chars << c.chr
+      else
+	Echo.puts("Invalid hex number #{hex}")
+	return FALSE
+      end
+    end
+    chars.each {|ch| Line.insert(ch.to_s)}
+    return TRUE
+  end
+
   # Creates key bindings for all Misc commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('='), cmdptr(showcpos), "display-position")
@@ -291,6 +310,7 @@ module Misc
     k.add(Kbd.ctrl('h'), cmdptr(backdel), "back-del-char")
     k.add(Kbd.meta_ctrl('i'), cmdptr(settabsize), "set-tab-size")
     k.add_dup(Kbd::DEL, "forw-del-char")
+    k.add(Kbd.meta_ctrl('u'), cmdptr(unicode), "unicode")
 
     # Create bindings for all ASCII printable characters and tab.
     ('!'.ord .. '~'.ord).each do |c|

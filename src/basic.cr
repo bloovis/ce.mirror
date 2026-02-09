@@ -29,15 +29,8 @@ module Basic
 
   # Goes to the end of the line.
   def gotoeol(f : Bool, n : Int32, k : Int32) : Result
-    w = E.curw
-    b = w.buffer
-    dot = w.dot
-    lp = b[dot.l]
-    if lp
-      dot.o = lp.text.size
-    else
-      raise "Nil line in gotobol!"
-    end
+    w, b, dot, lp = E.get_context
+    dot.o = lp.text.size
     return TRUE
   end
 
@@ -196,8 +189,8 @@ module Basic
   # to the current cursor column. The column is never off
   # the edge of the screen; it's more like display then
   # show position.
-  private def setgoal(lp : Pointer(Line), offset : Int32)
-    @@curgoal = lp.text.screen_width(offset)
+  private def setgoal
+    @@curgoal = Misc.getcolpos
   end
 
   # This routine looks at the line *lp* and the current
@@ -236,18 +229,12 @@ module Basic
     end
 
     # Get the current line pointer.
-    w = E.curw
-    dot = w.dot
-    b = w.buffer
-    bsize = b.size
-    unless lp = b[dot.l]
-      raise "Nil lp in forwline!"
-    end
+    w, b, dot, lp = E.get_context
 
     # If the last command was not forwline or backline,
     # set the goal column to the offset of the dot.
     if !E.lastflag.cpcn?
-      setgoal(lp, dot.o)
+      setgoal
     end
     E.thisflag = E.thisflag | Eflags::Cpcn
 
@@ -279,17 +266,12 @@ module Basic
     end
 
     # Get the current line pointer.
-    w = E.curw
-    dot = w.dot
-    b = w.buffer
-    unless lp = b[dot.l]
-      raise "Nil lp in backline!"
-    end
+    w, b, dot, lp = E.get_context
 
     # If the last command was not forwline or backline,
     # set the goal column to the offset of the dot.
     if !E.lastflag.cpcn?
-      setgoal(lp, dot.o)
+      setgoal
     end
     E.thisflag = E.thisflag | Eflags::Cpcn
 
