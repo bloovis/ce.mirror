@@ -77,6 +77,7 @@ class Line
     oldpos = dot.dup
     Window.each do |w1|
       if w1.buffer == b
+	# Adjust dot, mark, and undo dot.
 	[w1.dot, w1.mark, w1.udot].each do |pos|
 	  if pos.l == oldpos.l && pos.o >= oldpos.o
 	    pos.o -= oldpos.o
@@ -84,6 +85,11 @@ class Line
 	  elsif pos.l > oldpos.l
 	    pos.l += 1
 	  end
+	end
+
+	# Adjust top line.
+	if w1.line > oldpos.l
+	  w1.line += 1
 	end
       end
     end
@@ -116,10 +122,13 @@ class Line
     oldpos = dot.dup
     Window.each do |w1|
       if w1.buffer == b
+	# Adjust the dot.
 	dot = w1.dot
 	if dot.l == oldpos.l && (w1 == w || dot.o > oldpos.o)
 	  dot.o += n
 	end
+
+	# Adjust the mark and undo dot.
 	[w1.mark, w1.udot].each do |pos|
 	  if pos.l == oldpos.l && pos.o > oldpos.o
 	    pos.o += n
@@ -179,6 +188,7 @@ class Line
     oldpos = dot.dup
     Window.each do |w1|
       if w1.buffer == b
+	# Adjust dot, mark, and undo dot.
 	[w1.dot, w1.mark, w1.udot].each do |pos|
 	  if pos.l == oldpos.l + 1
 	    # This position is in the line that got deleted.
@@ -188,6 +198,11 @@ class Line
 	    # This position is somewhere after the line that got deleted.
 	    pos.l -= 1
 	  end
+	end
+
+	# Adjust top line.
+	if w1.line > oldpos.l
+	  w1.line -= 1
 	end
       end
     end
