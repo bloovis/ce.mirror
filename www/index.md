@@ -9,6 +9,7 @@ In this User Guide, we use the following conventions for keycode names:
 ## Chapters
 
 * [Quick Start](quickstart.md)
+* [Basic Concepts](concepts.md)
 * [Moving Around](moving-around.md)
 * [Inserting](inserting.md)
 * [Deleting and Killing](deleting.md)

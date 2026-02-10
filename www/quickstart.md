@@ -29,9 +29,9 @@ ce +50 src/buffer.cr
 
 ## Commands
 
-`ce` implements a large subset of MicroEMACS commands.  See the section **Key Bindings**
+`ce` implements a large subset of MicroEMACS commands.  See the section [Key Bindings](#keybindings)
 below for a complete list of commands.  If you find yourself stuck while using `ce`, and
-don't have time to look at the **Key Bindings** section, here are the most useful key
+don't have time to look at the [Key Bindings](#keybindings) section, here are the most useful key
 combos:
 
 * `F1`: wait for a key, then display the command bound to that key
@@ -74,7 +74,9 @@ of waiting for you to confirm.
 
 * The `file-write` command prompts you to confirm overwriting an existing file.
 
+<span id="keybindings">
 ## Key Bindings
+</span>
 
 Here is a complete list of the key bindings in `ce`.  `C-` indicates
 a Ctrl key combo; `M-` indicates an `Esc` key prefix; and `C-X` indicates
@@ -95,6 +97,7 @@ C-L              refresh
 C-N              forw-line
 C-O              ins-nl-and-backup
 C-P              back-line
+C-Q              quote
 C-R              back-search
 C-S              forw-search
 C-T              twiddle
@@ -118,27 +121,29 @@ C-X C-V          file-visit
 C-X C-W          file-write
 C-X C-X          swap-dot-and-mark
 C-X C-Z          shrink-window
+C-X D            dired
 C-X E            execute-macro
 C-X G            goto-line
 C-X I            spell-region
+C-X K            kill-buffer
 C-X N            forw-window
 C-X P            back-window
 C-X Return       echo
 C-X U            undo
-C-X X            xec
 C-X Z            enlarge-window
 C-Y              yank
 C-Z              back-page
 Del              forw-del-char
 Down             forw-line
 F1               help
+F10              back-buffer
 F2               file-save
 F3               file-visit
 F4               quit
 F5               undo
 F6               ruby-string
 F7               redo
-F8               next-buffer
+F8               forw-buffer
 F9               search-again
 Home             goto-bol
 Kend             goto-eol
@@ -153,10 +158,11 @@ M-?              reg-query-replace
 M-B              back-word
 M-Backspace      back-del-word
 M-C              cap-word
-M-C-E            gccerr
 M-C-F            fold-case
 M-C-R            back-regexp-search
 M-C-S            forw-regexp-search
+M-C-U            unicode
+M-C-V            display-version
 M-D              forw-del-word
 M-F              forw-word
 M-I              set-save-tabs
