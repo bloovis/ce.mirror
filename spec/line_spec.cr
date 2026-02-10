@@ -5,6 +5,9 @@ require "../src/window"
 require "../src/terminal"
 require "../src/keymap"
 require "../src/display"
+require "../src/macro"
+require "../src/files"
+require "../src/echo"
 require "../src/e"
 
 def initial_setup
@@ -22,6 +25,7 @@ describe Buffer do
   e.tty.close
   b = Buffer.new("dummy")
   w = Window.new(b)
+  Window.add_to_list(w)
 
   it "Creates an initial buffer" do
     initial_setup
