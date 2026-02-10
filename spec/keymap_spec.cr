@@ -1,6 +1,11 @@
 require "./spec_helper"
 require "../src/keymap"
 require "../src/keyboard"
+require "../src/e"
+require "../src/terminal"
+require "../src/display"
+require "../src/macro"
+require "../src/echo"
 
 module Values
   @@values = {false, 0, 0}
@@ -31,11 +36,11 @@ describe KeyMap do
 
   it "Creates a one-key map" do
     k.add(Kbd::PGDN, cmdptr(pagedown), "down-page")
-    result = k.call_by_key(Kbd::PGDN, true, 42)
+    result = k.call_by_key(Kbd::PGDN, true, 42, Kbd::PGDN)
     result.should eq(Result::True)
     Values.values.should eq({true, 42, Kbd::PGDN})
 
-    result = k.call_by_key(Kbd::PGDN, false, 1066)
+    result = k.call_by_key(Kbd::PGDN, false, 1066, Kbd::PGDN)
     result.should eq(Result::True)
     Values.values.should eq({false, 1066, Kbd::PGDN})
 
@@ -46,11 +51,11 @@ describe KeyMap do
 
   it "Adds a second entry to the map" do
     k.add(Kbd::PGUP, cmdptr(pageup), "up-page")
-    result = k.call_by_key(Kbd::PGUP, true, 1776)
+    result = k.call_by_key(Kbd::PGUP, true, 1776, Kbd::PGUP)
     result.should eq(Result::False)
     Values.values.should eq({true, 1776, Kbd::PGUP})
 
-    result = k.call_by_key(Kbd::PGUP, false, 1492)
+    result = k.call_by_key(Kbd::PGUP, false, 1492, Kbd::PGUP)
     result.should eq(Result::False)
     Values.values.should eq({false, 1492, Kbd::PGUP})
 
@@ -60,7 +65,7 @@ describe KeyMap do
   end
 
   it "Tries to call an unbound method" do
-    result = k.call_by_key(Kbd::DOWN, false, -99)
+    result = k.call_by_key(Kbd::DOWN, false, -99, Kbd::DOWN)
     result.should eq(Result::False)
   end
 
