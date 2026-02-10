@@ -110,8 +110,7 @@ module RubyRPC
       E.log("No server process, can't send RPC message")
       return
     end
-    nbytes = json.bytesize
-    f.puts(nbytes.to_s)
+    f.puts(json.bytesize)
     f.print(json)
     E.log("====\nSent #{json}")
   end
