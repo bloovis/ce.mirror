@@ -60,11 +60,6 @@ module RubyRPC
       @@process = nil
       return false
     end
-
-    # Load the local Ruby extension code.
-    if File.exists?(EXTENSION_FILENAME)
-      loadscript(EXTENSION_FILENAME)
-    end
     return true
   end
 
@@ -73,7 +68,7 @@ module RubyRPC
   # if .pe.rb doesn't exist, or if the server was loaded successfully.
   def init_server : Bool
     if File.exists?(EXTENSION_FILENAME)
-      return load_server
+      return loadscript(EXTENSION_FILENAME) == TRUE
     else
       return true
     end
