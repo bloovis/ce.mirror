@@ -295,8 +295,7 @@ class Buffer
 
   # Iterates over each line in the line number range `low` to
   # `high`, inclusive, yielding both the line number and the line itself.
-  # Aborts the iteration if the block returns false.  Line numbers
-  # are zero-based.
+  # Line numbers are zero-based.
   def each_in_range(low : Int32, high : Int32)
     lp = self[low]
     return unless lp

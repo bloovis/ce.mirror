@@ -1,14 +1,14 @@
 require "./spec_helper"
 require "../src/buffer"
 require "../src/line"
+require "../src/keymap"
+require "../src/files"
 
 def initial_setup(b : Buffer)
-  line1p = Line.alloc("This is line one.")
-  b.push(line1p)
-  line2p = Line.alloc("This is line two.")
-  b.push(line2p)
-  line3p = Line.alloc("This is line three.")
-  b.push(line3p)
+  b.list.clear
+  b.addline("This is line one.")
+  b.addline("This is line two.")
+  b.addline("This is line three.")
 end
 
 describe Buffer do
@@ -17,17 +17,15 @@ describe Buffer do
   it "Creates an initial buffer" do
     initial_setup(b)
 
-    lineno = 1
-    b.each do |s|
+    b.each_line do |lineno, s|
       case lineno
-      when 1
+      when 0
         s.text.should eq "This is line one."
-      when 2
+      when 1
         s.text.should eq "This is line two."
-      when 3
+      when 2
 	s.text.should eq "This is line three."
       end
-      lineno += 1
     end
     b.size.should eq(3)
   end
@@ -70,17 +68,11 @@ describe Buffer do
     end
   end
 
-  it "Determines zero-based line number for line 3 using lineno" do
+  it "Uses [] to find line 3" do
     if line3p
-      lnno = b.lineno(line3p)
-      lnno.should eq(2)
+      lp = b[2]
+      lp.should eq(line3p)
     end
-  end
-
-  it "Determines line number for line not in buffer" do
-    badline = Line.alloc("blorch")
-    lnno = b.lineno(badline)
-    lnno.should eq(b.size)
   end
 
   it "Searches for non-existent string 'four'" do
@@ -115,13 +107,15 @@ describe Buffer do
 
   it "Uses [] to seek to non-existent line number 4" do
     lnno = 0
-    f = b[3]
+    f = b[4]
     f.nil?.should eq(true)
   end
 
   l25p = Line.alloc("This is the new line 2.5.")
   it "Inserts a line after line 2" do
     l25p.nil?.should eq(false)
+    line2p = b[1] || Line.alloc("Useless")
+    line2p.nil?.should eq(false)
     b.insert_after(line2p, l25p)
     lineno = 1
     b.each do |s|
@@ -142,7 +136,9 @@ describe Buffer do
 
   it "Inserts a new line1.5 before line 2" do
     l15p = Line.alloc("This is the new line 1.5.")
-    b.insert_before(line2p, l15p)
+    line2p = b[1] || Line.alloc("Useless")
+    b.list.insert_before(line2p, l15p)
+    b.clear_caches(0)
     lineno = 1
     b.each do |s|
       case lineno
@@ -202,8 +198,9 @@ describe Buffer do
 
   it "Inserts a line at the beginning" do
     line0p = Line.alloc("This is line zero.")
-    b.unshift(line0p)
+    b.list.unshift(line0p)
     b.head.should eq(line0p)
+    b.clear_caches(0)
 
     lineno = 1
     b.each do |s|
@@ -246,28 +243,6 @@ describe Buffer do
     seen[0].should eq(1)
     seen[1].should eq(2)
     seen[2].should eq(3)
-  end
-
-  it "Iterates over a sub-range but exits early" do
-    lineno = 1
-    seen = [] of Int32
-    b.each_in_range(1, 3) do |n, s|
-      seen.push(n)
-      n.should eq(lineno)
-      (n <= 3).should eq(true)
-      case lineno
-      when 1
-	s.text.should eq "This is line one."
-      when 2
-	s.text.should eq "This is the new line 1.5."
-      end
-      lineno += 1
-      n < 2	# stop after line 2
-    end
-    lineno.should eq(3)
-    seen.size.should eq(2)
-    seen[0].should eq(1)
-    seen[1].should eq(2)
   end
 
   it "Test buffer flags" do
