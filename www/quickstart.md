@@ -113,6 +113,7 @@ C-X B            use-buffer
 C-X C-B          display-buffers
 C-X C-C          quit
 C-X C-K          display-bindings
+C-X C-F          set-file-name
 C-X C-N          down-window
 C-X C-P          up-window
 C-X C-Q          toggle-readonly

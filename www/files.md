@@ -1,5 +1,12 @@
 # Files
 
+**C-X C-F** (**set-file-name**)
+
+This command prompts in the echo line for a file name,
+If the file already exists, the command asks the user if this is OK.
+If the user says yes, the file name entered by the user
+becomes the new associated file name for the current buffer.
+
 **C-X C-R** (**file-read**)
 
 This command prompts in the echo line for a file name,

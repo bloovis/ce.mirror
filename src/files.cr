@@ -194,6 +194,19 @@ module Files
     return result
   end
 
+  # Prompts for a filename, then if the file exists, asks the user if that's
+  # OK.  If the user says yes, sets the current buffer's filename.
+  def setfilename(f : Bool, n : Int32, k : Int32) : Result
+    result, fname = Echo.getfname("Filename: ")
+    return result if result != TRUE
+    if File.exists?(fname)
+      result = Echo.yesno("File #{fname} exists.  OK")
+      return result if result != TRUE
+    end
+    E.curb.filename = fname
+    return TRUE
+  end
+
   # Creates key bindings for all Files commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx_ctrl('q'), cmdptr(togglereadonly), "toggle-readonly")
@@ -201,6 +214,7 @@ module Files
     k.add(Kbd.ctlx_ctrl('v'), cmdptr(filevisit), "file-visit")
     k.add(Kbd.ctlx_ctrl('w'), cmdptr(filewrite), "file-write")
     k.add(Kbd.ctlx_ctrl('i'), cmdptr(fileinsert), "file-insert")
+    k.add(Kbd.ctlx_ctrl('f'), cmdptr(setfilename), "set-file-name")
 
     k.add_dup(Kbd::F2, "file-save")
     k.add_dup(Kbd::F3, "file-visit")
