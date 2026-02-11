@@ -27,7 +27,6 @@ information for each buffer:
 
 * The "changed" flag, indicating whether the buffer has changed since the last save
 * The number of windows viewing this buffer
-* The "system" flag, indicating whether this is a "system" buffer not managed by the user
 * The size of the buffer in bytes (not characters)
 * The name of the buffer
 * The filename associated with the buffer.

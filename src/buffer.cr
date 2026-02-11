@@ -488,13 +488,10 @@ class Buffer
     namesize = [Buffer.buffers.map {|b| b.name.size}.max, bhdrsize].max
 
     # Populate the system buffer with information about all buffers.
-    b.addline("C W  S         Size " + bhdr.pad_right(namesize)       + " File")
-    b.addline("- -  -         ---- " + bhdrdashes.pad_right(namesize) + " ----")
+    b.addline("C W           Size " + bhdr.pad_right(namesize)       + " File")
+    b.addline("- -           ---- " + bhdrdashes.pad_right(namesize) + " ----")
     Buffer.each do |b2|
       #STDERR.puts("makelist: b2 name #{b2.name}, nwind #{b2.nwind}")
-      # Don't include system buffers in the list.
-      #next if b2.flags.system?
-
       # Calculate number of bytes in this buffer.
       bytes = 0
       b2.each_line do |n,l|
@@ -503,17 +500,21 @@ class Buffer
       end
       bytes -= 1	# adjust for last line
 
-      if b2.flags.changed?
-	s = "* "
-      else
-	s = "  "
+      line = String.build do |s|
+	if b2.flags.changed?
+	  s<< "* "
+	else
+	  s<< "  "
+	end
+	s << b2.nwind.to_s.pad_right(3)
+	s << " "
+	s << bytes.to_s.pad_left(12)
+	s << " "
+	s << b2.name.pad_right(namesize)
+	s << " "
+	s << b2.filename
       end
-      s = s +
-	  b2.nwind.to_s.pad_right(2) + " " +
-	  (b2.flags.system? ? "* " : "  ") +
-	  bytes.to_s.pad_left(12) + " " +
-	  b2.name.pad_right(namesize) + " " + b2.filename
-      b.addline(s)
+      b.addline(line)
     end
     return true
   end
