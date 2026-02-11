@@ -78,10 +78,18 @@ class Display
       @tty.move(w.toprow + w.nrow, 0)
       @tty.color(Terminal::CMODE)
       @tty.eeol
-      @tty.puts((b.flags.changed? ? "*" : " ") + "CrystalEdit " +
-		(b.modename == "" ? "" : ("(" + b.modename + ") ")) +
-                 b.name +
-		(b.filename == "" ? "" : " File:#{b.filename}"))
+      modeline = String.build do |str|
+        str << (b.flags.changed? ? "*" : " ")
+	str << "CrystalEdit "
+	if b.modename.size > 0
+	  str << "(#{b.modename}) "
+	end
+	str << b.name
+	if b.filename.size > 0
+	  str << " File:#{b.filename}"
+	end
+      end
+      @tty.puts(modeline)
       @tty.color(Terminal::CTEXT)
 
     end

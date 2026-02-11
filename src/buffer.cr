@@ -464,6 +464,7 @@ class Buffer
     if b.nil?
       raise "Unable to create sysbuf!"
     end
+    b.flags = b.flags | Bflags::ReadOnly
     return b
   end
 
