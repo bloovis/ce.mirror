@@ -122,7 +122,7 @@ module Paragraph
 
     # This is a list of characters that, if found at the end of a word,
     # require two spaces following them.
-    doubles = ['.', '?', '!']
+    doubles = {'.', '?', '!'}
 
     # Start adding words back to the buffer, making sure each line
     # doesn't exceed the fill column size.

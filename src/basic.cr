@@ -46,7 +46,7 @@ module Basic
   def gotoeob(f : Bool, n : Int32, k : Int32) : Result
     w = E.curw
     b = w.buffer
-    last = [b.size - 1, 0].max
+    last = {b.size - 1, 0}.max
     lp = b[last]
     if lp
       w.dot.l = last
@@ -67,7 +67,7 @@ module Basic
     # (80% of the screen size is what ITS EMACS seems to use).
     w = E.curw
     nrow = w.nrow
-    page = [w.nrow - (w.nrow // 5), 1].max
+    page = {w.nrow - (w.nrow // 5), 1}.max
     if !f
       n = page		# Default scroll
     elsif n < 0
@@ -96,7 +96,7 @@ module Basic
     w = E.curw
     b = w.buffer
     nrow = w.nrow
-    page = [w.nrow - (w.nrow // 5), 1].max
+    page = {w.nrow - (w.nrow // 5), 1}.max
     if !f
       n = page		# Default scroll
     elsif n < 0

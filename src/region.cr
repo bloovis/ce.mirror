@@ -147,7 +147,7 @@ class Region
 	region.size -= 1
       else
 	# Middle of line.
-	chunk = [lp.text.size - region.start.o, region.size].min
+	chunk = {lp.text.size - region.start.o, region.size}.min
 	Line.kinsert(lp.text[region.start.o, chunk])
 	region.start.o += chunk
 	region.size -= chunk
@@ -182,7 +182,7 @@ class Region
 
       # The new indentation is the old indentation + n, but
       # cannot be less than zero.
-      new_indent = [col + n, 0].max
+      new_indent = {col + n, 0}.max
 
       # Replace the line text with the proper indentation prefix,
       # plus the part of the line after the leading whitespace.

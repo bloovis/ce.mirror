@@ -223,7 +223,7 @@ module Misc
     chunk = 0
     if !f
       # No argument: kill from dot to end of line.
-      chunk = [lp.text.size - dot.o, 1].max
+      chunk = {lp.text.size - dot.o, 1}.max
     elsif n > 0
       # Positive argument: kill from dot forward over n lines.
       chunk = lp.text.size - dot.o + 1	# +1 for newline

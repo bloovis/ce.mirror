@@ -78,7 +78,7 @@ class Line
     Window.each do |w1|
       if w1.buffer == b
 	# Adjust dot, mark, and undo dot.
-	[w1.dot, w1.mark, w1.udot].each do |pos|
+	{w1.dot, w1.mark, w1.udot}.each do |pos|
 	  if pos.l == oldpos.l && pos.o >= oldpos.o
 	    pos.o -= oldpos.o
 	    pos.l += 1
@@ -129,7 +129,7 @@ class Line
 	end
 
 	# Adjust the mark and undo dot.
-	[w1.mark, w1.udot].each do |pos|
+	{w1.mark, w1.udot}.each do |pos|
 	  if pos.l == oldpos.l && pos.o > oldpos.o
 	    pos.o += n
 	  end
@@ -189,7 +189,7 @@ class Line
     Window.each do |w1|
       if w1.buffer == b
 	# Adjust dot, mark, and undo dot.
-	[w1.dot, w1.mark, w1.udot].each do |pos|
+	{w1.dot, w1.mark, w1.udot}.each do |pos|
 	  if pos.l == oldpos.l + 1
 	    # This position is in the line that got deleted.
 	    pos.o += prevsize
@@ -234,7 +234,7 @@ class Line
       # Calculate how many characters to delete in this line.
       text = lp.text
       lsize = text.size
-      chars = [lsize - dot.o, n].min
+      chars = {lsize - dot.o, n}.min
       if chars == 0
 	# If we're at the end of the line, merge this line
 	# with the next line.
@@ -265,9 +265,9 @@ class Line
 	oldpos = dot.dup
 	Window.each do |w1|
 	  if w1.buffer == b
-	    [w1.dot, w1.mark, w1.udot].each do |pos|
+	    {w1.dot, w1.mark, w1.udot}.each do |pos|
 	      if pos.l == oldpos.l && pos.o >= oldpos.o
-		pos.o = [pos.o - chars, oldpos.o].max
+		pos.o = {pos.o - chars, oldpos.o}.max
 	      end
 	    end
 	  end

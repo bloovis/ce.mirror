@@ -21,7 +21,7 @@ class Display
     ttywidth = @tty.ncol
     if curcol >= w.leftcol + ttywidth || curcol < w.leftcol
       #STDERR.puts("Curcol #{curcol}, leftcol #{w.leftcol}, tty.ncol #{ttywidth}")
-      w.leftcol = [curcol - (ttywidth // 2), 0].max
+      w.leftcol = {curcol - (ttywidth // 2), 0}.max
       #STDERR.puts("Changing leftcol to #{w.leftcol}")
     end
 
