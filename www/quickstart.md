@@ -129,6 +129,7 @@ C-X K            kill-buffer
 C-X N            forw-window
 C-X P            back-window
 C-X Return       echo
+C-X Tab          file-insert
 C-X U            undo
 C-X Z            enlarge-window
 C-Y              yank

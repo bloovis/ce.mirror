@@ -145,7 +145,6 @@ module Files
     return result
   end
 
-
   # Asks for a file name, and write the
   # contents of the current buffer to that file.
   # Update the remembered file name and clear the
@@ -174,12 +173,34 @@ module Files
     end
   end
 
+  # Prompts for a file, then inserts that file into the current buffer.
+  def fileinsert(f : Bool, n : Int32, k : Int32) : Result
+    result, fname = Echo.getfname("Insert file: ")
+    return result if result != TRUE
+    begin
+      File.open(fname) do |f|
+	nline = 0
+	while s = f.gets(chomp: false)
+	  Line.insertwithnl(s.scrub)
+	  nline += 1
+	end
+	Echo.puts("[Read #{nline} line" + (nline == 1 ? "" : "s") + "]")
+	result = TRUE
+      end
+    rescue ex
+      Echo.puts("Cannot open #{fname} for reading")
+      result = FALSE
+    end
+    return result
+  end
+
   # Creates key bindings for all Files commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.ctlx_ctrl('q'), cmdptr(togglereadonly), "toggle-readonly")
     k.add(Kbd.ctlx_ctrl('s'), cmdptr(filesave), "file-save")
     k.add(Kbd.ctlx_ctrl('v'), cmdptr(filevisit), "file-visit")
     k.add(Kbd.ctlx_ctrl('w'), cmdptr(filewrite), "file-write")
+    k.add(Kbd.ctlx_ctrl('i'), cmdptr(fileinsert), "file-insert")
 
     k.add_dup(Kbd::F2, "file-save")
     k.add_dup(Kbd::F3, "file-visit")

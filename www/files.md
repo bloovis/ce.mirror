@@ -1,5 +1,20 @@
 # Files
 
+**C-X C-R** (**file-read**)
+
+This command prompts in the echo line for a file name,
+then it deletes all of the text in the current buffer and reads in the
+file. The associated file name is set to the name of the file just
+read. The number of lines read is displayed in the echo line.
+
+**C-X C-I** (**file-insert**)
+
+This command prompts in the echo line for a file name,
+then reads in the
+file, inserting its contents at the dot in the current buffer.
+The number of lines read is displayed in the echo line.
+The file name associated with the current buffer is not changed.
+
 **C-X C-S, F2** (**file-save**)
 
 This command writes the contents of the current buffer
