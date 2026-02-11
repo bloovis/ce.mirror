@@ -18,9 +18,10 @@ class Display
     # visible, change the window's left column so that it is visible.
     w, b, dot, lp = E.get_context
     curcol = lp.text.screen_width(dot.o)
-    if curcol >= @tty.ncol + w.leftcol || curcol < w.leftcol
-      #STDERR.puts("Curcol #{curcol}, leftcol #{w.leftcol}, tty.ncol #{@tty.ncol}")
-      w.leftcol = [curcol - (@tty.ncol // 2), 0].max
+    ttywidth = @tty.ncol
+    if curcol >= w.leftcol + ttywidth || curcol < w.leftcol
+      #STDERR.puts("Curcol #{curcol}, leftcol #{w.leftcol}, tty.ncol #{ttywidth}")
+      w.leftcol = [curcol - (ttywidth // 2), 0].max
       #STDERR.puts("Changing leftcol to #{w.leftcol}")
     end
 
@@ -46,23 +47,14 @@ class Display
 
       # Display visible lines.
       b.each_in_range(first, last) do |i, lp|
-        # Remove tabs and make control characters readable.
-        line = lp.text.detab.readable
-	#STDERR.puts("Line size #{line.size}, leftcol #{w.leftcol}")
-
-	# If the entire line is invisible given the current left column,
-	# make it blank.  Otherwise, trim off the left part of the
-	# line that is invisible.
-	if w.leftcol >= line.size
-	  line = ""
-	elsif w.leftcol != 0
-	  line = line[w.leftcol..]
-	end
+        # Remove tabs and make control characters readable.  Use ttywidth + 1 so that
+	# we can tell below if the line will be too long to fit on the screen.
+        line = lp.text.readable(expand: true, leftcol: w.leftcol, width: ttywidth + 1)
 
 	# If the line won't fit on the screen, change the character at the right
 	# margin to an arrow to indicate that there is more to the right.
-	if line.size > @tty.ncol
-	  line = line[0...@tty.ncol-1] + "➤"
+	if line.size > ttywidth
+	  line = line[0...ttywidth-1] + "➤"
 	end
         @tty.putline(i - first + w.toprow, 0, line)
       end

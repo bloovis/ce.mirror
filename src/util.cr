@@ -69,15 +69,32 @@ class String
     return width
   end
 
-  # Returns a readable version of the string, where ASCII
-  # control characters (including Tab!) are replaced by ^C, where C is
-  # the corresponding letter.
-  def readable : String
-    s = self.gsub do |c|
-      if c.ord >= 0x00 && c.ord <= 0x1a
-	"^" + (c + '@'.ord).to_s
-      else
-	c
+  # Returns a readable version of the string.  If *expand* is true,
+  # tabs are expanded.  ASCII control characters (including tabs if *expand*
+  # is false) are replaced by ^C, where C is the corresponding letter.
+  # *leftcol* and *width* define the portion of the resulting string
+  # that is actually returned, i.e., any characters whose position falls
+  # outside that range are omitted.
+  def readable(expand = false, leftcol = 0, width = 32767) : String
+    col = 0
+    rightcol = leftcol + width
+    s = String.build do |str|
+      self.each_char do |c|
+        if c.ord == 0x09 && expand
+	  while true
+	    str << ' ' if col >= leftcol && col < rightcol
+	    col += 1
+	    break if (col % @@tabsize) == 0
+	  end
+	elsif c.ord >= 0x00 && c.ord <= 0x1a
+	  str << '^' if col >= leftcol && col < rightcol
+	  col += 1
+	  str << c + '@'.ord  if col >= leftcol && col < rightcol
+	  col += 1
+	else
+	  str << c if col >= leftcol && col < rightcol
+	  col += 1
+	end
       end
     end
     return s
@@ -103,7 +120,22 @@ class String
   # Returns a copy of the string with tabs replaced with the
   # equivalent number of spaces.
   def detab : String
-    self.gsub(/([^\t]*)(\t)/) { $1 + " " * (@@tabsize - $1.size % @@tabsize) }
+    col = 0
+    s = String.build do |str|
+      self.each_char do |c|
+        if c.ord == 0x09
+	  while true
+	    str << ' '
+	    col += 1
+	    break if (col % @@tabsize) == 0
+	  end
+	else
+	  str << c
+	  col += 1
+	end
+      end
+    end
+    return s
   end
 
   # Returns a string composed of tabs and spaces whose display size
