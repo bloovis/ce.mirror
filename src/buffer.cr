@@ -136,12 +136,10 @@ class Buffer
 
     # Check if the file has no terminating newline.  This is the
     # case if the last line in the file is not empty.
-    lp = last_line
-    appendnl = false
-    if lp.text.size != 0
+    if last_line.text.size != 0
       result = Echo.yesno("File doesn't end with a newline. Should I add one")
       return false if result == ABORT
-      appendnl = result == TRUE
+      addline("") if result == TRUE
     end
 
     Echo.puts("[Writing...]")
@@ -154,10 +152,12 @@ class Buffer
 	  else
 	    f.print(lp.text.detab)
 	  end
-	  if (lp != last_line) || appendnl
+	  if lp == last_line
+	    nline += 1 if lp.text.size != 0
+	  else
 	    f.print("\n")
+	    nline += 1
 	  end
-	  nline += 1
 	end
       end
       Echo.puts("[Wrote #{nline} line" + (nline == 1 ? "" : "s") + "]")
@@ -173,36 +173,35 @@ class Buffer
   # Returns true if successful, false otherwise
   def readin(@filename) : Bool
     @list.clear
-
+    lastnl = true
     if !File.exists?(@filename)
       # If the file doesn't exist, it must be new, so just add a single empty line.
       Echo.puts("[New file]")
-      @list.push(Line.alloc(""))
     else
       begin
 	File.open(@filename) do |f|
 	  nline = 0
-	  lastline = "\n"	# Pretend there's a blank line if file is empty
+	  lastnl = true	# Pretend there's a blank line if file is empty
 	  while s = f.gets(chomp: false)
 	    l = Line.alloc(s.chomp.scrub)
-	    lastline = s
+	    if s.size == 0 
+	      lastnl = true
+	    else
+	      lastnl = s[-1] == '\n'
+	    end
 	    @list.push(l)
 	    nline += 1
 	  end
-
-	  # If the last line ended in a newline, append
-	  # a blank line to the buffer, to give the user a place to
-	  # start adding new text.
-	  if lastline && lastline.size > 0 && lastline[-1] == '\n'
-	    @list.push(Line.alloc(""))
-	  end
-
 	  Echo.puts("[Read #{nline} line" + (nline == 1 ? "" : "s") + "]")
 	end
       rescue ex
 	Echo.puts("Cannot open #{@filename} for reading")
-        @list.push(Line.alloc(""))	# Add a blank line as a stand-in
+	lastnl = true
       end
+
+      # Add a blank line if the last line read ended with a newline,
+      # or if no lines were read.
+      addline("") if lastnl
     end
 
     # Mark the buffer as unchanged.
