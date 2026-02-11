@@ -38,7 +38,10 @@ class Undo
     # The string being inserted or deleted.
     property s : String
 
-    def initialize(@kind, @flags, @pos, @s)
+    # Copy of the buffer flags
+    property bflags : Bflags
+
+    def initialize(@kind, @flags, @pos, @s, @bflags)
     end
 
     # Provides a human-readable version of an undo record.
@@ -113,7 +116,7 @@ class Undo
     s ||= ""
 
     # Push a new record onto the undo stack.
-    @undo_stack.push(Record.new(kind, flags, pos, s))
+    @undo_stack.push(Record.new(kind, flags, pos, s, E.curb.flags))
   end
 
   # Indicates that we are starting an undo group by setting
@@ -194,6 +197,14 @@ class Undo
       when Undo::Kind::Delete
         w.dot = r.pos.dup
 	Line.insertwithnl(r.s)
+      end
+
+      # Set the buffer changed flag to the value it had when this
+      # undo record was saved.
+      if r.bflags.changed?
+	b.flags = b.flags | Bflags::Changed
+      else
+	b.flags = b.flags & ~Bflags::Changed
       end
 
       # We'd like to set the dot to the value it had when it finished
