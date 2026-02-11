@@ -240,9 +240,6 @@ class Window
 
   # This command splits the current window. A window
   # smaller than 3 lines cannot be split.
-  # The only other error that is possible is
-  # a "malloc" failure allocating the structure
-  # for the new window.
   def self.splitwind(f : Bool, n : Int32, k : Int32) : Result
     w = Window.current
     if w.nrow < 3
@@ -332,7 +329,7 @@ class Window
     Window.each do |w|
       #STDERR.puts("onlywind: checking window with buffer #{w.buffer.name}")
       if w != @@list[@@curi]
-	# Break the association the window (which is about to be
+	# Break the association between the window (which is about to be
 	# discarded) and its buffer.
 	#STDERR.puts("onlywind: decrementing nwind for #{w.buffer.name}")
 	w.buffer = nil
@@ -361,7 +358,7 @@ class Window
       return FALSE
     end
     toprow = 0
-    size = (E.tty.nrow // nwind) - 1
+    size = ((E.tty.nrow  - 1) // nwind) - 1
     @@list.each_with_index do |w, i|
       if i == nwind - 1
 	size = E.tty.nrow - toprow - 2
