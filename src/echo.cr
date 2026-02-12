@@ -18,12 +18,13 @@ module Echo
     @@empty
   end
 
-  # Below are special versions of the routines in Terminal that don't don't
+  # Below are special versions of the routines in `Terminal` that don't don't
   # do anything if the `@@noecho` variable is set.  This prevents echo
   # line activity from showing on the screen while we are
-  # processing a profile.  "Noecho" is set to TRUE when a profile is
-  # executed, and turned off temporarily by eprintf() to print error
+  # processing a profile.  `@@noecho` is set to true when a profile is
+  # executed, and turned off temporarily by `puts` to print error
   # messages (i.e. messages that don't start with '[').
+  # FIXME: profiles aren't implemented yet, so ignore the above comment for now.
 
   # Moves the cursor if `@@noecho` is false.
   def move(row : Int32, col : Int32)

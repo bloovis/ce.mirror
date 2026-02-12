@@ -5,9 +5,9 @@ module Files
 
   extend self
 
-  # Checks whether the current buffer is read-only.  It if is,
-  # display an error message and return FALSE; otherwise return TRUE.
-  def checkreadonly
+  # Checks whether the current buffer is read-only.  If it is,
+  # displays an error message and return false; otherwise return true.
+  def checkreadonly : Bool
     w = E.curw
     b = w.buffer
     if b.flags.read_only?

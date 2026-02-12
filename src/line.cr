@@ -24,10 +24,11 @@ class Line
   # The text of a line.
   property text : String
 
+  # Don't call this constuctor directly.  Instead, use `Line.alloc`.
   def initialize(@text : String)
   end
 
-  # Allocates a new Line object.
+  # Allocates a new `Line` object and returns a pointer to it.
   def self.alloc(s : String) : Pointer(Line)
     return Pointer(Line).malloc(1) {Line.new(s)}
   end
@@ -154,13 +155,7 @@ class Line
   end
 
   # Deletes a newline. Joins the current line
-  # with the next line. If the next line is the magic
-  # header line always return TRUE; merging the last line
-  # with the header line can be thought of as always being a
-  # successful operation, even if nothing is done, and this makes
-  # the kill buffer work "right". Easy cases can be done by
-  # shuffling data around. Hard cases require that lines be moved
-  # about in memory. Return FALSE on error and TRUE if all
+  # with the next line. Returns false on error and true if all
   # looks ok. Called by `Line.delete` only.
   def self.delnewline : Bool
     w, b, dot, prevl = E.get_context
@@ -209,14 +204,14 @@ class Line
     return true
   end
 
-  # Deletes "n" characters, starting at dot.
+  # Deletes *n* characters, starting at dot.
   #
   # It understands how do deal
-  # with end of lines, etc. It returns TRUE if all
-  # of the characters were deleted, and FALSE if
+  # with end of lines, etc. It returns true if all
+  # of the characters were deleted, and false if
   # they were not (because dot ran into the end of
-  # the buffer. The "kflag" is TRUE if the text
-  # should be put in the kill buffer.
+  # the buffer, or the buffer is read-only). The *kflag* is true
+  # if the text should be put in the kill buffer.
   def self.delete(n : Int32, kflag : Bool) : Bool
     #STDERR.puts "Line.delete: n #{n}, kflag #{kflag}"
 
@@ -281,7 +276,7 @@ class Line
   end
 
   # Replaces *plen* characters BEFORE dot with string *st*.
-  # Control-J characters in *st* are interpreted as newlines.
+  # Control-J (\n) characters in *st* are interpreted as newlines.
   # In MicroEMACS there was also a casehack disable flag, but
   # this is not used in CrystalEdit.
   def self.replace(plen : Int32, st : String) : Bool
@@ -303,9 +298,10 @@ class Line
     end
   end
 
-  # Replaces the character at the dot with `c` and moves
+  # Replaces the character at the dot with *c* and moves
   # the dot to the next character. If dot is at the end
-  # of the line, do nothing.
+  # of the line, merges this line with the next line,
+  # placing the character *c* between them.
   def self.putc(c : Char)
     Line.delete(1, false)
     Line.insert(c.to_s)
@@ -334,9 +330,8 @@ class Line
   end
 end
 
-# These hacks allows a pointer to Line have the some of the same methods as
+# This hack allows a pointer to `Line` have the some of the same methods as
 # the thing it points to.
-
 struct Pointer(T)
  # Returns the text of a line.
  def text : String

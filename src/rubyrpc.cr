@@ -702,7 +702,7 @@ module RubyRPC
  
   # Commands
 
-  # Prompts for a string, and evaluate the string using the
+  # This command prompts for a string, and evaluate the string using the
   # Ruby interpreter.  Return TRUE if the string was evaluated
   # successfully, and FALSE if an exception occurred.
   def rubystring(f : Bool, n : Int32, k : Int32) : Result
@@ -711,7 +711,7 @@ module RubyRPC
     return runruby(string)
   end
 
-  # Defines a new editor command that invokes a Ruby function.
+  # This command defines a new editor command that invokes a Ruby function.
   # The Ruby function *name* takes a single parameter, which
   # is the numeric argument to the command, or nil
   # if there is no argument.

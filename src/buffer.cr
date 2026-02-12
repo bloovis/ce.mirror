@@ -470,9 +470,9 @@ class Buffer
 
   # This routine rebuilds the text in the special buffer
   # that holds the buffer list. It is called
-  # by the `listbuffers` command. Return TRUE
-  # if everything works. Return FALSE if there
-  # is an error (if there is no memory).
+  # by the `listbuffers` command. Returns true
+  # if everything works. Return false if there
+  # is an error.
   def self.makelist : Bool
     # Create the system buffer if necessary.
     b = sysbuf
