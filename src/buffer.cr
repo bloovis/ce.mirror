@@ -199,10 +199,11 @@ class Buffer
 	lastnl = true
       end
 
-      # Add a blank line if the last line read ended with a newline,
-      # or if no lines were read.
-      addline("") if lastnl
     end
+
+    # Add a blank line if the last line read ended with a newline,
+    # or if no lines were read.
+    addline("") if lastnl
 
     # Mark the buffer as unchanged.
     changed(false)
