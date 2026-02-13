@@ -7,7 +7,7 @@ module Misc
   # and control characters.  The column is zero-based.
   def getcolpos : Int32
     w, b, dot, lp = E.get_context
-    return lp.text.screen_width(dot.o)
+    return lp.text.screen_width(dot.o, b.tab_width)
   end
 
   # Shows information about the dot: the character, the line number,
@@ -42,7 +42,7 @@ module Misc
     end
     s = sprintf("[CH:0x%02X Line:%d Row:%d Col:%d %d%% of %d]",
 	[c, dot.l + 1, dot.l - w.line + w.toprow + 1,
-	 text.screen_width(dot.o) + 1,
+	 text.screen_width(dot.o, b.tab_width) + 1,
 	 percent, bytes])
     Echo.puts(s)
     return TRUE
@@ -139,7 +139,7 @@ module Misc
     end
 
     # Adjust the indentation of the current line.
-    s = String.indent(nicol)
+    s = String.indent(nicol, b.use_tabs_to_indent ? b.tab_width : 0)
     return b_to_r(Line.insert(s))
   end
 
@@ -162,9 +162,9 @@ module Misc
     # specified, unindent by two spaces.
     if (f && (n == 4)) ||
        text =~ /^\s*(def|if|when|for|else|elsif|class|module)\b/
-      nicol += 2
+      nicol += b.indent_size
     elsif f && (n == 16)
-      nicol = nicol < 2 ? 0 : nicol - 2
+      nicol = nicol < 2 ? 0 : nicol - b.indent_size
     end
 
     # Insert a newline followed by the correct number of
@@ -272,7 +272,7 @@ module Misc
     else
       n = 8 unless f	# reset to default if no argument
     end
-    String.tabsize = n
+    E.curb.tab_width = n
     Echo.puts("[Tab size set to #{n} characters]")
     return TRUE
   end

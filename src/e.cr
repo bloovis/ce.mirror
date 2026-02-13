@@ -127,6 +127,11 @@ class E
     return self.instance.macro
   end
 
+  # Returns the Config object.
+  def self.config
+    return self.instance.config
+  end
+
   # Runs the execute method on the instance
   def self.execute(c : Int32, f : Bool, n : Int32) : Result
     return self.instance.execute(c, f, n)

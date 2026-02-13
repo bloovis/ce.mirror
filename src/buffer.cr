@@ -65,6 +65,18 @@ class Buffer
   # Name of mode; if empty, keymap is not used.
   property modename : String
 
+  # These properties are obtained from .editorconfig file(s), or
+  # or if not defined there, default values are provided.
+
+  # Number of columns used to represent a tab character.
+  property tab_width = 8
+
+  # True if tabs can be used for indentation (indent_style in .editorconfig).
+  property use_tabs_to_indent = true
+
+  # Number of columns to use for an indentation level.
+  property indent_size = 2
+
   # Class variables.
 
   # List of all buffers.
@@ -120,11 +132,58 @@ class Buffer
     # Create the size cache.
     @scache = -1
 
+    # Set some properties from .editorconfig file(s).
+    set_config_values
+
     # Add buffer to the list.
     @@blist.push(self)
   end
 
   # Instance methods.
+
+  # Read .editorconfig values that apply to this buffer's filename.
+  # Set some default values if no relevant config values are found.
+  private def set_config_values
+    # Set the default values.
+    @tab_width = 8
+    @indent_size = 2
+    @use_tabs_to_indent = true
+
+    # If the filename is blank, we don't need to searh config files.
+    return if filename.size == 0
+
+    # Get the tab_width value.
+    cfg = E.config
+    val = cfg.getvalue(@filename, "tab_width")
+    if val =~ /^(\d+)$/
+      @tab_width = val.to_i
+    end
+
+    # Get the indent_size value.
+    val = cfg.getvalue(@filename, "indent_size").downcase
+    if val == "tab"
+      @indent_size = @tab_width
+    elsif val =~ /^(\d+)$/
+      @indent_size = val.to_i
+    end
+    #STDERR.puts "Set indent_size to #{@indent_size}"
+
+    # Get the indent_style value
+    val = cfg.getvalue(@filename, "indent_style").downcase
+    if val == "tab"
+      @use_tabs_to_indent = true
+    elsif val == "space"
+      @use_tabs_to_indent = false
+    end
+  end
+
+  # Sets the buffer filename, then reads .editorconfig information
+  # for that filename.
+  def filename=(fname : String)
+    #STDERR.puts "Setting buffer filename to #{fname}"
+    @filename = fname
+    set_config_values
+  end
 
   # Writes the buffer to its associated file.  Returns true
   # on success, false otherwise.
@@ -478,7 +537,6 @@ class Buffer
     # Create the system buffer if necessary.
     b = sysbuf
     b.clear
-    b.filename = ""
 
     # Find the largest buffer name.  Take extra care to correctly pad
     # buffer names smaller than the "Buffer" header.

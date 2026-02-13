@@ -200,7 +200,7 @@ module Basic
   private def getgoal(lp : Pointer(Line)) : Int32
     col = 0
     dbo = 0
-    tabsize = String.tabsize
+    tabsize = E.curb.tab_width
     lp.text.each_char_with_index do |c, i|
       newcol = col
       if c == '\t'

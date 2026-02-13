@@ -17,7 +17,7 @@ class Display
     # Determine the actual screen column number of the dot.  If the column is not
     # visible, change the window's left column so that it is visible.
     w, b, dot, lp = E.get_context
-    curcol = lp.text.screen_width(dot.o)
+    curcol = lp.text.screen_width(dot.o, b.tab_width)
     ttywidth = @tty.ncol
     if curcol >= w.leftcol + ttywidth || curcol < w.leftcol
       #STDERR.puts("Curcol #{curcol}, leftcol #{w.leftcol}, tty.ncol #{ttywidth}")
@@ -49,7 +49,8 @@ class Display
       b.each_in_range(first, last) do |i, lp|
         # Remove tabs and make control characters readable.  Use ttywidth + 1 so that
 	# we can tell below if the line will be too long to fit on the screen.
-        line = lp.text.readable(expand: true, leftcol: w.leftcol, width: ttywidth + 1)
+        line = lp.text.readable(expand: true, leftcol: w.leftcol,
+		                width: ttywidth + 1, tabsize: b.tab_width)
 
 	# If the line won't fit on the screen, change the character at the right
 	# margin to an arrow to indicate that there is more to the right.

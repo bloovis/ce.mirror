@@ -68,7 +68,6 @@ module Echo
     # Grab the system buffer
     b = Buffer.sysbuf
     b.clear
-    b.filename = ""
 
     # Find the largest name size.
     namesize = a.map {|s| s.size}.max

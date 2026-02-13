@@ -1,17 +1,5 @@
 # Application-specific extensions to the `String` class.
 class String
-  @@tabsize = 8
-
-  # Returns the current tab size (default is 8).
-  def self.tabsize : Int32
-    @@tabsize
-  end
-
-  # Sets the current tab size.
-  def self.tabsize=(n : Int32)
-    @@tabsize = n
-  end
-
   # Splits the string into lines, and passes each line to the block.
   # It passes newlines (`\n`) as separate one-character strings, which
   # allows the block to handle them in a special way.  This also ensures
@@ -53,13 +41,13 @@ class String
   # Returns the screen width of the first *n* characters of the string,
   # taking into account tab expansion, and control characters being
   # displayed as two characters (e.g., `^C` for Ctrl-C).
-  def screen_width(n : Int32) : Int32
+  def screen_width(n : Int32, tabsize = 8) : Int32
     width = 0
     self.each_char do |c|
       break if n == 0
       n -= 1
       if c == '\t'
-	width += @@tabsize - (width % @@tabsize)
+	width += tabsize - (width % tabsize)
       elsif c.ord >= 0x00 && c.ord <= 0x1f
 	width += 2
       else
@@ -75,7 +63,7 @@ class String
   # *leftcol* and *width* define the portion of the resulting string
   # that is actually returned, i.e., any characters whose position falls
   # outside that range are omitted.
-  def readable(expand = false, leftcol = 0, width = 32767) : String
+  def readable(expand = false, leftcol = 0, width = 32767, tabsize = 8) : String
     col = 0
     rightcol = leftcol + width
     s = String.build do |str|
@@ -84,7 +72,7 @@ class String
 	  while true
 	    str << ' ' if col >= leftcol && col < rightcol
 	    col += 1
-	    break if (col % @@tabsize) == 0
+	    break if (col % tabsize) == 0
 	  end
 	elsif c.ord >= 0x00 && c.ord <= 0x1f
 	  str << '^' if col >= leftcol && col < rightcol
@@ -119,7 +107,7 @@ class String
 
   # Returns a copy of the string with tabs replaced with the
   # equivalent number of spaces.
-  def detab : String
+  def detab(tabsize = 8) : String
     col = 0
     s = String.build do |str|
       self.each_char do |c|
@@ -127,7 +115,7 @@ class String
 	  while true
 	    str << ' '
 	    col += 1
-	    break if (col % @@tabsize) == 0
+	    break if (col % tabsize) == 0
 	  end
 	else
 	  str << c
@@ -139,9 +127,15 @@ class String
   end
 
   # Returns a string composed of tabs and spaces whose display size
-  # is equal to *col*.
-  def self.indent(col : Int32) : String
-    return ("\t" * (col // @@tabsize)) + (" " * (col % @@tabsize))
+  # is equal to *col*.  If *tabsize* is zero, use spaces only, not tabs.
+  # Otherwise, *tabsize* specifies the number of columns represented
+  # by a tab.
+  def self.indent(col : Int32, tabsize = 8) : String
+    if tabsize == 0
+      return " " * col
+    else
+      return ("\t" * (col // tabsize)) + (" " * (col % tabsize))
+    end
   end
 
 end
