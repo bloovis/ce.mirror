@@ -19,6 +19,7 @@ require "./extend"
 require "./macro"
 require "./paragraph"
 require "./spell"
+require "./config"
 require "./e"
 require "../version"
 

@@ -20,6 +20,7 @@ class E
   property thisflag : Eflags = Eflags::None	# flags for currently running command
   property oldbufn = ""				# old buffer name
   property macro : Macro			# keyboard macro
+  property config : Config			# .editconfig information
 
   # Use the following class methods to access the instance variables
   # of the single instance of `E`.
@@ -173,6 +174,9 @@ class E
 
     # Create a Macro object.
     @macro = Macro.new
+
+    # Read .editorconfig information.
+    @config = Config.new
 
     # Set the instance to make this a pseudo-singleton class.
     @@instance = self
