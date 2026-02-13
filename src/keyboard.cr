@@ -175,7 +175,7 @@ class Kbd
 
     # If it's an ASCII control character, output ^C, where
     # is the corresponding letter.
-    if k >= 0x00 && k <= 0x1a
+    if k >= 0x00 && k <= 0x1f
       return "^" + (k + '@'.ord).chr.to_s
     end
 

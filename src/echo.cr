@@ -61,22 +61,6 @@ module Echo
     prefix
   end
 
-  # Returns the screen width of the first *n* characters of string *s*,
-  # where control characters are treated as having a width of two.
-  def screenwidth(s : String, n : Int32) : Int32
-    width = 0
-    s.each_char do |c|
-      break if n == 0
-      n -= 1
-      if c.ord >= 0x01 && c.ord <= 0x1a
-	width += 2
-      else
-	width += 1
-      end
-    end
-    return width
-  end
-
   # Populates the system buffer with the completions information.
   # Try to display it with more than one entry per line.  Returns
   # true if successful, false otherwise.
@@ -173,7 +157,7 @@ module Echo
         tty.move(row, tty.ncol - 1)
       else
         tty.putline(row, leftcol, s)
-        tty.move(row, screenwidth(ret, pos) + leftcol)
+        tty.move(row, ret.screen_width(pos) + leftcol)
       end
       tty.flush
 

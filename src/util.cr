@@ -60,7 +60,7 @@ class String
       n -= 1
       if c == '\t'
 	width += @@tabsize - (width % @@tabsize)
-      elsif c.ord >= 0x00 && c.ord <= 0x1a
+      elsif c.ord >= 0x00 && c.ord <= 0x1f
 	width += 2
       else
 	width += 1	# FIXME: should be unicode width!
@@ -86,7 +86,7 @@ class String
 	    col += 1
 	    break if (col % @@tabsize) == 0
 	  end
-	elsif c.ord >= 0x00 && c.ord <= 0x1a
+	elsif c.ord >= 0x00 && c.ord <= 0x1f
 	  str << '^' if col >= leftcol && col < rightcol
 	  col += 1
 	  str << c + '@'.ord  if col >= leftcol && col < rightcol
