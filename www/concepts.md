@@ -112,7 +112,7 @@ to the characters `@` through `Z` with the *CONTROL* bit set.
 the characters `A` through `Z`
 with the *CONTROL* bit set.
 
-This shorthand means that that **M-C-V**, for example, can be entered 
+This shorthand means that that **M-C-V**, for example, can be entered
 either as
 `ESC` followed by `Control-V`, or as `Control-\` followed by `V`.
 As another example, **C-X C-B** is entered as `Control-X` followed
@@ -142,7 +142,7 @@ Using `ALT` and `CTRL` together is also not supported.
 Normally when you type a key, `ce` attempts to
 interprets the key as a command.  Internally, `ce` keeps a table
 of each possible key, and the command assocated
-with that key.  This association is called the "key binding."  
+with that key.  This association is called the "key binding."
 Even text keys,
 such as the letters, numbers, and punctuation, are "bound" to a command
 called "ins-self"
