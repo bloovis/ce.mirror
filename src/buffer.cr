@@ -77,6 +77,9 @@ class Buffer
   # Number of columns to use for an indentation level.
   property indent_size = 2
 
+  # True to ensure that the file ends with newline when saving.
+  property insert_final_newline = true
+
   # Class variables.
 
   # List of all buffers.
@@ -148,6 +151,7 @@ class Buffer
     @tab_width = 8
     @indent_size = 2
     @use_tabs_to_indent = true
+    @insert_final_newline = true
 
     # If the filename is blank, we don't need to searh config files.
     return if filename.size == 0
@@ -166,14 +170,21 @@ class Buffer
     elsif val =~ /^(\d+)$/
       @indent_size = val.to_i
     end
-    #STDERR.puts "Set indent_size to #{@indent_size}"
 
-    # Get the indent_style value
+    # Get the indent_style value.
     val = cfg.getvalue(@filename, "indent_style").downcase
     if val == "tab"
       @use_tabs_to_indent = true
     elsif val == "space"
       @use_tabs_to_indent = false
+    end
+
+    # Get the insert_final_newline value.
+    val = cfg.getvalue(@filename, "insert_final_newline").downcase
+    if val == "true"
+      @insert_final_newline = true
+    elsif val == "false"
+      @insert_final_newline = false
     end
   end
 
@@ -195,7 +206,7 @@ class Buffer
 
     # Check if the file has no terminating newline.  This is the
     # case if the last line in the file is not empty.
-    if last_line.text.size != 0
+    if last_line.text.size != 0 && @insert_final_newline
       result = Echo.yesno("File doesn't end with a newline. Should I add one")
       return false if result == ABORT
       addline("") if result == TRUE
