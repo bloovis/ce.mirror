@@ -144,6 +144,28 @@ class ConfigSection
     when '{'
       glob, str = get_group(glob[1..], '}')
       dprint "brace: new glob '#{glob}', group '#{str}'"
+
+      # Check if this is a numeric range.
+      if m = /^(-?\d+)\.\.(-?\d+)$/.match(str)
+	low = m[1].to_i
+	high = m[2].to_i
+	return false if low > high
+	dprint "numeric range #{low} to #{high}"
+	m = /^-?\d+/.match(name)
+	if m
+	  num = m[0]
+	  numi = num.to_i
+	  if numi >= low && numi <= high
+	    return do_match(glob, name[num.size..])
+	  else
+	    return false
+	  end
+	else
+	  return false
+	end
+      end
+
+      # This is a group of comma separated strings.
       strs = str.split(',')
       dprint "brace: strs #{strs}"
       if strs.size == 1
@@ -321,13 +343,6 @@ c.files.each do |f|
     puts "  Section glob #{s.glob}, dir #{s.dirname}"
     s.pairs.each do |k, v|
       puts "    #{k} = #{v}"
-    end
-    ARGV.each do |filename|
-      if s.match(filename)
-	puts "  Section matched #{filename}"
-      else
-	puts "  Section did not match #{filename}"
-      end
     end
   end
 end
