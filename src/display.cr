@@ -49,8 +49,8 @@ class Display
       b.each_in_range(first, last) do |i, lp|
         # Remove tabs and make control characters readable.  Use ttywidth + 1 so that
 	# we can tell below if the line will be too long to fit on the screen.
-        line = lp.text.readable(expand: true, leftcol: w.leftcol,
-		                width: ttywidth + 1, tabsize: b.tab_width)
+        line = lp.text.readable(tabsize: b.tab_width, leftcol: w.leftcol,
+		                width: ttywidth + 1)
 
 	# If the line won't fit on the screen, change the character at the right
 	# margin to an arrow to indicate that there is more to the right.

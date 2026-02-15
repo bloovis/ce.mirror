@@ -128,7 +128,7 @@ module Echo
     # Have to do it the normal way: prompt the user to enter a string.
     tty = E.tty
     row = tty.nrow - 1
-    prompt = prompt.readable
+    prompt = prompt.readable(tabsize: 0)
     leftcol = prompt.size
     fillcols = tty.ncol - leftcol
     tty.putline(row, 0, prompt)
@@ -148,7 +148,7 @@ module Echo
     # Loop getting keys.
     until done
       # Redraw the ret buffer.
-      s = ret.readable
+      s = ret.readable(tabsize: 0)
       if s.size >= fillcols
 	# Answer is too big to fit on screen.  Just show the right portion that
 	# does fit.
@@ -156,7 +156,7 @@ module Echo
         tty.move(row, tty.ncol - 1)
       else
         tty.putline(row, leftcol, s)
-        tty.move(row, ret.screen_width(pos) + leftcol)
+        tty.move(row, ret.screen_width(pos, tabsize: 0) + leftcol)
       end
       tty.flush
 
@@ -253,7 +253,7 @@ module Echo
 	# carriage return.
 	E.macro.write_string(ret)
 	# Display the entire string before returning it.
-	s = ret.readable
+	s = ret.readable(tabsize: 0)
         tty.putline(row, leftcol, s)
 	tty.flush
 	return {TRUE, ret}

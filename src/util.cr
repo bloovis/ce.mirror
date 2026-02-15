@@ -38,15 +38,16 @@ class String
     self + " " * pad
   end
 
-  # Returns the screen width of the first *n* characters of the string,
-  # taking into account tab expansion, and control characters being
-  # displayed as two characters (e.g., `^C` for Ctrl-C).
+  # Returns the screen width of the first *n* characters of the string.
+  # If *tabsize* is non-zero, take into account tab expansion;
+  # otherwise treat tabs as ASCII control characters.  ASCII control
+  # characters are displayed as two characters (e.g., `^C` for Ctrl-C).
   def screen_width(n : Int32, tabsize = 8) : Int32
     width = 0
     self.each_char do |c|
       break if n == 0
       n -= 1
-      if c == '\t'
+      if c == '\t' && tabsize != 0
 	width += tabsize - (width % tabsize)
       elsif c.ord >= 0x00 && c.ord <= 0x1f
 	width += 2
@@ -57,18 +58,18 @@ class String
     return width
   end
 
-  # Returns a readable version of the string.  If *expand* is true,
-  # tabs are expanded.  ASCII control characters (including tabs if *expand*
-  # is false) are replaced by ^C, where C is the corresponding letter.
+  # Returns a readable version of the string.  If *tabsize* is non-zero,
+  # tabs are expanded.  ASCII control characters (including tabs if *tabsize*
+  # is zero) are replaced by ^C, where C is the corresponding letter.
   # *leftcol* and *width* define the portion of the resulting string
   # that is actually returned, i.e., any characters whose position falls
   # outside that range are omitted.
-  def readable(expand = false, leftcol = 0, width = 32767, tabsize = 8) : String
+  def readable(tabsize = 8, leftcol = 0, width = 32767) : String
     col = 0
     rightcol = leftcol + width
     s = String.build do |str|
       self.each_char do |c|
-        if c.ord == 0x09 && expand
+        if c == '\t' && tabsize != 0
 	  while true
 	    str << ' ' if col >= leftcol && col < rightcol
 	    col += 1
@@ -111,7 +112,7 @@ class String
     col = 0
     s = String.build do |str|
       self.each_char do |c|
-        if c.ord == 0x09
+        if c == '\t'
 	  while true
 	    str << ' '
 	    col += 1

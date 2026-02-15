@@ -46,7 +46,7 @@ class Undo
 
     # Provides a human-readable version of an undo record.
     def to_s : String
-      return "kind #{@kind}, flags #{flags}, pos (#{@pos.l},#{@pos.o}), s '#{@s.readable}'"
+      return "kind #{@kind}, flags #{flags}, pos (#{@pos.l},#{@pos.o}), s '#{@s.readable(tabsize: 0)}'"
     end
   end
 

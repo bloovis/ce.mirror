@@ -2,6 +2,15 @@
 # .editorconfig files.   For more information about these files, see
 # <https://spec.editorconfig.org/> .
 
+# Set to true to enable sending debug messages to STDERR.
+CFGDEBUG = false
+
+def dprint(str)
+  if CFGDEBUG
+    STDERR.puts str
+  end
+end
+
 # The `ConfigSection` class stores information about a single section in
 # a .editorconfig file.
 class ConfigSection
@@ -81,7 +90,7 @@ class ConfigSection
   # Does the hard work of matching a string *name* against
   # a glob pattern *glob*.  Uses recursion heavily.
   private def do_match(glob : String, name : String) : Bool
-    #STDERR.puts "do_match: glob '#{glob}', name '#{name}'"
+    dprint "do_match: glob '#{glob}', name '#{name}'"
     return true if glob.size == 0 && name.size == 0
     g = glob[0]?
     return false unless g
@@ -98,7 +107,7 @@ class ConfigSection
 	return true if do_match(glob[1..], name[i..])
 	i += 1
       end
-      #STDERR.puts "star: glob #{glob}, name #{name}, i #{i}"
+      dprint "star: glob #{glob}, name #{name}, i #{i}"
       if glob.size == 1
 	# Nothing in the glob after '*', and we reached
 	# the end of the name, so there is a match.
@@ -112,17 +121,31 @@ class ConfigSection
       return do_match(glob[1..], name[1..])
     when '['
       glob, str = get_group(glob[1..], ']')
-      #STDERR.puts "bracket: new glob '#{glob}', group '#{str}'"
+      dprint "bracket: new glob '#{glob}', group '#{str}'"
       n = name[0]?
       return false unless n
-      return false if !str.includes?(n)
-      #STDERR.puts "bracket: matched #{n}"
+
+      # If the set of characters is empty, ignore it.
+      if str.size == 0
+	return do_match(glob, name)
+      end
+
+      # Check for a leading '!', which means match any character
+      # NOT in the set.  Otherwise match any character in the set.
+      if str[0] == '!'
+	set = str[1..]
+	dprint("! set '#{set}' matching against '#{n}'")
+	return false if set.includes?(n)
+      else
+	return false if !str.includes?(n)
+	dprint "bracket: matched #{n}"
+      end
       return do_match(glob, name[1..])
     when '{'
       glob, str = get_group(glob[1..], '}')
-      #STDERR.puts "brace: new glob '#{glob}', group '#{str}'"
+      dprint "brace: new glob '#{glob}', group '#{str}'"
       strs = str.split(',')
-      #STDERR.puts "brace: strs #{strs}"
+      dprint "brace: strs #{strs}"
       if strs.size == 1
 	if "{#{str}}" == name[0, str.size+2]
 	  return do_match(glob, name[str.size+2..])
@@ -130,7 +153,7 @@ class ConfigSection
       end
       strs.each do |s|
 	if s == name[0,s.size]
-	  #STDERR.puts "brace: matched #{s}"
+	  dprint "brace: matched #{s}"
 	  return do_match(glob, name[s.size..])
 	end
       end
@@ -150,7 +173,7 @@ class ConfigSection
   # .editorconfig file that exactly matches the glob.  Otherwise,
   # *filename* may be in any subdirectory.
   def match(filename : String) : Bool
-    #STDERR.puts "match: filename #{filename}, glob #{@glob}"
+    dprint "match: filename #{filename}, glob #{@glob}"
 
     # The file must be in at or below the directory containing
     # this .editorconfig.
@@ -165,7 +188,7 @@ class ConfigSection
       # Use the unexpanded glob and filename, so that they will match
       # files in any subdirectory.
       filename = Path[filename].basename
-      #STDERR.puts "matching glob #{@glob} against basename #{filename}"
+      dprint "matching glob #{@glob} against basename #{filename}"
       return do_match(@glob, filename)
     end
   end
@@ -191,7 +214,7 @@ class ConfigFile
   # Parses and stores the preamble and sections from a
   # single .editorconfig file.
   def initialize(@fullpath)
-    #STDERR.puts "parsing config file #{@fullpath}"
+    dprint "parsing config file #{@fullpath}"
     @root = false
     @preamble = Hash(String, String).new
     @sections = [] of ConfigSection
@@ -205,19 +228,19 @@ class ConfigFile
 	key = $1.strip
 	value = $2.strip
 	if section
-	  #STDERR.puts "section key #{key}, value #{value}"
+	  dprint "section key #{key}, value #{value}"
 	  section.addpair(key, value)
 	else
-	  #STDERR.puts "preamble key #{key}, value #{value}"
+	  dprint "preamble key #{key}, value #{value}"
 	  preamble[key.downcase] = value
 	end
       elsif l =~ /^\[(.+)\]$/
 	name = $1
-	#STDERR.puts "New section #{name}"
+	dprint "New section #{name}"
 	section = ConfigSection.new(name, fullpath)
 	sections << section
       else
-	#STDERR.puts "Unrecognized line '#{l}'"
+	dprint "Unrecognized line '#{l}'"
       end
     end
     if root = preamble["root"]?
@@ -272,7 +295,7 @@ class Config
 	      else
 		value = v
 	      end
-	      #STDERR.puts "Found #{key} in #{s.glob}, v was '#{v}', setting value to '#{value}'"
+	      dprint "Found #{key} in #{s.glob}, v was '#{v}', setting value to '#{value}'"
 	    end
 	  end
 	end
@@ -285,8 +308,8 @@ end
 
 {% if flag?(:TEST) %}
 
-if ARGV.size < 1
-  puts "usage: filename..."
+if ARGV.size != 2
+  puts "usage: filename key"
   exit 1
 end
 
@@ -309,11 +332,10 @@ c.files.each do |f|
   end
 end
 
-ARGV.each do |filename|
-  value = c.getvalue(filename, "indent_size", "3")
-  puts "indent_size for #{filename} = '#{value}'"
-  value = c.getvalue(filename, "tab_width", "6")
-  puts "tab_width for #{filename} = '#{value}'"
-end
+
+filename = ARGV[0]
+key = ARGV[1]
+value = c.getvalue(filename, key, "<not found>")
+puts "#{key} for #{filename} = '#{value}'"
 
 {% end %} # flag TEST
