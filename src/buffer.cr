@@ -86,6 +86,9 @@ class Buffer
   # Characters to be used as line separators when saving.
   property end_of_line = "\n"
 
+  # Character set (use `iconv -l` to get the complete list)
+  property charset = "UTF-8"
+
   # Class variables.
 
   # List of all buffers.
@@ -160,6 +163,7 @@ class Buffer
     @insert_final_newline = true
     @trim_trailing_whitespace = false
     @end_of_line = "\n"
+    @charset = "UTF-8"
 
     # If the filename is blank, we don't need to searh config files.
     return if filename.size == 0
@@ -212,6 +216,13 @@ class Buffer
     elsif val == "crlf"
       @end_of_line = "\r\n"
     end
+
+    # Get the charset value.
+    val = cfg.getvalue(@filename, "charset").downcase
+    case val
+    when "latin1", "utf-8", "utf-16be", "utf-16le"
+      @charset = val.upcase
+    end
   end
 
   # Sets the buffer filename, then reads .editorconfig information
@@ -242,6 +253,7 @@ class Buffer
     nline = 0
     begin
       File.open(@filename, "w") do |f|
+        f.set_encoding(@charset, invalid: :skip)
         self.each do |lp|
 	  if @trim_trailing_whitespace
 	    text = lp.text.rstrip
@@ -281,6 +293,7 @@ class Buffer
     else
       begin
 	File.open(@filename) do |f|
+	  f.set_encoding(@charset, invalid: :skip)
 	  nline = 0
 	  lastnl = true	# Pretend there's a blank line if file is empty
 	  delimiter = (@end_of_line == "\r") ? '\r' : '\n'

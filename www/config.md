@@ -40,9 +40,15 @@ meaning.
 **end_of_line**: if this is set, it defines what character(s) `ce` will use as the line
 separator when loading or saving files.  If it is set to `lf`, the ASCII linefeed character
 is the line separator.  If it is set to `crlf`, the ASCII carriage return/linefeed combo
-is the line separator.  if it is set to `cr`, the ASCII carriage return
+is the line separator.  If it is set to `cr`, the ASCII carriage return
 character is the line separator.  If `ce` cannot find a value for `end_of_line`,
 it uses the default value of `lf`.
+
+**charset**: if this is set, it defines the character set that `ce` uses when loading or saving
+files.  The supported character sets are `latin1`, `utf-8`, `utf-16be`, and
+`utf-16le`.  If the value is any other character set, or if `ce` cannot find a value for `charset`,
+it uses the default value of `utf-8`.  (Internally, `ce` uses the `utf-8` character set,
+and converts from/to the specified character set when loading or saving files.)
 
 `ce` ignores any other properties that it finds in `.editorconfig` files.
 
@@ -67,13 +73,11 @@ This config file applies only to files matching
 the pattern `*.cr` in the current directory or any of its subdirectories.
 For each matching file:
 
-* The line separator character is a linefeed
+* The character set is `utf-8`.
+* The line separator character is a linefeed.
 * The indentation size is set to 2 characters.
 * Indentation uses tabs.
 * The tab size is set 8 characters.
 * When saving the file, `ce` will ask the user if a newline needs
 to be added to the last line if a newline is not present, and it will trim trailing
 whitespace from each line.
-
-This config file also contains a property that `ce` currently ignores
-(`charset`).
