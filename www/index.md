@@ -24,4 +24,5 @@ In this User Guide, we use the following conventions for keycode names:
 * [Ruby Extensions](ruby.md)
 * [Modes](modes.md)
 * [UTF-8 and Unicode](utf8.md)
+* [EditorConfig Support](config.md)
 * [Implementation Notes](implementation.md)
