@@ -83,6 +83,9 @@ class Buffer
   # True if trailing whitespace should be removed from lines when saving.
   property trim_trailing_whitespace = false
 
+  # Characters to be used as line separators when saving.
+  property end_of_line = "\n"
+
   # Class variables.
 
   # List of all buffers.
@@ -156,6 +159,7 @@ class Buffer
     @use_tabs_to_indent = true
     @insert_final_newline = true
     @trim_trailing_whitespace = false
+    @end_of_line = "\n"
 
     # If the filename is blank, we don't need to searh config files.
     return if filename.size == 0
@@ -197,6 +201,16 @@ class Buffer
       @trim_trailing_whitespace = true
     elsif val == "false"
       @trim_trailing_whitespace = false
+    end
+
+    # Get the end_of_line value.
+    val = cfg.getvalue(@filename, "end_of_line").downcase
+    if val == "lf"
+      @end_of_line = "\n"
+    elsif val == "cr"
+      @end_of_line = "\r"
+    elsif val == "crlf"
+      @end_of_line = "\r\n"
     end
   end
 
@@ -242,7 +256,7 @@ class Buffer
 	  if lp == last_line
 	    nline += 1 if lp.text.size != 0
 	  else
-	    f.print("\n")
+	    f.print(@end_of_line)
 	    nline += 1
 	  end
 	end
@@ -269,12 +283,13 @@ class Buffer
 	File.open(@filename) do |f|
 	  nline = 0
 	  lastnl = true	# Pretend there's a blank line if file is empty
-	  while s = f.gets(chomp: false)
+	  delimiter = (@end_of_line == "\r") ? '\r' : '\n'
+	  while s = f.gets(delimiter: delimiter, chomp: false)
 	    l = Line.alloc(s.chomp.scrub)
 	    if s.size == 0 
 	      lastnl = true
 	    else
-	      lastnl = s[-1] == '\n'
+	      lastnl = s[-1] == delimiter
 	    end
 	    @list.push(l)
 	    nline += 1
