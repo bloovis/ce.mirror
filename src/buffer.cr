@@ -80,6 +80,9 @@ class Buffer
   # True to ensure that the file ends with newline when saving.
   property insert_final_newline = true
 
+  # True if trailing whitespace should be removed from lines when saving.
+  property trim_trailing_whitespace = false
+
   # Class variables.
 
   # List of all buffers.
@@ -152,6 +155,7 @@ class Buffer
     @indent_size = 2
     @use_tabs_to_indent = true
     @insert_final_newline = true
+    @trim_trailing_whitespace = false
 
     # If the filename is blank, we don't need to searh config files.
     return if filename.size == 0
@@ -186,6 +190,14 @@ class Buffer
     elsif val == "false"
       @insert_final_newline = false
     end
+
+    # Get the trim_trailing_whitespace value.
+    val = cfg.getvalue(@filename, "trim_trailing_whitespace").downcase
+    if val == "true"
+      @trim_trailing_whitespace = true
+    elsif val == "false"
+      @trim_trailing_whitespace = false
+    end
   end
 
   # Sets the buffer filename, then reads .editorconfig information
@@ -217,10 +229,15 @@ class Buffer
     begin
       File.open(@filename, "w") do |f|
         self.each do |lp|
-	  if @@savetabs
-	    f.print(lp.text)
+	  if @trim_trailing_whitespace
+	    text = lp.text.rstrip
 	  else
-	    f.print(lp.text.detab)
+	    text = lp.text
+	  end
+	  if @@savetabs
+	    f.print(text)
+	  else
+	    f.print(text.detab)
 	  end
 	  if lp == last_line
 	    nline += 1 if lp.text.size != 0

@@ -1,11 +1,16 @@
 # EditorConfig Support
 
-`ce` supports the [EditorConfig standard](https://editorconfig.org/).  It reads
-`.editconfig` files according to the standard, and sets certain properties for
+`ce` supports the [EditorConfig standard](https://editorconfig.org/).  At startup, it reads
+`.editorconfig` files according to the standard, and sets certain properties for
 a buffer based on the filename associated with the buffer, and whether there exist
-sections of `.editconfig` file(s) that match that filename.
+sections of `.editorconfig` file(s) that match that filename.
+
+`ce` does not re-read `.editorconfig` files if they change during an editing
+session.  You must restart `ce` to force it to re-read those files.
 
 `ce` recognizes the following properties:
+
+## Supported Properties
 
 **tab_width**: if this is set, it specifies the number of spaces represented by a tab.
 This affects the on-screen display of tabs.  If `ce` cannot find a value for
@@ -26,10 +31,17 @@ for `indent_style`, it uses the default value of `tab`.
 if a newline should be added to the end of the file if one does not already exist.
   If `ce` cannot find a value for `insert_final_newline`, it uses the default value of `true`.
 
+**trim_trailing_whitespace**: if this is set to `true`, when saving a file `ce` will remove
+trailing whitespace from each line.  If `ce` cannot find a value for `trim_trailing_whitespace`,
+it uses the default value of `false`.  This property should be used with care, because
+in some file formats, such as Markdown, trailing whitespace can have specific intended
+meaning.
+
 `ce` ignores any other properties that it finds in `.editorconfig` files.
 
-Here is the `.editconfig` file that I use.  The indentation size is 2 characters;
-indentation uses tabs; and the tab size is 8 characters.
+## Example
+
+Here is the `.editorconfig` file that I use for Crystal projects:
 
 ```
 root = true
@@ -43,3 +55,17 @@ indent_size = 2
 trim_trailing_whitespace = true
 tab_width = 8
 ```
+
+This config file applies only to files matching
+the pattern `*.cr` in the current directory or any of its subdirectories.
+For each matching file:
+
+* The indentation size is set to 2 characters.
+* Indentation uses tabs.
+* The tab size is set 8 characters.
+* When saving the file, `ce` will ask the user if a newline needs
+to be added to the last line if a newline is not present, and it will trim trailing
+whitespace from each line.
+
+This config file also contains properties that `ce` currently ignores
+(`charset` and `end_of_line`).
