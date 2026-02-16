@@ -94,6 +94,7 @@ class ConfigSection
     return true if glob.size == 0 && name.size == 0
     g = glob[0]?
     return false unless g
+
     case g
     when '*'
       if glob.size > 1 && glob[1] == '*'
@@ -181,6 +182,14 @@ class ConfigSection
       end
       return false
     else
+      # It's not a special character.  If it's a backslash,
+      # fetch the next glob character and also treat it as
+      # non-special.
+      if g == '\\'
+	g = glob[1]?
+	return false unless g
+	glob = glob[1..]
+      end
       n = name[0]?
       return false unless n
       return false if g != n
