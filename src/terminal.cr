@@ -63,7 +63,8 @@ class Terminal
      LibNCurses::KEY_F12 => Kbd::F12
   }
 
-  # Initializse our instance variables but doesn't initialize ncurses yet.
+  # Initializes our instance variables but doesn't fully set up ncurses yet;
+  # use `#open` for that.
   def initialize
     Locale.setlocale(Locale::LC_CTYPE, "")
     @scr = LibNCurses.initscr

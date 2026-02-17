@@ -32,8 +32,8 @@ class Window
   # The number of screen rows the in window.
   property nrow : Int32
 
-  # The left column of the window (allows for left and right
-  # scrolling for the display of long lines).
+  # The left column of the window.  `Display#update` uses it to
+  # do left and right scrolling for the display of long lines).
   property leftcol : Int32
 
   @@list = [] of Window		# list of all windows
