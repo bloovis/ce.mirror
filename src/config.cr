@@ -49,7 +49,12 @@ class ConfigSection
   private def has_slash : Bool
     brackets = false
     braces = false
+    skipnext = false
     @glob.each_char do |c|
+      if skipnext
+	skipnext = false
+	next
+      end
       if brackets
 	if c == ']'
 	  brackets = false
@@ -66,6 +71,8 @@ class ConfigSection
 	  brackets = true
 	when '{'
 	  braces = true
+	when '\\'
+	  skipnext = true
 	end
       end
     end
@@ -97,6 +104,8 @@ class ConfigSection
 
     case g
     when '*'
+      # A single '*' matches any character except '/'.
+      # Two '*' match any character including '/'.
       if glob.size > 1 && glob[1] == '*'
 	slash = 0.chr
 	glob = glob[1..]
@@ -119,8 +128,13 @@ class ConfigSection
 	return do_match(glob[1..], name)
       end
     when '?'
+      # Match any character.
       return do_match(glob[1..], name[1..])
     when '['
+      # This is a set of characters in brackets, one
+      # of which must match.  If the first character
+      # in the set is '!' NONE of the subsequent characters
+      # must match.
       glob, str = get_group(glob[1..], ']')
       dprint "bracket: new glob '#{glob}', group '#{str}'"
       n = name[0]?
@@ -143,6 +157,11 @@ class ConfigSection
       end
       return do_match(glob, name[1..])
     when '{'
+      # This is a group in braces.  It can be a single
+      # string, which is matched including it braces.
+      # It can be a comma separated set of strings, one
+      # of which must be matched.  Or it can be
+      # a range of integers, separated by "..".
       glob, str = get_group(glob[1..], '}')
       dprint "brace: new glob '#{glob}', group '#{str}'"
 
@@ -239,7 +258,7 @@ class ConfigFile
   # The sections in the .editorconfig file.
   property sections : Array(ConfigSection)
 
-  # True if this is a root .editorocnfig file.
+  # True if this is a root .editorconfig file.
   property root : Bool
 
   # Parses and stores the preamble and sections from a
@@ -253,9 +272,14 @@ class ConfigFile
     section = nil
     File.read_lines(fullpath).each do |line|
       l = line.strip
+
+      # Ignore blank lines and comments.
       next if l.size == 0
       next if l[0] == '#' || l[0] == ';'
+
       if l =~ /^(.+)=(.+)$/
+	# This is a key-value pair.  If we're not in
+	# a section, the pair is part of the preamble.
 	key = $1.strip
 	value = $2.strip
 	if section
@@ -266,6 +290,8 @@ class ConfigFile
 	  preamble[key.downcase] = value
 	end
       elsif l =~ /^\[(.+)\]$/
+	# This is a glob pattern in brackets, so it's
+	# the start of a section.
 	name = $1
 	dprint "New section #{name}"
 	section = ConfigSection.new(name, fullpath)
@@ -274,6 +300,10 @@ class ConfigFile
 	dprint "Unrecognized line '#{l}'"
       end
     end
+
+    # If the preamble contained "root = true", mark
+    # this as a root file (i.e., don't ascend
+    # any farther looking for .editorconfig files.
     if root = preamble["root"]?
       @root = (root.downcase == "true")
     end
