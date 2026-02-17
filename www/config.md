@@ -50,6 +50,10 @@ files.  The supported character sets are `latin1`, `utf-8`, `utf-16be`, and
 it uses the default value of `utf-8`.  (Internally, `ce` uses the `utf-8` character set,
 and converts from/to the specified character set when loading or saving files.)
 
+**spelling_language**: if this is set, specifies the language that should be used
+for spell checking (e.g., `fr` for French).  `ce` uses `aspell` for spell checking, so you should also
+install the desired `aspell-LANG` package.
+
 `ce` ignores any other properties that it finds in `.editorconfig` files.
 
 ## Example
@@ -81,3 +85,4 @@ For each matching file:
 * When saving the file, `ce` will ask the user if a newline needs
 to be added to the last line if a newline is not present, and it will trim trailing
 whitespace from each line.
+* No spelling language is specified.

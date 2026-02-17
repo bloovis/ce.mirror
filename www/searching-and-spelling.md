@@ -126,13 +126,13 @@ to confirm each replacement, as in **replace-string**.
 
 **C-X I** (**spell-region**)
 
-This command uses `ispell` to spell-check the current region
+This command uses `aspell` to spell-check the current region
 (the text between the mark and the dot).  At each misspelled
 word, `ce` pops up a window showing the suggested replacements,
 and prompts for an replacement:
 
 * Entering a blank string ignores the misspelled word
-and adds it to ispell's list of words to ignore in the future.
+and adds it to aspell's list of words to ignore in the future.
 
 * Entering a number replaces the misspelled word with the matching
 suggested replacement in the popup window.
@@ -140,6 +140,10 @@ suggested replacement in the popup window.
 * Entering any other string replaces the misspelled word with that string.
 
 * Entering `Ctrl-G` aborts the command.
+
+If you want aspell to use a language other than the default, install
+the desired `aspell-LANG` package, and then add a `spelling_language`
+key/value pair to the appropriate section of an [EditorConfig file](./config.md).
 
 **M-\$** (**spell-word**)
 

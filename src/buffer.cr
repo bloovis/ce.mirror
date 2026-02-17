@@ -89,6 +89,9 @@ class Buffer
   # Character set (use `iconv -l` to get the complete list)
   property charset = "UTF-8"
 
+  # Language to use for ispell.
+  property spelling_language = ""
+
   # Class variables.
 
   # List of all buffers.
@@ -223,6 +226,10 @@ class Buffer
     when "latin1", "utf-8", "utf-16be", "utf-16le"
       @charset = val.upcase
     end
+
+    # Get the spelling_language value.  This is used by spelling commands.
+    # If it is missing or blank, no language will be specified.
+    @spelling_language = cfg.getvalue(@filename, "spelling_language").downcase
   end
 
   # Sets the buffer filename, then reads .editorconfig information

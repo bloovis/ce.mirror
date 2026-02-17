@@ -1,5 +1,5 @@
 # The `Spell` module implements spell-checking commands
-# using ispell's interactive mode (`ispell -a`)
+# using aspell's interactive mode (`aspell -a`)
 module Spell
 
   @@process : Process | Nil = nil
@@ -15,33 +15,41 @@ module Spell
     return Line.getc.to_s =~ @@regex
   end
 
-  # Opens a two-way pipe to the ispell program.  Returns true
+  # Opens a two-way pipe to the aspell program.  Returns true
   # if successful, false otherwise.
-  def open_ispell : Bool
+  def open_aspell : Bool
     if !@@process.nil?
       return true
     end
 
+    # -a means ispell pipe mode.
+    # --lang sets the language to be used.
+    args = ["-a"]
+    lang = E.curb.spelling_language
+    if lang != ""
+      args << "--lang=#{lang}"
+    end
+
     begin
-      @@process = Process.new("ispell",
-			     ["-a"],
+      @@process = Process.new("aspell",
+			     args,
                              input: Process::Redirect::Pipe,
                              output: Process::Redirect::Pipe,
                              error: Process::Redirect::Pipe,
 			     shell: false)
-      E.log("Created process for ispell")
+      E.log("Created process for aspell")
     rescue IO::Error
-      Echo.puts("Unable to create process for ispell")
+      Echo.puts("Unable to create process for aspell")
       @@process = nil
       return false
     end
 
-    # Read the identification message from ispell.
+    # Read the identification message from aspell.
     if p = @@process
       f = p.output?
       if f
 	s = f.gets
-	E.log("ispell identified itself as '#{s}'")
+	E.log("aspell identified itself as '#{s}'")
       end
       return true
     else
@@ -49,28 +57,28 @@ module Spell
     end
   end
 
-  # Returns ispell's output file, or nil if the ispell
+  # Returns aspell's output file, or nil if the aspell
   # process is dead.
-  private def ispell_output : IO | Nil
+  private def aspell_output : IO | Nil
     f = nil
     if p = @@process
       f = p.output?
     end
     if f.nil?
-      Echo.puts("Can't open ispell's output file handle")
+      Echo.puts("Can't open aspell's output file handle")
      end
     return f
   end
 
-  # Returns ispell's input file, or nil if the ispell
+  # Returns aspell's input file, or nil if the aspell
   # process is dead.
-  private def ispell_input : IO | Nil
+  private def aspell_input : IO | Nil
     f = nil
     if p = @@process
       f = p.input?
     end
     if f.nil?
-      Echo.puts("Can't open ispell's input file handle")
+      Echo.puts("Can't open aspell's input file handle")
     end
     return f
   end
@@ -106,7 +114,7 @@ module Spell
   # it's doing on the echo line.
   private def get_replacement(word : String, rest : String, info : Bool) : Result
     #Echo.puts("Using /,\s*/ to split '#{rest}'")
-    # Split the ispell response into a list of suggestions.
+    # Split the aspell response into a list of suggestions.
     suggestions = rest.split(/,\s*/)
 
     # Determine the size of the largest suggestion, adding 5
@@ -147,15 +155,15 @@ module Spell
     E.disp.update
 
     # Prompt the user to enter a response containing a replacement
-    # string, or the number of an ispell-suggested replacement.
+    # string, or the number of an aspell-suggested replacement.
     nomsg = "No replacement done"
     prompt = "Replacement string or suggestion number (#{1} to #{suggestions.size}): "
     result, s = Echo.reply(prompt, nil)
     if result != TRUE
-      # User didn't enter a replacement, so tell ispell to accept this
+      # User didn't enter a replacement, so tell aspell to accept this
       # word in the future.
       if result == FALSE
-	if fin = ispell_input
+	if fin = aspell_input
 	  fin.puts("@#{word}")
 	end
       end
@@ -179,15 +187,15 @@ module Spell
     end
   end
 
-  # Runs ispell on the word under the cursor.  If ispell
+  # Runs aspell on the word under the cursor.  If aspell
   # thinks the word is misspelled, prompts the user for
   # replacement, and pops up the system buffer showing
   # the suggested replacements.  The *info* parameter
   # is true if `checkword` should display information
   # about what it's doing on the echo line.
   def checkword(info : Bool) : Result
-    if !open_ispell
-      Echo.puts("Unable to open a pipe to ispell")
+    if !open_aspell
+      Echo.puts("Unable to open a pipe to aspell")
       return ABORT
     end
 
@@ -198,36 +206,36 @@ module Spell
       return FALSE
     end
 
-    # Write the word to ispell.
-    return ABORT unless fin = ispell_input
+    # Write the word to aspell.
+    return ABORT unless fin = aspell_input
     fin.puts word
 
-    # Read the response from ispell.
-    return ABORT unless fout = ispell_output
+    # Read the response from aspell.
+    return ABORT unless fout = aspell_output
 
     # Read the response.  If it's non-blank, read more lines
     # until we find a blank line.
     buf = fout.gets
     if buf.nil?
-      Echo.puts("Can't read response from ispell")
+      Echo.puts("Can't read response from aspell")
       return ABORT
     end
     if buf.size > 0
       while true
         s = fout.gets
 	if s.nil?
-	  Echo.puts("Can't read blank line from ispell")
+	  Echo.puts("Can't read blank line from aspell")
 	  return ABORT
 	end
 	break if s == ""
       end
     end
-    #Echo.puts("ispell response to #{word} is '#{buf}'")
+    #Echo.puts("aspell response to #{word} is '#{buf}'")
 
-    # A blank response means ispell doesn't know what to
+    # A blank response means aspell doesn't know what to
     # do with the word.
     if buf.size == 0
-      Echo.puts("ispell doesn't recognize #{word} as a word") if info
+      Echo.puts("aspell doesn't recognize #{word} as a word") if info
       return FALSE
     end
 
