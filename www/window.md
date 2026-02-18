@@ -9,7 +9,7 @@ that one window and you edit a line, it is updated in all windows.
 
 A window is as only wide as can fit on your terminal.
 If a text line is too long to be displayed in a window, the last
-column is displayed as a `$` character.  However,
+column is displayed as a `➤` character.  However,
 `ce` will let you
 view long lines by automatically scrolling the window left or right
 if you move the cursor past the left or right edges of the window.

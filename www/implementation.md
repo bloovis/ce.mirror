@@ -38,6 +38,36 @@ it is not known immediately which line comes first in the list.  To determine
 the ordering, MicroEMACS scans forwards and backwards simultaneously from
 one of the lines until it hits the other line.
 
+This diagram shows the relationship between a window, its buffer,
+and the screen.
+
+```
+ Screen                                                         Buffer
++--------+                                              +-----------------+
+|class S>|                                              | Declaration of  |
+|  def l>|                                              |  Independence   |
+|  end   |               Window                         |When in the      |
+| MicroE>|mode line  /  +-----------------+             |course of        |
+|human e>| <- toprow |  |human events,    | line --->   |human events,    |
+|it beco>|           |  |it becomes       |             |it becomes       |
+|necessa>|           |  |necessary for    |             |necessary for    |
+|one peo>|cursor     |  |one people to    | dot.l--->   |one people to    |
+|dissolv>|           |  |dissolve the     |             |dissolve the     |
+|politic>|       nrow|  |political bands  |             |political bands  | 
+|which h>|           |  |which have       |             |which have       |
+|connect>|           |  |connected them   |             |connected them   |
+|with an>|           |  |with another,    |             |with another,    |
+|and to >|           |  |and to assume    |             |and to assume    |
+|among t>|           |  |among the powers |             |among the powers |
+| MicroE>|mode line  \  +-----------------+             |of the earth,    |
+|        |echo line                                     |the separate and |
++--------+                                              |equal station to |
+                                                        |which the Laws   |
+                                                        |of Nature and of |
+                                                        |  ......         |
+                                                        +-----------------+
+```
+
 ### Display
 
 When MicroEMACS was written, back in the mid 1980s, many computers used
