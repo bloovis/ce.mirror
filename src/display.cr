@@ -57,7 +57,7 @@ class Display
 	if line.size > ttywidth
 	  line = line[0...ttywidth-1] + "➤"
 	end
-        @tty.putline(i - first + w.toprow, 0, line)
+	@tty.putline(i - first + w.toprow, 0, line)
       end
 
       # Fill remainder with blank lines.
@@ -82,7 +82,7 @@ class Display
 	  str << " File:#{b.filename}"
 	end
       end
-      @tty.puts(modeline)
+      @tty.puts(modeline[0..ttywidth-1])
       @tty.color(Terminal::CTEXT)
 
     end

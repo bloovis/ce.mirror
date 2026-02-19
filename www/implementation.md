@@ -125,7 +125,7 @@ ordered by line number, it must be cleared in these situations.
 To prevent this from being a total disaster, `ce` tries to keep at least
 one, or possibly two lines in the cache after an add or delete.  It also
 handles the common cases of looking up line numbers that are one line
-before after after a line already in the cache.  In those cases, `ce`
+before or after a line already in the cache.  In those cases, `ce`
 merely has to use a forward or backward link from the cached line to
 get to the desired line.
 
