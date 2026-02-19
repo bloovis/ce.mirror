@@ -106,7 +106,7 @@ module Search
 	w.dot = dot
 	return TRUE
       end
-      
+
       # Try again in next/previous line.
       if forward
 	break if lp == b.last_line
@@ -175,7 +175,7 @@ module Search
 	spos.l += 1
 	spos.o = 0
 	found = true
-      elsif 
+      elsif
 	# Match a normal string.
 	if spos.o + s.size <= text.size &&
 	   text[spos.o, s.size].compare(s, case_insensitive: @@casefold) == 0
@@ -405,7 +405,7 @@ module Search
   # an `n` doesn't replace, a C-G quits.
   #
   # If *query* is false, replace all strings with no prompting.
-  # 
+  #
   # The *f* parameter is a case-fold hack flag, passed to `Line.replace`
   # (was used in MicroEMACS, not used in CrystalEdit).
   #
@@ -549,7 +549,7 @@ module Search
    [0,  8,  4,  6,  2,  0,  0,  0], # 1: normal seen /
    [2,  2,  2,  2,  3,  2,  2,  1], # 2: comment
    [2,  0,  2,  2,  3,  2,  2,  1], # 3: comment seen *
-   [5,  4,  0,  4,  4,  0,  4,  1], # 4: quote 
+   [5,  4,  0,  4,  4,  0,  4,  1], # 4: quote
    [4,  4,  4,  4,  4,  4,  4,  1], # 5: quote seen \
    [7,  6,  6,  0,  6,  0,  6,  1], # 6: string
    [6,  6,  6,  6,  6,  6,  6,  1], # 7: string seen \

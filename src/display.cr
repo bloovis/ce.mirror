@@ -91,7 +91,7 @@ class Display
     # in the current window.
     w = E.curw
     dot = w.dot
-    currow = dot.l - w.line + w.toprow 
+    currow = dot.l - w.line + w.toprow
     @tty.move(currow, curcol - w.leftcol)
 
     # Refresh the display

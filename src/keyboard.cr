@@ -18,7 +18,7 @@
 # Kbd.getkey returns this "cooked" representation.  For example,
 # Ctrl-A would be returned as CTRL | 0x41, and Esc-A (M-A) would be returned
 # as META | 0x41.
-# 
+#
 # Kbd.getraw returns raw keycodes without prefix or modifier bits.
 # So Ctrl-A would be returned as 0x01, and Esc-A would be returned
 # as two successive keys, 0x1b and 0x41.
@@ -86,7 +86,7 @@ class Kbd
   F12    = 0x96
   CLICK  = 0x97
   DCLICK = 0x98
-  
+
   # Class methods.
 
   # Returns the internal value of the Ctrl-modified key *s*.
@@ -231,7 +231,7 @@ class Kbd
     c = getinp
     case c
     when ('a'.ord..'z'.ord)	# convert to upper case
-      return c - 'a'.ord + 'A'.ord 
+      return c - 'a'.ord + 'A'.ord
     when (@ctrl_at..@ctrl_z)   # control key
       return CTRL | (c + '@'.ord)
     else

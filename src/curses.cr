@@ -53,7 +53,7 @@ lib LibNCurses
 
   # Hack to obtain curscr.
   $curscr : Window
-  
+
   # General functions
   fun initscr : Window
   fun endwin : LibC::Int

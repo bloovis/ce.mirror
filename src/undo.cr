@@ -55,7 +55,7 @@ class Undo
 
   # Stack of redo records
   property redo_stack : Array(Record)
-  
+
   # True if we're in the middle of an undo operation
   property undoing : Bool
 

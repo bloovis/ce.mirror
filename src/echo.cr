@@ -232,7 +232,7 @@ module Echo
 	  pos += default.size
 	end
       else
-	# Get the ASCII-fied character and insert it into the buffer. 
+	# Get the ASCII-fied character and insert it into the buffer.
 	s = Kbd.ascii(k)
 	ret = ret.insert(pos, s)	# convert codepoint to Char to String
 	pos += 1

@@ -12,7 +12,7 @@ class Window
   getter   buffer : Buffer
 
   # The line number in the buffer of the window's top row.
-  property line : Int32	
+  property line : Int32
 
   # The current cursor position in the buffer.
   property dot : Pos
@@ -155,7 +155,7 @@ class Window
 
   # Class methods.
 
-  # Appends the window *w* to the list of windows.  
+  # Appends the window *w* to the list of windows.
   # If this is the first window, make it the current one.
   def self.add_to_list(w : Window)
     if @@curi == -1
@@ -265,7 +265,7 @@ class Window
     # Set the proposed top line number of the two windows.
     # It may be adjusted later.
     line = w.line
-    
+
     if above <= upper_nrow
       # If the dot is above or right on the split point, we
       # will make the old window be the upper window.
@@ -298,7 +298,7 @@ class Window
       # Set the new window's top row and number of rows.
       w2.toprow = w.toprow
       w2.nrow = upper_nrow
-      
+
       # Set the old window's top row and number of rows.
       upper_nrow += 1	# skip over upper window's mode line
       w.toprow += upper_nrow

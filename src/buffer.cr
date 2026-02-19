@@ -45,7 +45,7 @@ class Buffer
   # or detached from this buffer.  When the last window is detached, we save that
   # window's values, so that the next time a window is attached, we
   # copy them to that window.  See `Window#add_wind` for details.
-  
+
   # Current cursor position in buffer.
   property dot : Pos
 
@@ -306,7 +306,7 @@ class Buffer
 	  delimiter = (@end_of_line == "\r") ? '\r' : '\n'
 	  while s = f.gets(delimiter: delimiter, chomp: false)
 	    l = Line.alloc(s.chomp.scrub)
-	    if s.size == 0 
+	    if s.size == 0
 	      lastnl = true
 	    else
 	      lastnl = s[-1] == delimiter

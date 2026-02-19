@@ -109,7 +109,7 @@ module RubyRPC
     f.print(json)
     E.log("====\nSent #{json}")
   end
-    
+
   # Constructs a JSON string for a call to a Ruby command to be sent to the server.
   # * *method*: name of command
   # * *flag*: 1 if command was preceded by a C-u numeric prefix
@@ -699,7 +699,7 @@ module RubyRPC
     end
     return FALSE
   end
- 
+
   # Commands
 
   # This command prompts for a string, and evaluate the string using the
@@ -750,7 +750,7 @@ module RubyRPC
     k.add(Kbd::F6, cmdptr(rubystring), "ruby-string")
     k.add(Kbd::RANDOM, cmdptr(rubycommand), "ruby-command")
 
-    # Test of Ruby binding.  rubycall is not fully implemented yet, 
+    # Test of Ruby binding.  rubycall is not fully implemented yet,
     # so these only display information on the echo line.
     #k.addruby(Kbd.ctlx('d'), "insdate")
     #k.addruby(Kbd.ctlx('x'), "xact")

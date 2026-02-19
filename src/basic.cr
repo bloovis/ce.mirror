@@ -75,7 +75,7 @@ module Basic
     else
       n *= page		# Convert from pages to lines
     end
-    
+
     # Move the current line number down, but not past the end of the buffer.
     w.line += n
     bsize = w.buffer.size
@@ -104,7 +104,7 @@ module Basic
     else
       n *= page		# Convert from pages to lines
     end
-      
+
     # Move the current line number up, but not past the start of the buffer.
     w.line = b.clamp(w.line - n)
 
@@ -180,7 +180,7 @@ module Basic
 	n = 0			# we're done
       end
     end
-      
+
     return TRUE
   end
 

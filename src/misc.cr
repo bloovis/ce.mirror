@@ -152,7 +152,7 @@ module Misc
     w, b, dot, lp = E.get_context
     text = lp.text
 
-    # Find indentation and the offset of the first non-whitespace 
+    # Find indentation and the offset of the first non-whitespace
     nicol, i = text.current_indent
 
     # Look at the string following the whitespace in the

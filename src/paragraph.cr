@@ -88,7 +88,7 @@ module Paragraph
   # This command fills the current paragraph according to the current fill column.
   def fillpara(f : Bool, n : Int32, k : Int32) : Result
     w, b, dot, lp = E.get_context
-    
+
     # Get the position of the end of the paragraph.
     gotoeop(false, 1, Kbd::RANDOM)
     finish = w.dot.dup

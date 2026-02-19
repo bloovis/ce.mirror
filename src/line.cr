@@ -292,7 +292,7 @@ class Line
   def self.getc : Char
     w, b, dot, lp = E.get_context
     if dot.o == lp.text.size
-      return '\n' 
+      return '\n'
     else
       return lp.text[dot.o]
     end

@@ -78,7 +78,7 @@ class ConfigSection
     end
     return false
   end
-  
+
   # Extracts a bracket/brace group from glob, returns a tuple containing
   # the new glob and the group.
   private def get_group(glob : String, endchar : Char) : Tuple(String, String)
@@ -133,8 +133,8 @@ class ConfigSection
     when '['
       # This is a set of characters in brackets, one
       # of which must match.  If the first character
-      # in the set is '!' NONE of the subsequent characters
-      # must match.
+      # in the set is '!' NONE of the remaining characters
+      # in brackets must match.
       glob, str = get_group(glob[1..], ']')
       dprint "bracket: new glob '#{glob}', group '#{str}'"
       n = name[0]?
@@ -158,7 +158,7 @@ class ConfigSection
       return do_match(glob, name[1..])
     when '{'
       # This is a group in braces.  It can be a single
-      # string, which is matched including it braces.
+      # string, which is matched including its braces.
       # It can be a comma separated set of strings, one
       # of which must be matched.  Or it can be
       # a range of integers, separated by "..".
@@ -186,6 +186,8 @@ class ConfigSection
       end
 
       # This is a group of comma separated strings.
+      # But if there's only one string, it must
+      # match including the surrounding braces.
       strs = str.split(',')
       dprint "brace: strs #{strs}"
       if strs.size == 1
@@ -215,8 +217,8 @@ class ConfigSection
       return do_match(glob[1..], name[1..])
     end
     return false
-  end      
-      
+  end
+
   # Returns true if *filename* is matched by this section's
   # glob pattern.  If the glob has a forward slash, then
   # *filename* must be in a subdirectory of this section's
@@ -232,7 +234,7 @@ class ConfigSection
 
     if @glob_has_slash
       # Use the fully expanded glob pattern and filename so that
-      # therir directory paths must match.
+      # their directory paths must match.
       return do_match(@fullglob, path)
     else
       # Use the unexpanded glob and filename, so that they will match
@@ -315,7 +317,7 @@ end
 # files it finds while traversing up the directory tree.
 class Config
   property files : Array(ConfigFile)
-  
+
   # Walks up the directory tree, looking for and parsing any
   # .editorconfig files it finds, until it reaches the root
   # directory or finds a .editorconfig file with "root = true"
@@ -364,7 +366,7 @@ class Config
     end
     return value
   end
-	  
+
 end
 
 {% if flag?(:TEST) %}

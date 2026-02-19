@@ -356,7 +356,7 @@ class E
       # Record the macro information.
       @macro.write_prefix(n) if f
       @macro.write_key(c)
-	  
+
       # Run the command.
       execute(c, f, n)
       Echo.replyq_clear
