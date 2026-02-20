@@ -86,6 +86,16 @@ module RubyRPC
     end
   end
 
+  # Returns the Ruby process's PID, or 0 if the process
+  # was not created successfully
+  def pid : Int64
+    if p = @@process
+      return p.pid
+    else
+      return 0_i64
+    end
+  end
+
   # Returns the server's input file, or nil if the server
   # can't be loaded.
   def input_file : IO?
@@ -357,6 +367,14 @@ module RubyRPC
     return make_normal_response(key, "", id)
   end
 
+  def get_fillcol(id : Int32) : String
+    return make_normal_response(Paragraph.fillcol, "", id)
+  end
+
+  def get_tabsize(id : Int32) : String
+    return make_normal_response(E.curb.tab_width, "", id)
+  end
+
   # Handles a request from the Ruby server get a virtual variable from the editor.
   # The variables can be real ones, like the current line or line number.
   # They can also be pseudo-variables that perform actions, like prompting
@@ -381,6 +399,8 @@ module RubyRPC
     when "offset"   then get_offset(id)
     when "filename" then get_filename(id)
     when "key"      then get_key(id)
+    when "fillcol"  then get_fillcol(id)
+    when "tabsize"  then get_tabsize(id)
     else
       make_error_response(ERROR_PARAMS, "no such variable {name}", id)
     end

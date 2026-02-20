@@ -95,7 +95,29 @@ def ctlxrp(f : Bool, n : Int32, k : Int32) : Result
   end
 end
 
-# This command reports on some internal statistics.
+# Adds process information for the process *pid* to the system buffer *b*,
+# using *name* as the name of the process.
+def process_info(b : Buffer, pid : Int64, name : String)
+  begin
+    s = File.read("/proc/#{pid}/statm")
+    vals = s.split
+    b.addline("")
+    header = "#{name} (pid #{pid}) process information"
+    b.addline(header)
+    b.addline("=" * header.size)
+    b.addline("All values in pages)")
+    b.addline("Total program size:   #{vals[0]}")
+    b.addline("Resident set size:    #{vals[1]}")
+    b.addline("Resident shared size: #{vals[2]}")
+    b.addline("Code size:            #{vals[3]}")
+    b.addline("Data + stack size:    #{vals[5]}")
+  rescue
+    b.addline("Unable to obtain information for #{name} process")
+  end
+end
+
+# This command reports on some internal statistics, and
+# process information for the editor and the Ruby server.
 def stats(f : Bool, n : Int32, k : Int32) : Result
   curb = E.curb
   b = Buffer.sysbuf
@@ -111,22 +133,13 @@ def stats(f : Bool, n : Int32, k : Int32) : Result
   b.addline("Bytes sent to Ruby:               #{bytes_sent}")
   b.addline("Bytes received from Ruby:         #{bytes_received}")
 
-  # Display process info.
+  # Display process info for editor.
+  process_info(b, Process.pid, "ce")
 
-  begin
-    s = File.read("/proc/#{Process.pid}/statm")
-    vals = s.split
-    b.addline("")
-    b.addline("Process information")
-    b.addline("===================")
-    b.addline("(All values in pages)")
-    b.addline("Total program size:   #{vals[0]}")
-    b.addline("Resident set size:    #{vals[1]}")
-    b.addline("Resident shared size: #{vals[2]}")
-    b.addline("Code size:            #{vals[3]}")
-    b.addline("Data + stack size:    #{vals[5]}")
-  rescue
-    b.addline("Unable to obtain process information")
+  # Display process info for Ruby.
+  pid = RubyRPC.pid
+  if pid != 0
+    process_info(b, pid, "ruby")
   end
   return b_to_r(Buffer.popsysbuf)
 end
