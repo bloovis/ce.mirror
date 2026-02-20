@@ -11,6 +11,9 @@ module RubyRPC
   @@tried = false
   @@process : Process | Nil
   @@id = 1
+  @@nreceived = 0
+  @@bytes_sent = 0
+  @@bytes_received = 0
 
   # JSON-RPC error codes
   ERROR_METHOD    = -32601	# Method not found
@@ -24,6 +27,15 @@ module RubyRPC
   EXTENSION_FILENAME = "./.pe.rb"
 
   extend self
+
+  # Returns a tuple containing:
+  # * the number of JSON messages sent to the Ruby server
+  # * the number of JSON messages received from the Ruby server
+  # * the number of bytes sent to the Ruby server
+  # * the number of bytes received from the Ruby server
+  def stats : Tuple(Int32, Int32, Int32, Int32)
+    return {(@@id - 1) // 2, @@nreceived, @@bytes_sent, @@bytes_received}
+  end
 
   # Loads the Ruby server (`server.rb`), and if that is successful,
   # loads the Ruby file `.pe.rb`, which contains the directory-local
@@ -105,9 +117,11 @@ module RubyRPC
       E.log("No server process, can't send RPC message")
       return
     end
-    f.puts(json.bytesize)
+    nbytes = json.bytesize
+    f.puts(nbytes)
     f.print(json)
     E.log("====\nSent #{json}")
+    @@bytes_sent += nbytes + 3	# 3 is not exact (NN + \n)
   end
 
   # Constructs a JSON string for a call to a Ruby command to be sent to the server.
@@ -525,7 +539,7 @@ module RubyRPC
   # * cmd - run an editor command
   # * set - set an editor virtual variable
   # * get - get an editor virtual variable
-  def handle_call(obj : JSON::Any) : Bool
+  def handle_call(id : Int32, obj : JSON::Any) : Bool
     method = get_string(obj, "method")
     unless method
       E.log("Unable to get method from JSON")
@@ -533,7 +547,6 @@ module RubyRPC
     else
       E.log("handle_call: method #{method}")
     end
-    id = get_int(obj, "id")
     E.log("handle_call: id #{id}")
 
     # There should always be a params object.
@@ -561,11 +574,7 @@ module RubyRPC
 
   # Parses a JSON error object *obj* from the server. Returns false to tell the caller
   # that we can stop reading messages, or true to continue reading messages.
-  def handle_error(obj : JSON::Any) : Bool
-    id = obj["id"]?
-    if id
-      E.log("id: #{id.as_i}")
-    end
+  def handle_error(id : Int32, obj : JSON::Any) : Bool
     params = obj["error"]?
     if params
       h = params.as_h
@@ -594,8 +603,7 @@ module RubyRPC
   #
   # The flag is false if we did see the expected result message, meaning
   # we can stop reading messages.
-  def handle_result(obj : JSON::Any, expected_id : Int32) : Tuple(Bool, Result)
-    id = get_int(obj, "id")
+  def handle_result(id : Int32, obj : JSON::Any, expected_id : Int32) : Tuple(Bool, Result)
     result_code = get_int(obj, "result")
     string = get_string(obj, "string") || "<none>"
     E.log("handle_result: id #{id}, expected_id #{expected_id}, result #{result_code}, string #{string}")
@@ -619,6 +627,7 @@ module RubyRPC
       E.log("Unable to read line from server")
       return nil
     end
+
     E.log("====\nReceived size line:\n#{s}")
     len = s.to_i
     E.log("got len #{len}")
@@ -628,6 +637,7 @@ module RubyRPC
     f.read(slice)
     jsonbuf = String.new(slice)
     E.log("got json '#{jsonbuf}'")
+    @@bytes_received += s.size + 1 + len
     return JSON.parse(jsonbuf)
   end
 
@@ -656,17 +666,19 @@ module RubyRPC
         E.log("Couldn't read RPC message")
 	break
       end
+      @@nreceived += 1
 
       # It can be one of three types of messages:
       # - normal response
       # - error response
       # - method call
+      rubyid = get_int(msg, "id")
       if is_result(msg)
-	keep_going, result = handle_result(msg, id)
+	keep_going, result = handle_result(rubyid, msg, id)
       elsif is_error(msg)
-	keep_going = handle_error(msg)
+	keep_going = handle_error(rubyid, msg)
       elsif is_call(msg)
-	keep_going = handle_call(msg)
+	keep_going = handle_call(rubyid, msg)
       else
 	E.log("Unrecognized message")
       end

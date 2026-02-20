@@ -95,6 +95,42 @@ def ctlxrp(f : Bool, n : Int32, k : Int32) : Result
   end
 end
 
+# This command reports on some internal statistics.
+def stats(f : Bool, n : Int32, k : Int32) : Result
+  curb = E.curb
+  b = Buffer.sysbuf
+  b.clear
+
+  # Display some stats from ce itself.
+  b.addline("Editor information")
+  b.addline("==================")
+  b.addline("Current buffer line cache size:   #{curb.lcache.size}")
+  nsent, nreceived, bytes_sent, bytes_received = RubyRPC.stats
+  b.addline("JSON messages sent to Ruby:       #{nsent}")
+  b.addline("JSON messages received from Ruby: #{nreceived}")
+  b.addline("Bytes sent to Ruby:               #{bytes_sent}")
+  b.addline("Bytes received from Ruby:         #{bytes_received}")
+
+  # Display process info.
+
+  begin
+    s = File.read("/proc/#{Process.pid}/statm")
+    vals = s.split
+    b.addline("")
+    b.addline("Process information")
+    b.addline("===================")
+    b.addline("(All values in pages)")
+    b.addline("Total program size:   #{vals[0]}")
+    b.addline("Resident set size:    #{vals[1]}")
+    b.addline("Resident shared size: #{vals[2]}")
+    b.addline("Code size:            #{vals[3]}")
+    b.addline("Data + stack size:    #{vals[5]}")
+  rescue
+    b.addline("Unable to obtain process information")
+  end
+  return b_to_r(Buffer.popsysbuf)
+end
+
 # This command executes the current (un-named) macro. The command argument is the
 # number of times to loop. Quits as soon as a command gets an error.
 # Returns TRUE if all ok, else FALSE.
@@ -167,7 +203,7 @@ begin
   k.add(Kbd.ctlx(')'), cmdptr(ctlxrp), "end-macro")
   k.add(Kbd.ctlx('e'), cmdptr(ctlxe), "execute-macro")
   k.add(Kbd.meta_ctrl('v'), cmdptr(showversion), "display-version")
-
+  k.add(Kbd::RANDOM, cmdptr(stats), "display-stats")
   k.add_dup(Kbd::F4, "quit")
 
   # Create some key bindings for other modules.
