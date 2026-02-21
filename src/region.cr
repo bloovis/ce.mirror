@@ -17,10 +17,6 @@ class Region
   # between the two positions.  It returns a tuple containing
   # the starting position, the ending position, and the size.
   protected def self.make_region(pos1 : Pos, pos2 : Pos) : Tuple(Pos, Pos, Int32)
-    # Get the number of lines in the buffer.
-    b = E.curb
-    bsize = b.size
-
     # Determine which is first: pos1 or pos2?
     if pos1.l < pos2.l
       # Pos1 is before pos2.
@@ -49,10 +45,11 @@ class Region
     # to the starting line.
     startl = start.l
     starto = start.o
+    b = E.curb
     lp = b[startl]
 
-    # lp should never be nil, but if it is, return
-    # an empty region with an invalid Pos.
+    # lp should never be nil, but if it is, return an empty
+    # region with invalid start and finish positions.
     if lp.nil?
       Echo.puts "Invalid line number #{startl}"
       start.l = -1
@@ -61,10 +58,11 @@ class Region
       return {start, finish, rsize}
     end
 
-    # Calculate the size of the region.  Be careful
-    # not to go past the end of buffer.
+    # Calculate the size of the region by stepping through all
+    # the lines in the region.  Stop when we reach the ending
+    # line of the region or the end of the buffer.
     rsize = lp.text.size - starto + 1	# +1 for newline
-    while startl + 1 < bsize
+    while lp != b.last_line
       startl += 1
       lp = lp.next
       if startl == finish.l
@@ -99,7 +97,7 @@ class Region
   end
 
   # This `Region` constructor calculates the size of the region
-  # between the positions *pos1* and *pos2*.
+  # between the positions *pos1* and *pos2* in the current buffer.
   def initialize(pos1 : Pos, pos2 : Pos)
     # Use the helper function to do the hard work.
     @start, @finish, @size = Region.make_region(pos1, pos2)
