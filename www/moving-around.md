@@ -72,7 +72,9 @@ On PCs, this function is bound to the `Up` arrow key.
 
 Move forward by pages. If an argument is given, it specifies the
 number of pages to move. If no argument is given, 1 is assumed.
-A page is a group of lines about 20% smaller than a window.
+By default, the amount of overlap is two lines (i.e., the number
+of lines from the old view that are shown in the new view.).
+Use the `set-overlap` command to change this value.
 If possible, dot is kept where it is; otherwise it it moved
 to the middle of the new page.
 On PCs, this function is bound to the `PgDn` key.
@@ -84,7 +86,9 @@ in lines instead of screenfuls. Look in `def.h` for the gory details.
 
 Move backwards by pages. If an argument is given, it specifies the
 number of pages to move. If no argument is given, 1 is assumed.
-A page is a group of lines about 20% smaller than a window.
+By default, the amount of overlap is two lines (i.e., the number
+of lines from the old view that are shown in the new view.).
+Use the `set-overlap` command to change this value.
 If possible, dot is kept where it is; otherwise it it moved
 to the middle of the new page.
 On PCs, this function is bound to the `PgUp` key.
@@ -132,3 +136,8 @@ measured as a percentage of the buffer size.
 
 * The number of characters in the buffer.
 
+**M-O** (**set-overlap**)
+
+This command sets the number of overlap lines when scrolling
+by pages, i.e., the number of lines of lines from the old view
+that are shown in the new view.  The default value is 2.

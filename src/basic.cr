@@ -6,6 +6,9 @@ module Basic
   # The current goal column for moving up and down a line.
   @@curgoal = 0
 
+  # Number of overlapped lines when scrolling by pages.
+  @@overlap = 2
+
   extend self
 
   # Checks if the dot must move after the current window has been
@@ -59,15 +62,12 @@ module Basic
 
   # Scrolls forward by a specified number
   # of lines, or by a full page if no argument.
-  # The "5" is the window overlap (from ITS EMACS).
-  # Because the top line in the window is zapped,
-  # we have to do a hard update and get it back.
   def forwpage(f : Bool, n : Int32, k : Int32) : Result
     # Compute how much to scroll to get to next page
     # (80% of the screen size is what ITS EMACS seems to use).
     w = E.curw
     nrow = w.nrow
-    page = {w.nrow - (w.nrow // 5), 1}.max
+    page = {w.nrow - @@overlap, 1}.max
     if !f
       n = page		# Default scroll
     elsif n < 0
@@ -85,18 +85,12 @@ module Basic
     return TRUE
   end
 
-  # This command is like `forwpage`,
-  # but it goes backwards. The "5", like above,
-  # is the overlap between the two windows. The
-  # hard update is done because the top line in
-  # the window is zapped.
+  # This command is like `forwpage`, but it goes backwards.
   def backpage(f : Bool, n : Int32, k : Int32) : Result
-    # Compute how much to scroll to get to next page
-    # (80% of the screen size is what ITS EMACS seems to use).
     w = E.curw
     b = w.buffer
     nrow = w.nrow
-    page = {w.nrow - (w.nrow // 5), 1}.max
+    page = {w.nrow - @@overlap, 1}.max
     if !f
       n = page		# Default scroll
     elsif n < 0
@@ -339,6 +333,20 @@ module Basic
     return TRUE
   end
 
+  # Sets the number of overlapped lines when scrolling by pages to *n*,
+  # which must be positive and no greater than half the screen height.
+  def setoverlap(f : Bool, n : Int32, k : Int32) : Result
+    min = 0
+    max = E.tty.nrow // 2
+    if n < min || n > max
+      Echo.puts("Overlap must be in the range #{min} to #{max}")
+      return FALSE
+    end
+    @@overlap = n
+    Echo.puts("[Overlap set to #{n}]")
+    return TRUE
+  end
+
   # Binds keys for basic commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd::PGDN, cmdptr(forwpage), "forw-page")
@@ -354,6 +362,7 @@ module Basic
     k.add(Kbd.ctrl('@'), cmdptr(setmark), "set-mark")
     k.add(Kbd.ctlx_ctrl('x'), cmdptr(swapmark), "swap-dot-and-mark")
     k.add(Kbd.ctlx('g'), cmdptr(gotoline), "goto-line")
+    k.add(Kbd.meta('o'), cmdptr(setoverlap), "set-overlap")
 
     k.add_dup(Kbd.ctrl('v'), "forw-page")
     k.add_dup(Kbd.ctrl('z'), "back-page")	# MINCE compatibility
