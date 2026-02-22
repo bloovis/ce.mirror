@@ -112,8 +112,8 @@ C-X =            display-position
 C-X B            use-buffer
 C-X C-B          display-buffers
 C-X C-C          quit
-C-X C-K          display-bindings
 C-X C-F          set-file-name
+C-X C-K          display-bindings
 C-X C-N          down-window
 C-X C-P          up-window
 C-X C-Q          toggle-readonly
@@ -122,16 +122,17 @@ C-X C-V          file-visit
 C-X C-W          file-write
 C-X C-X          swap-dot-and-mark
 C-X C-Z          shrink-window
-C-X D            dired
 C-X E            execute-macro
 C-X G            goto-line
 C-X I            spell-region
 C-X K            kill-buffer
 C-X N            forw-window
+C-X O            forw-window
 C-X P            back-window
 C-X Return       echo
 C-X Tab          file-insert
 C-X U            undo
+C-X V            display-version
 C-X Z            enlarge-window
 C-Y              yank
 C-Z              back-page
@@ -164,7 +165,8 @@ M-C-F            fold-case
 M-C-R            back-regexp-search
 M-C-S            forw-regexp-search
 M-C-U            unicode
-M-C-V            display-version
+M-C-V            other-forw-page
+M-C-Z            other-back-page
 M-D              forw-del-word
 M-F              forw-word
 M-I              set-save-tabs
@@ -175,6 +177,7 @@ M-Q              query-replace
 M-R              replace-string
 M-Tab            set-tab-size
 M-U              upper-word
+M-V              back-page
 M-W              copy-region
 M-X              extended-command
 M-[              back-paragraph

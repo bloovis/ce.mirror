@@ -356,7 +356,8 @@ module Basic
     k.add(Kbd.ctlx('g'), cmdptr(gotoline), "goto-line")
 
     k.add_dup(Kbd.ctrl('v'), "forw-page")
-    k.add_dup(Kbd.ctrl('z'), "back-page")
+    k.add_dup(Kbd.ctrl('z'), "back-page")	# MINCE compatibility
+    k.add_dup(Kbd.meta('v'), "back-page")	# EMACS compatibility
     k.add_dup(Kbd.ctrl('f'), "forw-char")
     k.add_dup(Kbd.ctrl('b'), "back-char")
     k.add_dup(Kbd.ctrl('a'), "goto-bol")

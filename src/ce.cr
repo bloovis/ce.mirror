@@ -215,7 +215,7 @@ begin
   k.add(Kbd.ctlx('('), cmdptr(ctlxlp), "start-macro")
   k.add(Kbd.ctlx(')'), cmdptr(ctlxrp), "end-macro")
   k.add(Kbd.ctlx('e'), cmdptr(ctlxe), "execute-macro")
-  k.add(Kbd.meta_ctrl('v'), cmdptr(showversion), "display-version")
+  k.add(Kbd.ctlx('v'), cmdptr(showversion), "display-version")
   k.add(Kbd::RANDOM, cmdptr(stats), "display-stats")
   k.add_dup(Kbd::F4, "quit")
 

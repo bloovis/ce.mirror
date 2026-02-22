@@ -554,6 +554,26 @@ class Window
     return TRUE
   end
 
+  # Moves the next window forward by *n* pages.
+  def self.scrollnextforw(f : Bool, n : Int32, k : Int32) : Result
+    return TRUE if @@list.size == 1
+    s = nextwind(false, 1, Kbd::RANDOM)
+    return s unless s == TRUE
+    s = Basic.forwpage(f, n, Kbd::RANDOM)
+    return s unless s == TRUE
+    return prevwind(false, 1, Kbd::RANDOM)
+  end
+
+  # Moves the next window backwards by *n* pages.
+  def self.scrollnextback(f : Bool, n : Int32, k : Int32) : Result
+    return TRUE if @@list.size == 1
+    s = nextwind(false, 1, Kbd::RANDOM)
+    return s unless s == TRUE
+    s = Basic.backpage(f, n, Kbd::RANDOM)
+    return s unless s == TRUE
+    return prevwind(false, 1, Kbd::RANDOM)
+  end
+
   # Binds keys for window commands.
   def self.bind_keys(k : KeyMap)
     k.add(Kbd.ctlx('n'), cmdptr(nextwind), "forw-window")
@@ -567,5 +587,9 @@ class Window
     k.add(Kbd.meta('!'), cmdptr(reposition), "reposition-window")
     k.add(Kbd.ctlx_ctrl('n'), cmdptr(mvdnwind), "down-window")
     k.add(Kbd.ctlx_ctrl('p'), cmdptr(mvupwind), "up-window")
+    k.add(Kbd.meta_ctrl('v'), cmdptr(scrollnextforw), "other-forw-page")
+    k.add(Kbd.meta_ctrl('z'), cmdptr(scrollnextback), "other-back-page")
+
+    k.add_dup(Kbd.ctlx('o'), "forw-window")	# EMACS compatibility
   end
 end
