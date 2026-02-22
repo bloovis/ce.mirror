@@ -176,6 +176,10 @@ def ctlxe(f : Bool, n : Int32, k : Int32) : Result
 	af = true
 	an = m.read_int
 	break unless an
+
+	# Read the key for the command.
+	c = m.read_int
+	break unless c
       end
 
       # If this key wasn't the end of of macro marker,
