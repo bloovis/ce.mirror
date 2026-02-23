@@ -18,7 +18,7 @@ module Echo
     @@empty
   end
 
-  # Below are special versions of the routines in `Terminal` that don't don't
+  # Below are special versions of the routines in `Terminal` that don't
   # do anything if the `@@noecho` variable is set.  This prevents echo
   # line activity from showing on the screen while we are
   # processing a profile.  `@@noecho` is set to true when a profile is
@@ -61,16 +61,11 @@ module Echo
     prefix
   end
 
-  # Populates the system buffer with the completions information.
-  # Try to display it with more than one entry per line.  Returns
-  # true if successful, false otherwise.
-  private def show_completions(a : Array(String)) : Bool
-    # Grab the system buffer
-    b = Buffer.sysbuf
-    b.clear
-
+  # Adds a set of names to the sysbuf, formatting them in
+  # columns so as to fit the screen width.
+  def add_names_to_sysbuf(b : Buffer, names : Array(String))
     # Find the largest name size.
-    namesize = a.map {|s| s.size}.max
+    namesize = names.map {|s| s.size}.max
 
     # Find out how many names will fit in a screen line.
     cols = E.tty.ncol // (namesize + 1)	# +1 for space separator
@@ -78,8 +73,8 @@ module Echo
     # Construct lines of text using cols as the number of columns.
     s = ""
     col = 0
-    a.each_with_index do |name, i|
-      if col == cols - 1 || i == a.size - 1
+    names.each_with_index do |name, i|
+      if col == cols - 1 || i == names.size - 1
         s = s + (col == 0 ? "" : " ") + name
 	b.addline(s)
 	s = ""
@@ -92,6 +87,18 @@ module Echo
 	col = (col + 1) % cols
       end
     end
+  end
+
+  # Populates the system buffer with the completions information.
+  # Try to display it with more than one entry per line.  Returns
+  # true if successful, false otherwise.
+  private def show_completions(a : Array(String)) : Bool
+    # Grab the system buffer
+    b = Buffer.sysbuf
+    b.clear
+
+    # Format the names in columns to fit screen width.
+    add_names_to_sysbuf(b, a)
 
     # Pop up the buffer.
     status = Buffer.popsysbuf
@@ -107,9 +114,9 @@ module Echo
   # so far, which returns an array of strings that start with that string.
   # Returns a tuple containing a Result code and the response string.
   # The Result code has these meanings:
-  # * False - user entered an empty response
-  # * True  - user entered a non-empty response
-  # * Abort - user aborted the response with Ctrl-G
+  # * FALSE - user entered an empty response
+  # * TRUE  - user entered a non-empty response
+  # * ABORT - user aborted the response with Ctrl-G
   def reply_with_completions(prompt : String, default : String | Nil,
 		    block_given : Bool, &block) : Tuple(Result, String)
     # If there's a string in the replyq, placed there by a Ruby
@@ -137,7 +144,7 @@ module Echo
     @@empty = false
 
     ret = ""
-    pos = ret.size
+    pos = 0
     done = false
     aborted = false
     lastk = Kbd::RANDOM
@@ -421,7 +428,6 @@ module Echo
 
   # Returns the next string from the reply queue, or
   # nil if the reqply queue is empty.
-
   def replyq_get : String | Nil
     return @@replyq.shift?
   end

@@ -117,38 +117,17 @@ module Spell
     # Split the aspell response into a list of suggestions.
     suggestions = rest.split(/,\s*/)
 
-    # Determine the size of the largest suggestion, adding 5
-    # for a prefix "NNN: ", where NNN is a suggestion number.
-    # There should not be more than 99 suggestions, but we'll
-    # allow for more just in case.
-    ssize = suggestions.map {|s| s.size + 5}.max
+    # Make a set of names with the number of each name as a prefix.
+    i = 0
+    names = suggestions.map {|s| i += 1; "#{i}: #{s}"}
 
-    # Add a header line.
+    # Grab the sysbuf and add a header line.
     b = Buffer.sysbuf
     b.clear
     b.addline("Suggested replacements for #{word}:")
 
-    # Find out how many suggestions will fit in a screen line.
-    cols = E.tty.ncol // (ssize + 1)	# +1 for space separator
-
-    # Construct lines of text using cols as the number of columns.
-    s = ""
-    col = 0
-    suggestions.each_with_index do |sugg, i|
-      sugg = "#{i+1}: " + sugg
-      if col == cols - 1 || i == suggestions.size - 1
-        s = s + (col == 0 ? "" : " ") + sugg
-	b.addline(s)
-	s = ""
-	col = 0
-      elsif col == 0
-        s = sugg.pad_right(ssize)
-	col = (col + 1) % cols
-      else
-	s = s + " " + sugg.pad_right(ssize)
-	col = (col + 1) % cols
-      end
-    end
+    # Add the suggestions to the sysbuf.
+    Echo.add_names_to_sysbuf(b, names)
 
     # Pop up the system buffer showing the suggested replacements
     return FALSE if !Buffer.popsysbuf
