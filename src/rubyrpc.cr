@@ -522,6 +522,11 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  def set_update(int id, str : String | Nil) : String
+    E.disp.update
+    return make_normal_response(0, "", id)
+  end
+
   # Handles a request from the Ruby server to set a virtual variable
   # in the editor. These can be real variables
   # like the current line number or the current line.  They can
@@ -547,6 +552,7 @@ module RubyRPC
     when "mode"     then set_mode(id, string)
     when "filename" then set_filename(id, string)
     when "popup"    then set_popup(id, string)
+    when "update"   then set_update(id, string)
     else
       make_error_response(ERROR_PARAMS, "no such variable {name}", id)
     end
