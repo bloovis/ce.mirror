@@ -105,6 +105,9 @@ module Paragraph
       return FALSE
     end
 
+    # Get the indentation level of the first line in the paragraph.
+    indent, i = lp.text.current_indent
+
     # Collect all the words in the region into a single array.
     a = [] of String
     l = start.l
@@ -129,7 +132,7 @@ module Paragraph
     buf = ""
     a.each do |s|
       if buf == ""
-	space = ""
+	space = " " * indent
       else
 	space = doubles.includes?(buf[-1]) ? "  " : " "
       end
@@ -140,6 +143,7 @@ module Paragraph
       else
 	buf = buf + space + s
       end
+      indent = 0
     end
     if buf != ""
       Line.insert(buf)
