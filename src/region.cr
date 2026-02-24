@@ -175,19 +175,22 @@ class Region
     # Loop through every line in the region.
     while w.dot.l != region.finish.l
       # Calculate the current indentation of the line.
+      # If the line is empty, don't bother indenting it.
       text = lp.text
-      col, offset = text.current_indent
+      if text.size != 0
+	col, offset = text.current_indent
 
-      # The new indentation is the old indentation + n, but
-      # cannot be less than zero.
-      new_indent = {col + n, 0}.max
+	# The new indentation is the old indentation + n, but
+	# cannot be less than zero.
+	new_indent = {col + n, 0}.max
 
-      # Replace the line text with the proper indentation prefix,
-      # plus the part of the line after the leading whitespace.
-      Line.delete(offset, false)
-      Line.insert(String.indent(new_indent))
+	# Replace the line text with the proper indentation prefix,
+	# plus the part of the line after the leading whitespace.
+	Line.delete(offset, false)
+	Line.insert(String.indent(new_indent))
+      end
 
-      # Move the next line.  Stop if we're at the line buffer line.
+      # Move to the next line.  Stop if we're at the last buffer line.
       break if lp == b.last_line
       lp = lp.next
       w.dot.l += 1
