@@ -233,19 +233,19 @@ class Line
       if chars == 0
 	# If we're at the end of the line, merge this line
 	# with the next line.
-	return false unless Line.delnewline
 	b.undo.delete(dot, "\n")
+	return false unless Line.delnewline
 	if kflag
 	  return false unless Line.kinsert("\n")
 	end
 	n -= 1
       else
-	# Mark the buffer as changed.
-	b.changed
-
 	# Save undo information
 	deleted_text = text[dot.o, chars]
 	b.undo.delete(dot, deleted_text)
+
+	# Mark the buffer as changed.
+	b.changed
 
 	# Remove nchars characters from this line.
 	right = dot.o + chars
