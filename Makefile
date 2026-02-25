@@ -2,6 +2,10 @@ ce : $(wildcard src/*.cr)
 	./get_version.rb
 	crystal build --no-color --error-trace src/ce.cr
 
+ce.release : $(wildcard src/*.cr)
+	./get_version.rb
+	crystal build --no-color --error-trace --release -o ce.release src/ce.cr
+
 % : %.cr
 	crystal build --no-color --error-trace $<
 
