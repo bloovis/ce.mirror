@@ -101,12 +101,12 @@ This command adjusts the windows so that they all have approximately
 the same height.  This is useful after several **split-window**
 commands have created some windows that are too small.
 
-**M-C-V** (**other-forw-page**)
+**M-C-V**,**C-X PgDn** (**other-forw-page**)
 
 This command moves the next window forward by pages.  If an argument
 is given, it specifes the number of pages to move.
 
-**M-C-Z** (**other-back-page**)
+**M-C-Z**,**C-X PgUp** (**other-back-page**)
 
 This command moves the next window backwards by pages.  If an argument
 is given, it specifes the number of pages to move.

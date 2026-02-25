@@ -1,4 +1,4 @@
-# Keys are represented using a 32-bit
+# Keys are represented using a 31-bit
 # keyboard code, where bits 20-0 are the raw
 # keycode, and bits 28-30 are modifier/prefix flags.
 #
@@ -106,9 +106,16 @@ class Kbd
     s.upcase.ord | META | CTRL
   end
 
-  # Returns the internal value of Ctrl-X *s" sequence.
+  # Returns the internal value of Ctrl-X *s" sequence,
+  # where *s* is an ASCII printable character.
   def self.ctlx(s : Char) : Int32
     s.upcase.ord | CTLX
+  end
+
+  # Returns the internal value of Ctrl-X *s" sequence,
+  # where *s* is a "special" key code (e.g., PGDN).
+  def self.ctlx(s : Int32) : Int32
+    s | CTLX
   end
 
   # Returns the internal value of Ctrl-X Ctrl-*s* sequence.
@@ -170,7 +177,7 @@ class Kbd
 
     # Negative numbers are special, and are used for unbound commands.
     if k < 0
-      return "Unbound-#{-k}"
+      return "Unbound#{k}"
     end
 
     # If it's an ASCII control character, output ^C, where
@@ -227,7 +234,7 @@ class Kbd
   # Helper function for getkey; shouldn't be called outside this module.
   # Gets a key after a prefix has been seen; converts lower to upper, and
   # converts control characters to our internal representation.
-  def getctrl : Int32
+  private def getctrl : Int32
     c = getinp
     case c
     when ('a'.ord..'z'.ord)	# convert to upper case

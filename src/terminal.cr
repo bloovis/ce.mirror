@@ -3,7 +3,7 @@ require "./keyboard"
 
 
 # We have to set the locale so that ncurses will work correctly
-# with UTF-8 string.
+# with UTF-8 strings.
 lib Locale
   # LC_CTYPE is probably 0 (at least in glibc)
   LC_CTYPE = 0

@@ -74,6 +74,14 @@ I may add them as needed:
 * incremental search (I have never used this feature)
 * a few other little-used commands
 
+## Added Features
+
+`ce` has a small set of features that aren't in my MicroEMACS variant:
+
+* Support for EditorConfig.
+* Commands for scrolling the other window.
+* Command for displaying internal stats.
+
 ## User Guide
 
 Complete usage information can be found [here](www/index.md).

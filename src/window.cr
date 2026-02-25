@@ -591,5 +591,7 @@ class Window
     k.add(Kbd.meta_ctrl('z'), cmdptr(scrollnextback), "other-back-page")
 
     k.add_dup(Kbd.ctlx('o'), "forw-window")	# EMACS compatibility
+    k.add_dup(Kbd.ctlx(Kbd::PGDN), "other-forw-page")
+    k.add_dup(Kbd.ctlx(Kbd::PGUP), "other-back-page")
   end
 end
