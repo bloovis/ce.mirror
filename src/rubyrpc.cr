@@ -148,7 +148,7 @@ module RubyRPC
   #     "method": "stuff",
   #      "params": {"flag": 1, "prefix": 42, "key": 9, "strings": ["a string"]  }, "id": 1}
   # ```
-  def make_rpc_request(method : String, flag : Int32, prefix : Int32, key,
+  def make_rpc_request(method : String, flag : Int32, prefix : Int32, key : Int32,
 		       strings : Array(String), id : Int32) : String
     string = JSON.build do |json|
       json.object do
@@ -681,7 +681,7 @@ module RubyRPC
     send_message(msg)
     result = TRUE
 
-    # Loop reading responses from the server.  There maybe one or more
+    # Loop reading responses from the server.  There may be one or more
     # method calls from the server before it sends a response for
     # the method call we just sent it.
     keep_going = true
@@ -714,9 +714,8 @@ module RubyRPC
     return result
   end
 
-  # Runs the Ruby command *name*, passing in the usual command
+  # Runs the Ruby command *name*, passes it the usual command
   # parameters *f*, *n*, and *k*, and returns its result.
-  # This is just the scaffold for a future working implementation.
   def rubycall(name : String, f : Bool, n : Int32, k : Int32) : Result
     return FALSE if !load_server
     E.log("rubycall: calling #{name}")
@@ -787,11 +786,6 @@ module RubyRPC
   def bind_keys(k : KeyMap)
     k.add(Kbd::F6, cmdptr(rubystring), "ruby-string")
     k.add(Kbd::RANDOM, cmdptr(rubycommand), "ruby-command")
-
-    # Test of Ruby binding.  rubycall is not fully implemented yet,
-    # so these only display information on the echo line.
-    #k.addruby(Kbd.ctlx('d'), "insdate")
-    #k.addruby(Kbd.ctlx('x'), "xact")
   end
 
 end

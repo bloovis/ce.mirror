@@ -10,15 +10,15 @@ MicroEMACS functionality to perform basic editing, including undo/redo,
 keyboard macros, and Ruby extensions.  My hope is that the Crystal
 code will be easier to understand and modify than the C code in MicroEMACS.
 
-`ce` has a compiled code size of about 3 Mb.  This is much larger than
-the 110 Kb code size of MicroEMACS, and is likely due to the inclusion
+`ce` has a compiled code size of about 1.1 Mb for a --release build.  This is much
+larger than the 110 Kb code size of MicroEMACS, and is likely due to the inclusion
 of the very large Crystal standard library.  But it is still much
 smaller than editors in use by the Cool Kids these days.  For example,
 the very popular [zed](https://github.com/zed-industries/zed) has about
 300 Mb of code.  I've heard that VS Code is similarly huge,
 though I have not examined the binaries myself.  Of course, these popular editors
 are much more feature-rich, but it is questionable whether they have
-100 times more utility than `ce`, or 3000 times more utility than
+300 times more utility than `ce`, or 3000 times more utility than
 MicroEMACS.
 
 ## Installation
@@ -30,6 +30,16 @@ make
 ```
 
 Then copy the resulting binary file `ce` to some place in your PATH.
+
+You can also make a "release" version of `ce` by using this command:
+
+```
+make ce.release
+```
+
+This instructs the compiler to use optimization level 3, which will
+greatly reduce code size, but compilation will be very slow.  The resulting
+binary will be called `ce.release`, to distinguish it from the unoptimized `ce`.
 
 `ce` requires no external shards (Crystal libraries).  It does require
 the `ncurses` or `ncursesw` package for your Linux distro.

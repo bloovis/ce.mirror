@@ -105,7 +105,7 @@ def process_info(b : Buffer, pid : Int64, name : String)
     header = "#{name} (pid #{pid}) process information"
     b.addline(header)
     b.addline("=" * header.size)
-    b.addline("All values in pages)")
+    b.addline("(All values in pages)")
     b.addline("Total program size:   #{vals[0]}")
     b.addline("Resident set size:    #{vals[1]}")
     b.addline("Resident shared size: #{vals[2]}")
