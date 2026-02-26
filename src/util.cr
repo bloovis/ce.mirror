@@ -1,3 +1,10 @@
+# We need the `wcwidth` function from libc to get the display width
+# of Unicode characters.
+lib LibC
+  alias WChar = UInt32
+  fun wcwidth(c : WChar) : Int
+end
+
 # Application-specific extensions to the `String` class.
 class String
   # Splits the string into lines, and passes each line to the block.
@@ -52,7 +59,7 @@ class String
       elsif c.ord >= 0x00 && c.ord <= 0x1f
 	width += 2
       else
-	width += 1	# FIXME: should be unicode width!
+	width += LibC.wcwidth(c.ord)
       end
     end
     return width
@@ -82,7 +89,7 @@ class String
 	  col += 1
 	else
 	  str << c if col >= leftcol && col < rightcol
-	  col += 1
+	  col += LibC.wcwidth(c.ord)
 	end
       end
     end
