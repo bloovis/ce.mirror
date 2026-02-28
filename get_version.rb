@@ -13,8 +13,8 @@ def version
     return "unknown"
   else
     p = IO::popen(['git', 'rev-parse', 'HEAD'])
-    p.close
     return "git-" + p.read[0, 7]
+    p.close
   end
 end
 
