@@ -263,7 +263,7 @@ by passing it as a parameter when calling the command.
 As of this writing, the only command that looks at the keycode is **ins-self**.
 Given that fact, the following example inserts an 'x' character in to the current buffer:
 
-``
+```
 E.ins_self key('x')
 ```
 
