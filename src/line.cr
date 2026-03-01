@@ -231,6 +231,7 @@ class Line
       lsize = text.size
       chars = {lsize - dot.o, n}.min
       if chars == 0
+	#STDERR.puts "Line.delete: deleting newline"
 	# If we're at the end of the line, merge this line
 	# with the next line.
 	b.undo.delete(dot, "\n")
@@ -252,8 +253,9 @@ class Line
 	if kflag
 	  return false unless Line.kinsert(deleted_text)
 	end
+	#STDERR.puts "line before #{chars} chars removed: '#{lp.text}'"
 	lp.text = text[0, dot.o] + text[right, lsize - right]
-	#STDERR.puts "line with #{chars} chars removed: '#{lp.text}'"
+	#STDERR.puts "line after #{chars} chars removed: '#{lp.text}'"
 	n -= chars
 
 	# Adjust dot, mark, and undo dot in all windows that have the same buffer.
@@ -268,9 +270,6 @@ class Line
 	  end
 	end	# Window.each
       end
-
-      # Stop if we've hit the end of the buffer.
-      break if lp == b.last_line
     end
     return true
   end

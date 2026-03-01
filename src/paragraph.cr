@@ -62,7 +62,6 @@ module Paragraph
     return result if n == 0
 
     w, b, dot, lp = E.get_context
-
     n.times do
       # Scan forward looking for a line that starts with a word.
       while true
@@ -74,10 +73,14 @@ module Paragraph
       end
 
       # Scan forward looking for a line that doesn't start with a word.
+      # Take special care on the last line.
       while true
-	break if lp == b.last_line
 	break unless @@regex.match(lp.text)
-	dot.l += 1
+	if lp == b.last_line
+	  dot.o = lp.text.size
+	  break
+	end
+        dot.l += 1
 	dot.o = 0
 	lp = lp.next
       end

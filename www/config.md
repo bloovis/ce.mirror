@@ -81,7 +81,7 @@ For each matching file:
 * The line separator character is a linefeed.
 * The indentation size is set to 2 characters.
 * Indentation uses tabs.
-* The tab size is set 8 characters.
+* The tab size is 8 characters.
 * When saving the file, `ce` will ask the user if a newline needs
 to be added to the last line if a newline is not present, and it will trim trailing
 whitespace from each line.
