@@ -231,6 +231,9 @@ class Line
       lsize = text.size
       chars = {lsize - dot.o, n}.min
       if chars == 0
+	# Stop if we're at the end of the buffer.
+	break if lp == b.last_line
+
 	#STDERR.puts "Line.delete: deleting newline"
 	# If we're at the end of the line, merge this line
 	# with the next line.

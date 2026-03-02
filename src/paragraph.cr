@@ -35,10 +35,15 @@ module Paragraph
     n.times do
       # Scan back looking for a line that starts with a word.
       while true
-	return result if lp == b.first_line
-	dot.l -= 1
+	if lp == b.first_line
+	  dot.o = 0
+	  return result
+	end
+	if dot.o == 0
+	  dot.l -= 1
+	  lp = lp.previous
+	end
 	dot.o = 0
-	lp = lp.previous
 	break if @@regex.match(lp.text)
       end
 
@@ -65,8 +70,8 @@ module Paragraph
     n.times do
       # Scan forward looking for a line that starts with a word.
       while true
-	return result if lp == b.last_line
 	break if @@regex.match(lp.text)
+	return result if lp == b.last_line
 	dot.l += 1
 	dot.o = 0
 	lp = lp.next
@@ -78,7 +83,7 @@ module Paragraph
 	break unless @@regex.match(lp.text)
 	if lp == b.last_line
 	  dot.o = lp.text.size
-	  break
+	  return result
 	end
         dot.l += 1
 	dot.o = 0
@@ -115,8 +120,12 @@ module Paragraph
     a = [] of String
     l = start.l
     while true
-      a.concat(lp.text.split)
-      break if l == finish.l
+      if l == finish.l
+	a.concat(lp.text[0,finish.o].split)
+	break
+      else
+	a.concat(lp.text.split)
+      end
       l += 1
       lp = lp.next
     end
