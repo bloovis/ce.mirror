@@ -16,6 +16,14 @@ end
 # Line pointers in the buffer.
 alias LineCache = Hash(Int32, Pointer(Line))
 
+# `Buffer` stores a linked list of text lines, along with some related
+# attributes, such as a set of undo records, a filename, and values
+# obtained from relevant .editorconfig files, if any.
+#
+# `Buffer` contains class methods for iterating over the list
+# of all buffers.  It also has a constructor for creating a special system
+# buffer that is used for temporary displays of information that
+# can't fit on the echo line.
 class Buffer
   # Linked list of lines.
   property list : LinkedList(Line)
@@ -155,7 +163,7 @@ class Buffer
 
   # Instance methods.
 
-  # Read .editorconfig values that apply to this buffer's filename.
+  # Reads .editorconfig values that apply to this buffer's filename.
   # Set some default values if no relevant config values are found.
   private def set_config_values
     # Set the default values.
@@ -288,7 +296,7 @@ class Buffer
     return status
   end
 
-  # Clears the buffer, and reads the file `filename` into the buffer.
+  # Clears the buffer, and reads the file *filename* into the buffer.
   # Returns true if successful, false otherwise
   def readin(@filename) : Bool
     @list.clear
@@ -344,7 +352,7 @@ class Buffer
     return true
   end
 
-  # Returns the number of lines in the buffer.  Uses the size cache (@scache)
+  # Returns the number of lines in the buffer.  Uses the size cache (`@scache`)
   # if it's valid; otherwise does it the hard way.
   def size : Int32
     # Is the size already in the cache?
@@ -405,7 +413,7 @@ class Buffer
 
   # Iterates over each line in the buffer, yielding both the zero-based
   # line number and the line itself.  If the block returns false,
-  # abort the iteration.
+  # aborts the iteration.
   def each_line
     n = 0
     @list.each do |l|
@@ -497,7 +505,7 @@ class Buffer
   # to save the user the grief of losing text. The
   # window chain is nearly always wrong if this gets
   # called; the caller must arrange for the updates
-  # that are required. Return true if everything
+  # that are required. Returns true if everything
   # looks good.
   def clear : Bool
     if @flags.changed? && !@flags.system?
@@ -531,7 +539,7 @@ class Buffer
     return true
   end
 
-  # Forces a line number to fall within the valid line
+  # Forces the line number *line* to fall within the valid line
   # number range (0 to buffer size - 1).
   def clamp(line : Int32) : Int32
     if line < 0
@@ -810,6 +818,6 @@ class Buffer
     k.add(Kbd.meta('i'), cmdptr(setsavetabs), "set-save-tabs")
   end
 
-  # Allow buffer to have the same methods as the linked list.
+  # Allows buffer to have the same methods as the linked list.
   forward_missing_to @list
 end
