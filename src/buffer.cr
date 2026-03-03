@@ -175,18 +175,22 @@ class Buffer
     @end_of_line = "\n"
     @charset = "UTF-8"
 
-    # If the filename is blank, we don't need to searh config files.
+    # If the filename is blank, we don't need to search config files.
     return if filename.size == 0
 
-    # Get the tab_width value.
+    # Find the neareset config section for this filename.
     cfg = E.config
-    val = cfg.getvalue(@filename, "tab_width")
+    section = cfg.findsection(@filename)
+    return if section.nil?
+
+    # Get the tab_width value.
+    val = section.getvalue("tab_width")
     if val =~ /^(\d+)$/
       @tab_width = val.to_i
     end
 
     # Get the indent_size value.
-    val = cfg.getvalue(@filename, "indent_size").downcase
+    val = section.getvalue("indent_size").downcase
     if val == "tab"
       @indent_size = @tab_width
     elsif val =~ /^(\d+)$/
@@ -194,7 +198,7 @@ class Buffer
     end
 
     # Get the indent_style value.
-    val = cfg.getvalue(@filename, "indent_style").downcase
+    val = section.getvalue("indent_style").downcase
     if val == "tab"
       @use_tabs_to_indent = true
     elsif val == "space"
@@ -202,7 +206,7 @@ class Buffer
     end
 
     # Get the insert_final_newline value.
-    val = cfg.getvalue(@filename, "insert_final_newline").downcase
+    val = section.getvalue("insert_final_newline").downcase
     if val == "true"
       @insert_final_newline = true
     elsif val == "false"
@@ -210,7 +214,7 @@ class Buffer
     end
 
     # Get the trim_trailing_whitespace value.
-    val = cfg.getvalue(@filename, "trim_trailing_whitespace").downcase
+    val = section.getvalue("trim_trailing_whitespace").downcase
     if val == "true"
       @trim_trailing_whitespace = true
     elsif val == "false"
@@ -218,7 +222,7 @@ class Buffer
     end
 
     # Get the end_of_line value.
-    val = cfg.getvalue(@filename, "end_of_line").downcase
+    val = section.getvalue("end_of_line").downcase
     if val == "lf"
       @end_of_line = "\n"
     elsif val == "cr"
@@ -228,7 +232,7 @@ class Buffer
     end
 
     # Get the charset value.
-    val = cfg.getvalue(@filename, "charset").downcase
+    val = section.getvalue("charset").downcase
     case val
     when "latin1", "utf-8", "utf-16be", "utf-16le"
       @charset = val.upcase
@@ -236,15 +240,27 @@ class Buffer
 
     # Get the spelling_language value.  This is used by spelling commands.
     # If it is missing or blank, no language will be specified.
-    @spelling_language = cfg.getvalue(@filename, "spelling_language").downcase
+    @spelling_language = section.getvalue("spelling_language").downcase
   end
 
   # Sets the buffer filename, then reads .editorconfig information
   # for that filename.
   def filename=(fname : String)
     #STDERR.puts "Setting buffer filename to #{fname}"
+    oldfn = @filename
     @filename = fname
-    set_config_values
+
+    # If the .editorconfig section for the old filename is the same
+    # as the one for the new filename, don't set the new config values.
+    # This ensures that values like tab width, which the user can override,
+    # won't change if the user changes the filename to one similar to the
+    # old filename.
+    oldsection = E.config.findsection(oldfn)
+    newsection = E.config.findsection(fname)
+    return if newsection.nil?
+    if oldsection.nil? || oldsection != newsection
+      set_config_values
+    end
   end
 
   # Writes the buffer to its associated file.  Returns true
@@ -277,7 +293,7 @@ class Buffer
 	  if @@savetabs
 	    f.print(text)
 	  else
-	    f.print(text.detab)
+	    f.print(text.detab(@tab_width))
 	  end
 	  if lp == last_line
 	    nline += 1 if lp.text.size != 0

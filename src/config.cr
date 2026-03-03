@@ -1,4 +1,4 @@
-# These classes are used to parse and store information from one or more
+# These classes parse and store information from one or more
 # .editorconfig files.   For more information about these files, see
 # <https://spec.editorconfig.org/> .
 
@@ -96,6 +96,7 @@ class ConfigSection
 
   # Does the hard work of matching a string *name* against
   # a glob pattern *glob*.  Uses recursion heavily.
+  # Returns true if there is a match, or false otherwise.
   private def do_match(glob : String, name : String) : Bool
     dprint "do_match: glob '#{glob}', name '#{name}'"
     return true if glob.size == 0 && name.size == 0
@@ -245,6 +246,23 @@ class ConfigSection
     end
   end
 
+  # Gets the value named *key* from this section, or
+  # returns *default* if the value is not found.
+  def getvalue(key : String, default = "") : String
+    value = default
+    @pairs.each do |k, v|
+      if key == k
+	if v == "unset"
+	  value = default
+	else
+	  value = v
+	end
+	dprint "Found #{key} in #{@glob}, v was '#{v}', setting value to '#{value}'"
+      end
+    end
+    return value
+  end
+
 end
 
 # `ConfigFile` parses and stores all of the sections for a single .editorconfig file.
@@ -343,28 +361,19 @@ class Config
     end
   end
 
-  # Gets the value named *key* from the closest .editorconfig file
-  # whose glob match matches *filename*.  Returns *default* if
+  # Finds the closest .editorconfig section whose glob match matches
+  # *filename*.  Returns nil if not found.
   # the value is not found.
-  def getvalue(filename : String, key : String, default = "") : String
-    value = default
+  def findsection(filename : String) : ConfigSection?
+    section = nil
     @files.each do |f|
       f.sections.each do |s|
 	if s.match(filename)
-	  s.pairs.each do |k, v|
-	    if key == k
-	      if v == "unset"
-		value = default
-	      else
-		value = v
-	      end
-	      dprint "Found #{key} in #{s.glob}, v was '#{v}', setting value to '#{value}'"
-	    end
-	  end
+	  section = s
 	end
       end
     end
-    return value
+    return section
   end
 
 end
@@ -391,7 +400,12 @@ end
 
 filename = ARGV[0]
 key = ARGV[1]
-value = c.getvalue(filename, key, "<not found>")
-puts "#{key} for #{filename} = '#{value}'"
+section = c.findsection(filename)
+if section.nil?
+  puts "Can't find a config section for #{filename}"
+else
+  value = section.getvalue(key, "<not found>")
+  puts "#{key} for #{filename} = '#{value}'"
+end
 
 {% end %} # flag TEST
