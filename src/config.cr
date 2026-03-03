@@ -246,23 +246,6 @@ class ConfigSection
     end
   end
 
-  # Gets the value named *key* from this section, or
-  # returns *default* if the value is not found.
-  def getvalue(key : String, default = "") : String
-    value = default
-    @pairs.each do |k, v|
-      if key == k
-	if v == "unset"
-	  value = default
-	else
-	  value = v
-	end
-	dprint "Found #{key} in #{@glob}, v was '#{v}', setting value to '#{value}'"
-      end
-    end
-    return value
-  end
-
 end
 
 # `ConfigFile` parses and stores all of the sections for a single .editorconfig file.
@@ -361,6 +344,30 @@ class Config
     end
   end
 
+  # Gets the value named *key* from the closest .editorconfig file
+  # whose glob match matches *filename*.  Returns *default* if
+  # the value is not found.
+  def getvalue(filename : String, key : String, default = "") : String
+    value = default
+    @files.each do |f|
+      f.sections.each do |s|
+	if s.match(filename)
+	  s.pairs.each do |k, v|
+	    if key == k
+	      if v == "unset"
+		value = default
+	      else
+		value = v
+	      end
+	      dprint "Found #{key} in #{s.glob}, v was '#{v}', setting value to '#{value}'"
+	    end
+	  end
+	end
+      end
+    end
+    return value
+  end
+
   # Finds the closest .editorconfig section whose glob match matches
   # *filename*.  Returns nil if not found.
   # the value is not found.
@@ -397,15 +404,9 @@ c.files.each do |f|
   end
 end
 
-
 filename = ARGV[0]
 key = ARGV[1]
-section = c.findsection(filename)
-if section.nil?
-  puts "Can't find a config section for #{filename}"
-else
-  value = section.getvalue(key, "<not found>")
-  puts "#{key} for #{filename} = '#{value}'"
-end
+value = c.getvalue(filename, key, "<not found>")
+puts "#{key} for #{filename} = '#{value}'"
 
 {% end %} # flag TEST

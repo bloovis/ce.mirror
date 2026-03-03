@@ -184,13 +184,13 @@ class Buffer
     return if section.nil?
 
     # Get the tab_width value.
-    val = section.getvalue("tab_width")
+    val = cfg.getvalue(@filename, "tab_width")
     if val =~ /^(\d+)$/
       @tab_width = val.to_i
     end
 
     # Get the indent_size value.
-    val = section.getvalue("indent_size").downcase
+    val = cfg.getvalue(@filename, "indent_size").downcase
     if val == "tab"
       @indent_size = @tab_width
     elsif val =~ /^(\d+)$/
@@ -198,7 +198,7 @@ class Buffer
     end
 
     # Get the indent_style value.
-    val = section.getvalue("indent_style").downcase
+    val = cfg.getvalue(@filename, "indent_style").downcase
     if val == "tab"
       @use_tabs_to_indent = true
     elsif val == "space"
@@ -206,7 +206,7 @@ class Buffer
     end
 
     # Get the insert_final_newline value.
-    val = section.getvalue("insert_final_newline").downcase
+    val = cfg.getvalue(@filename, "insert_final_newline").downcase
     if val == "true"
       @insert_final_newline = true
     elsif val == "false"
@@ -214,7 +214,7 @@ class Buffer
     end
 
     # Get the trim_trailing_whitespace value.
-    val = section.getvalue("trim_trailing_whitespace").downcase
+    val = cfg.getvalue(@filename, "trim_trailing_whitespace").downcase
     if val == "true"
       @trim_trailing_whitespace = true
     elsif val == "false"
@@ -222,7 +222,7 @@ class Buffer
     end
 
     # Get the end_of_line value.
-    val = section.getvalue("end_of_line").downcase
+    val = cfg.getvalue(@filename, "end_of_line").downcase
     if val == "lf"
       @end_of_line = "\n"
     elsif val == "cr"
@@ -232,7 +232,7 @@ class Buffer
     end
 
     # Get the charset value.
-    val = section.getvalue("charset").downcase
+    val = cfg.getvalue(@filename, "charset").downcase
     case val
     when "latin1", "utf-8", "utf-16be", "utf-16le"
       @charset = val.upcase
@@ -240,7 +240,7 @@ class Buffer
 
     # Get the spelling_language value.  This is used by spelling commands.
     # If it is missing or blank, no language will be specified.
-    @spelling_language = section.getvalue("spelling_language").downcase
+    @spelling_language = cfg.getvalue(@filename, "spelling_language").downcase
   end
 
   # Sets the buffer filename, then reads .editorconfig information
