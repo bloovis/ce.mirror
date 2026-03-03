@@ -426,10 +426,8 @@ module RubyRPC
   end
 
   def set_lineno(id : Int32, lineno : Int32) : String
-    lineno -= 1		# Internally we use zero-based line numbers
-    if lineno >= 0 && lineno < E.curb.size
-      E.curw.dot = Pos.new(lineno, 0)
-    end
+    # Internally we use zero-based line numbers, hence the -1.
+    E.curw.dot = Pos.new(E.curb.clamp(lineno - 1))
     return make_normal_response(0, "", id)
   end
 

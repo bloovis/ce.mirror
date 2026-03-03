@@ -1,7 +1,6 @@
 # `Basic` contains basic command functions for moving the
 # cursor around on the screen, setting mark, and swapping dot with
-# mark. Only moves between lines, which might make the
-# current buffer framing bad, are hard.
+# mark.
 module Basic
   # The current goal column for moving up and down a line.
   @@curgoal = 0
@@ -66,6 +65,7 @@ module Basic
     # Compute how much to scroll to get to next page
     # (80% of the screen size is what ITS EMACS seems to use).
     w = E.curw
+    b = w.buffer
     nrow = w.nrow
     page = {w.nrow - @@overlap, 1}.max
     if !f
@@ -77,9 +77,7 @@ module Basic
     end
 
     # Move the current line number down, but not past the end of the buffer.
-    w.line += n
-    bsize = w.buffer.size
-    w.line = bsize - 1 if w.line >= bsize
+    w.line = b.clamp(w.line + n)
 
     checkdot(w)
     return TRUE
@@ -116,7 +114,6 @@ module Basic
     end
     w, b, dot, lp = E.get_context
     #STDERR.puts "backchar: dot.l #{dot.l}, dot.o #{dot.o}"
-    bsize = b.size
     while n > 0
       if lp.nil?
 	raise "Nil line in backchar!"
@@ -152,7 +149,6 @@ module Basic
       return backchar(f, -n, Kbd::RANDOM)
     end
     w, b, dot, lp = E.get_context
-    bsize = b.size
     while n > 0
       if lp.nil?
 	raise "Nil line in forwchar!"
@@ -160,7 +156,7 @@ module Basic
       lsize = lp.text.size	# total size of this line
       rem = lsize - dot.o	# remaining chars in this line
       if n > rem		# need to advance to next line?
-	if dot.l + 1 == bsize	# already on last line?
+	if lp == b.last_line	# already on last line?
 	  dot.o = lsize		# put dot at end of line
 	  return FALSE	# tell caller we failed to advance n chars
 	else
@@ -306,7 +302,7 @@ module Basic
     return TRUE
   end
 
-  # Goes to a specific line, mostly for looking
+  # Goes to a specific 1-based line number *n*, mostly for looking
   # up compilation errors, which give the
   # error a line number. If an argument is present, then
   # it is the line number, else prompt for a line number

@@ -132,7 +132,7 @@ class E
     return self.instance.config
   end
 
-  # Runs the execute method on the instance
+  # Runs the execute method on the instance.
   def self.execute(c : Int32, f : Bool, n : Int32) : Result
     return self.instance.execute(c, f, n)
   end
@@ -220,9 +220,7 @@ class E
 	  b.readin(fname)
 
 	  # Move to the specified line number.
-	  if pos.l >= 0 && pos.l < b.size
-	    b.dot.l = pos.l
-	  end
+	  b.dot.l = b.clamp(pos.l)
 
 	  # Move to the specified column in that line.
 	  if lp = b[b.dot.l]
@@ -264,11 +262,9 @@ class E
     end
   end
 
-  # Command execution. Look up the binding in the the
-  # binding array, and do what it says. Return a very bad status
-  # if there is no binding, or if the symbol has a type that
-  # is not usable (there is no way to get this into a symbol table
-  # entry now). Also fiddle with the flags.
+  # Command execution. Looks up the binding for the keycode *c* in the the
+  # binding tables, and runs the associated commands. Returns ABORT
+  # if there is no binding. Also fiddles with the flags.
   def execute(c : Int32, f : Bool, n : Int32) : Result
     # If there is no binding for this key, and the key is a Unicode character, use the
     # binding for Space, i.e. ins-self.
@@ -288,14 +284,23 @@ class E
       keymap = @keymap
     end
     if keymap.key_bound?(bindc)
+      # Clear the flags for this command.
       @thisflag = Eflags::None
+
+      # Start an undo group.
       E.curb.undo.start
 
       # Call the method bound to this key
       status = keymap.call_by_key(bindc, f, n, c)
 
+      # Save any flags that might have been set by this command.
       @lastflag = @thisflag
+
+      # End the undo group.
       E.curb.undo.finish
+
+      # Clear the reply string queue used by Ruby extensions, in case
+      # the command ignored the queue.
       Echo.replyq_clear
       return status
     else

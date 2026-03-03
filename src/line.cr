@@ -24,7 +24,7 @@ class Line
   # The text of a line.
   property text : String
 
-  # Don't call this constuctor directly.  Instead, use `Line.alloc`.
+  # Don't call this constructor directly.  Instead, use `Line.alloc`.
   def initialize(@text : String)
   end
 
@@ -231,12 +231,12 @@ class Line
       lsize = text.size
       chars = {lsize - dot.o, n}.min
       if chars == 0
-	# Stop if we're at the end of the buffer.
+	# We're at the end of the line, so merge this line
+	# with the next line. Stop if we're at the end of the
+	# buffer, because there is no next line.
 	break if lp == b.last_line
 
 	#STDERR.puts "Line.delete: deleting newline"
-	# If we're at the end of the line, merge this line
-	# with the next line.
 	b.undo.delete(dot, "\n")
 	return false unless Line.delnewline
 	if kflag
@@ -244,7 +244,8 @@ class Line
 	end
 	n -= 1
       else
-	# Save undo information
+	# Delete some characters within a line.
+	# First, save undo information.
 	deleted_text = text[dot.o, chars]
 	b.undo.delete(dot, deleted_text)
 
@@ -272,15 +273,15 @@ class Line
 	    end
 	  end
 	end	# Window.each
-      end
-    end
+      end	# if chars == 0
+    end		# while n > 0
     return true
   end
 
   # Replaces *plen* characters BEFORE dot with string *st*.
   # Control-J (\n) characters in *st* are interpreted as newlines.
   # In MicroEMACS there was also a casehack disable flag, but
-  # this is not used in CrystalEdit.
+  # CrystalEdit doesn't use that hack.
   def self.replace(plen : Int32, st : String) : Bool
     # Delete the characters to be replaced.
     return false if Misc.backdel(false, plen, Kbd::RANDOM) != TRUE
