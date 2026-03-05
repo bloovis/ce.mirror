@@ -188,7 +188,6 @@ class Kbd
 
     # Check for Ctrl-X and Meta prefixes.
     s = String.build do |s|
-      s << ""
       s << "C-X " if (k & CTLX) == CTLX
       s << "M-" if (k & META) == META
       k &= ~(CTLX | META)

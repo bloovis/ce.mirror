@@ -10,7 +10,7 @@ module Spell
   # Returns true if the character at the dot
   # is considered to be part of a word.  This is different
   # from `Word.inword`, because it considers only
-  # alphas and apostrophes to be word characters.
+  # letters and apostrophes to be word characters.
   def inword
     return Line.getc.to_s =~ @@regex
   end
@@ -86,7 +86,6 @@ module Spell
   # Finds the word under the cursor and returns it, leaving
   # the cursor past the end of the word.
   def getcursorword : String | Nil
-    s = ""
     # If we're not already in a word, return nil
     return nil if !inword
 
@@ -101,9 +100,11 @@ module Spell
 
     # Scan forward past the end of word, accumulating its
     # characters as we go.
-    while inword
-      s = s + Line.getc.to_s
-      dot.o += 1
+    s = String.build do |str|
+      while inword
+	str << Line.getc
+	dot.o += 1
+      end
     end
     return s
   end

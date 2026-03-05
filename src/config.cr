@@ -29,7 +29,7 @@ class ConfigSection
   # fully expanded glob pattern.
   property fullglob = ""
 
-  # True if the the glob has a non-escaped forward slawh.
+  # True if the the glob has a non-escaped forward slash.
   property glob_has_slash : Bool
 
   def initialize(@glob, pathname)

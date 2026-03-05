@@ -5,12 +5,16 @@ the functionality of my MicroEMACS variant.  There is no good reason for me
 to create such a thing, since MicroEMACS is smaller, faster, and more portable.
 I'm doing it simply for my own amusement and education.
 
-As of the time of this writing (2026-02-13), `ce` implements enough
+*Important Note*: I did *not* use AI to write CrystalEdit.  I typed all of the code
+myself, and all of the mistakes and bugs are my own.  Many of the comments,
+and most of the User Guide, were taken directly from MicroEMACS.
+
+As of this writing (2026-03-04), `ce` implements enough
 MicroEMACS functionality to perform basic editing, including undo/redo,
 keyboard macros, and Ruby extensions.  My hope is that the Crystal
 code will be easier to understand and modify than the C code in MicroEMACS.
 
-`ce` has a compiled code size of about 1.1 Mb for a --release build.  This is much
+`ce` has a compiled code size of about 1.1 Mb for a `--release` build.  This is much
 larger than the 110 Kb code size of MicroEMACS, and is likely due to the inclusion
 of the very large Crystal standard library.  But it is still much
 smaller than editors in use by the Cool Kids these days.  For example,

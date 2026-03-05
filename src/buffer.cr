@@ -178,7 +178,8 @@ class Buffer
     # If the filename is blank, we don't need to search config files.
     return if filename.size == 0
 
-    # Find the neareset config section for this filename.
+    # If there is no config section for this filename,
+    # don't bother trying get values for it.
     cfg = E.config
     section = cfg.findsection(@filename)
     return if section.nil?

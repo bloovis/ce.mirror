@@ -239,6 +239,11 @@ module Echo
 	  pos += default.size
 	end
       else
+	# If it's Control-Q, get the next key without interpretation.
+	if k == Kbd.ctrl('q')
+	  k = E.kbd.getkey
+	end
+
 	# Get the ASCII-fied character and insert it into the buffer.
 	s = Kbd.ascii(k)
 	ret = ret.insert(pos, s)	# convert codepoint to Char to String
