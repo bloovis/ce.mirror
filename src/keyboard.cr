@@ -138,7 +138,7 @@ class Kbd
   end
 
   # Names of our special keys, plus a few others in the normal ASCII range.
-  @@keynames = {
+  KEYNAMES = {
      # Special keys
      UP    => "Up",
      DOWN  => "Down",
@@ -193,7 +193,7 @@ class Kbd
       k &= ~(CTLX | META)
 
       # Is the keycode in the special keys table?
-      n = @@keynames[k]?
+      n = KEYNAMES[k]?
       if n
 	# Output the special key name.
 	s << n
@@ -202,7 +202,7 @@ class Kbd
 	s << "C-" if (k & CTRL) == CTRL
 
 	# Look it up again in the table, but this time without CTRL.
-	n = @@keynames[k & CHAR]?
+	n = KEYNAMES[k & CHAR]?
 	if n
 	  s << n
 	else

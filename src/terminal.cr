@@ -38,7 +38,7 @@ class Terminal
   CMODE = 2
 
   # Map ncurses special key values to our own internal key values.
-  @@keymap = {
+  KEYMAP = {
      LibNCurses::KEY_UP => Kbd::UP,
      LibNCurses::KEY_DOWN => Kbd::DOWN,
      LibNCurses::KEY_LEFT => Kbd::LEFT,
@@ -177,7 +177,7 @@ class Terminal
       when LibNCurses::KEY_MOUSE
 	return Kbd::CLICK		# Horrible hack for mouse
       else
-	if special = @@keymap[c]?	# Try special key map
+	if special = KEYMAP[c]?		# Try special key map
 	  return special
 	else
 	  return Kbd::RANDOM		# Unknown function key
