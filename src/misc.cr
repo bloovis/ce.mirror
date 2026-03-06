@@ -164,7 +164,7 @@ module Misc
        text =~ /^\s*(def|if|when|for|else|elsif|class|module)\b/
       nicol += b.indent_size
     elsif f && (n == 16)
-      nicol = nicol < 2 ? 0 : nicol - b.indent_size
+      nicol = {nicol - b.indent_size, 0}.max
     end
 
     # Insert a newline followed by the correct number of
