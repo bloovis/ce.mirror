@@ -222,7 +222,7 @@ module Echo
 	      pos = ret.size
 	    end
 	  end
-	  if lastk == Kbd.ctrl('i')
+	  if lastk == Kbd.ctrl('i') && a.size > 0
 	    # Pop up the system buffer showing the possible completions.
 	    show_completions(a)
 	    lastk = Kbd::RANDOM
