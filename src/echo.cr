@@ -392,7 +392,8 @@ module Echo
 	    a = [dirname, dirname]
 	    #STDERR.puts("Adding two-element #{dirname}")
 	  end
-	else
+	end
+	if a.size == 1 && a[0][-1] != '/'
 	  # There's a single non-directory filename that matches.
 	  # But we don't want the completion to immediately choose
 	  # that file without user confirmation.  So pretend that
