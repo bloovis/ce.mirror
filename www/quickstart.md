@@ -68,9 +68,7 @@ showing the suggested replacements.  Then they prompt you to enter your
 own replacement, or type the number of one of the suggested replacements.
 
 * Autocompletion for prompts: use the Tab key twice in a row (instead of the '?' key)
-to pop up a window showing the possible completions.  Also, autocompletions
-for filenames automatically choose a file if there's only one choice, instead
-of waiting for you to confirm.
+to pop up a window showing the possible completions.
 
 * The `file-write` command prompts you to confirm overwriting an existing file.
 

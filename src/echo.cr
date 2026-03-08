@@ -392,10 +392,23 @@ module Echo
 	    a = [dirname, dirname]
 	    #STDERR.puts("Adding two-element #{dirname}")
 	  end
+	else
+	  # There's a single non-directory filename that matches.
+	  # But we don't want the completion to immediately choose
+	  # that file without user confirmation.  So pretend that
+	  # there are two filenames, both the same, but with a space
+	  # appended.  The space tells the user that this really is
+	  # the only choice.  Later we will strip out this extra space.
+	  # This makes the completion work the same as bash or MicroEMACS.
+	  s = "#{a[0]} "
+	  a = [s, s]
 	end
       end
       a
     end
+
+    # Strip trailing spaces.
+    fname = fname.rstrip
 
     # Return immediately on Ctrl-G abort.
     return {result, fname} if result == ABORT
