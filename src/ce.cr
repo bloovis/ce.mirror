@@ -127,6 +127,8 @@ def stats(f : Bool, n : Int32, k : Int32) : Result
   b.addline("Editor information")
   b.addline("==================")
   b.addline("Current buffer line cache size:   #{curb.lcache.size}")
+  b.addline("Current buffer undo stack size:   #{curb.undo.undo_stack.size}")
+  b.addline("Current buffer redo stack size:   #{curb.undo.redo_stack.size}")
   nsent, nreceived, bytes_sent, bytes_received = RubyRPC.stats
   b.addline("JSON messages sent to Ruby:       #{nsent}")
   b.addline("JSON messages received from Ruby: #{nreceived}")
