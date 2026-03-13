@@ -3,6 +3,20 @@
 # command bound to a key.
 module Extend
 
+  HELP = <<-EOS
+  Some commonly used key bindings:
+  F1: wait for a key, then display the command bound to that key
+  Ctrl-X Ctrl-K: display all key bindings
+  Ctrl-X Ctrl-S or F2: save current file
+  Ctrl-X Ctrl-V or F3: open a file
+  Ctrl-X Ctrl-C or F4: exit the editor
+  Ctrl-X 2: split the window
+  Ctrl-X N: move to the next window
+  Ctrl-X 1: make the current window the only window
+  F8: move to the next buffer
+  F5: undo
+  EOS
+
   extend self
 
   # Prompts the user for a command name, and runs that command.
@@ -26,20 +40,7 @@ module Extend
     if k == Kbd::F1
       b = Buffer.sysbuf
       b.clear
-      s = <<-EOS
-      Some commonly used key bindings:
-      F1: wait for a key, then display the command bound to that key
-      Ctrl-X Ctrl-K: display all key bindings
-      Ctrl-X Ctrl-S or F2: save current file
-      Ctrl-X Ctrl-V or F3: open a file
-      Ctrl-X Ctrl-C or F4: exit the editor
-      Ctrl-X 2: split the window
-      Ctrl-X N: move to the next window
-      Ctrl-X 1: make the current window the only window
-      F8: move to the next buffer
-      F5: undo
-      EOS
-      s.lines.each {|l| b.addline l}
+      HELP.lines.each {|l| b.addline l}
       return b_to_r(Buffer.popsysbuf)
     end
 
