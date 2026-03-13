@@ -22,9 +22,9 @@ module Files
   # with the current user's home directory, and replacing ~name with
   # that user's home directory.
   def tilde_expand(s : String) : String
-    if s =~ /(~([^\s\/]*))/ # twiddle directory expansion
-      full = $1
-      name = $2
+    if s =~ /^~([^\/]*)(.*)/
+      name = $1
+      rest = $2
       if name.empty?
 	#STDERR.puts "User name is empty in #{s}"
 	dir = Path.home.to_s
@@ -34,11 +34,11 @@ module Files
 	  dir = u.home_directory
 	  #STDERR.puts "Found user #{name}, home directory #{dir}"
 	else
-	  dir = "~#{name}"	# probably doesn't exist!
+	  return s	# probably doesn't exist!
 	end
       end
       #STDERR.puts "Replacing #{full} with #{dir} in #{s}"
-      return s.sub(full, dir)
+      return "#{dir}#{rest}"
     else
       #STDERR.puts "No twiddle seen in #{s}"
       return s
