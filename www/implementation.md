@@ -10,7 +10,7 @@ Here are some notes about data structures in MicroEMACS.
 
 ### Line
 
-In MicroEMACS, buffers are linked lists of lines.  Each line contains a forward
+In MicroEMACS, a buffer contains a linked list of lines.  Each line contains a forward
 link, a backward link, and a character buffer. This structure is allocated as a single unit.
 This means that if the character buffer must be enlarged, an entirely new line structure
 must be allocated, and the characters copied from the old line to the new line.
@@ -103,14 +103,14 @@ Here are some notes about data structures in `ce`.
 
 ### Line
 
-In `ce`, as in MicroEMACS, buffers are linked lists of lines, and a line
+In `ce`, as in MicroEMACS, a buffer contains a linked list of lines, and a line
 contains forward and backwards links.  But the character buffer in a line
 is allocated separately from the links.  This means that if the characters
 are changed, the links don't change.  This greatly simplifies operations
 that operate on a single line.
 
-In `ce`, positions are not stored as line pointers;
-they are stored as line numbers.  This reduces calculations involving
+In `ce`, a buffer position uses a line number instead of a line pointer.
+This reduces calculations involving
 distances between two lines to simple arithmetic.  However,
 it complicates the mapping of a line number to a line pointer.
 The brute force method involves scanning the entire linked list
@@ -131,7 +131,7 @@ get to the desired line.
 
 ### Window
 
-As mentioned earlier, positions in `ce` are stored as line numbers.
+As mentioned earlier, a buffer position uses a line number, not a line pointer.
 This includes the dot, mark, and line attributes of windows.
 But care has to be taken to ensure these line numbers are updated properly
 when a line is inserted or deleted.  Fortunately, that is an easy
@@ -140,7 +140,7 @@ that were after the line being added or deleted.
 
 ### Display
 
-As mentioned above, I moved the display update code in MicroEMACS
+As mentioned earlier, I moved the display update code in MicroEMACS
 to a simplified model that used the ncursesw library.  In `ce`, I also
 used ncursesw, but I simplified things even further by eliminating
 the redundant virtual screen that MicroEMACS uses in its display

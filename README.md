@@ -14,7 +14,7 @@ MicroEMACS functionality to perform basic editing, including undo/redo,
 keyboard macros, and Ruby extensions.  My hope is that the Crystal
 code will be easier to understand and modify than the C code in MicroEMACS.
 
-`ce` has a compiled code size of about 1.1 Mb for a `--release` build.  This is much
+`ce` has just over 8K lines of code, and a compiled code size of about 1.1 Mb for a `--release` build.  This is much
 larger than the 110 Kb code size of MicroEMACS, and is likely due to the inclusion
 of the very large Crystal standard library.  But it is still much
 smaller than editors in use by the Cool Kids these days.  For example,
@@ -24,6 +24,13 @@ though I have not examined the binaries myself.  Of course, these popular editor
 are much more feature-rich, but it is questionable whether they have
 300 times more utility than `ce`, or 3000 times more utility than
 MicroEMACS.
+
+For browsing and searching in large projects, I prefer to use separate tools designed for this purpose:
+
+* For C projects, I use the venerable [cscope](https://cscope.sourceforge.net/), which is
+available in every Linux distro.
+* For Crystal and Ruby projects, I use my own cscope-like program, `crscope`.  You
+can find this in my `csup` repository.  
 
 ## Installation
 

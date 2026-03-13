@@ -369,8 +369,7 @@ class Config
   end
 
   # Finds the closest .editorconfig section whose glob match matches
-  # *filename*.  Returns nil if not found.
-  # the value is not found.
+  # *filename*.  Returns nil if no such section is found.
   def findsection(filename : String) : ConfigSection?
     section = nil
     @files.each do |f|
