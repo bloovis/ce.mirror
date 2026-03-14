@@ -27,7 +27,7 @@ class Undo
   # `Record` holds the information for a single undo operation.
   class Record
     # The kind of undo record (Insert or Delete)
-    getter kind : Undo::Kind
+    getter kind : Kind
 
     # The flags for this record (Start, Finish, or None).
     property flags : Uflags
@@ -72,7 +72,7 @@ class Undo
   # Adds a record of the specified *kind* to the undo stack.
   # If the position *pos* or the string *s* are nil, uses
   # default invalid or empty values instead.
-  private def add(kind : Undo::Kind, pos : Pos | Nil = nil, s : String | Nil = nil)
+  private def add(kind : Kind, pos : Pos | Nil = nil, s : String | Nil = nil)
     # Do nothing if we're in the middle of an undo operation.
     return if @undoing
 
@@ -191,10 +191,10 @@ class Undo
       end
       #STDERR.puts("Undoing #{r.to_s}")
       case r.kind
-      when Undo::Kind::Insert
+      when Kind::Insert
         w.dot = r.pos.dup
 	Line.delete(r.s.size, false)
-      when Undo::Kind::Delete
+      when Kind::Delete
         w.dot = r.pos.dup
 	Line.insertwithnl(r.s)
       end
@@ -255,10 +255,10 @@ class Undo
       end
       #STDERR.puts("Redoing #{r.to_s}")
       case r.kind
-      when Undo::Kind::Insert
+      when Kind::Insert
         w.dot = r.pos.dup
 	Line.insertwithnl(r.s)
-      when Undo::Kind::Delete
+      when Kind::Delete
         w.dot = r.pos.dup
 	Line.delete(r.s.size, false)
       end
