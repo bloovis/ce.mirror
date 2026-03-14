@@ -3,8 +3,8 @@
 In this User Guide, we use the following conventions for keycode names:
 
 * `C-x` means `Ctrl-x`, where x is any letter key
-* `M-x` means press `Esc` (or `Ctrl-[`) followed by `x`, where `x` is any key
-
+* `M-x` means press `Esc` (or `Ctrl-[`) followed by `x`, where `x` is any key;
+or hold down `Alt` while pressing a letter key.
 
 ## Chapters
 

@@ -86,9 +86,8 @@ word `Control` here, and in the next few examples, means the key marked
 * To get a character with the
 *META* bit set, prefix the character
 with `Control-[`, `Escape`, or `ESC`.  An alternative method that
-works on FlexOS is to
-hold down the `ALT` key while entering the character.  This method
-also works on PC-DOS, but only with `ALT-A` through `ALT-Z`.
+works on a PC keyboard is hold down the `ALT` key while entering the character;
+this works only with `ALT-A` through `ALT-Z`.
 
 * To get a character with the
 *CTLX* bit set, prefix the character

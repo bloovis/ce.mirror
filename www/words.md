@@ -31,7 +31,6 @@ number of words over which to move. The default argument is 1.
 The forward word command moves dot forward by words, stopping
 on the first non-word character. If an argument is specified, it is the
 number of words over which to move. The default argument is 1.
-On PC-DOS and FlexOS this function is also bound to `C-Right`.
 
 **M-L** (**lower-word**)
 
