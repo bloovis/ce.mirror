@@ -307,17 +307,21 @@ module RubyRPC
   # operations do more that getting a variable, e.g., testing
   # that a particular editor command exists.
 
+  # Gets the current line, including a terminating newline if this
+  # is not the last line in the buffer.
   def get_line(id : Int32) : String
     w, b, dot, lp = E.get_context
     # Append a newline if this is not the last line.
     return make_normal_response(0, lp.text + (lp == b.last_line ? "" : "\n"), id)
   end
 
+  # Gets the 1-based current line number.
   def get_lineno(id : Int32) : String
     w, b, dot, lp = E.get_context
     return make_normal_response(dot.l + 1, "", id)
   end
 
+  # Checks if the string *str* is is a valid editor command name.
   def get_iscmd(id : Int32, str : String | Nil) : String
     if str.nil?
       message = "Missing command name for get_iscmd"
@@ -336,6 +340,8 @@ module RubyRPC
     return make_normal_response(found ? 1 : 0, found ? "found" : "not found", id)
   end
 
+  # Prompts the user with the string *prompt*, and returns the
+  # reply typed by the user, or nil if the user aborted with Ctrl-G.
   def get_reply(id : Int32, prompt : String | Nil) : String
     if prompt.nil?
       message = "Missing prompt for get_reply"
@@ -350,27 +356,33 @@ module RubyRPC
     end
   end
 
+  # Gets the current buffer's flags (include the "changed" flag).
   def get_bflag(id : Int32) : String
     return make_normal_response(E.curb.flags.to_i, "", id)
   end
 
+  # Gets the zero-based offset of the cursor (dot) in the current line.
   def get_offset(id : Int32) : String
     return make_normal_response(E.curw.dot.o, "", id)
   end
 
+  # Gets the filename associated with the current buffer.
   def get_filename(id : Int32) : String
     return make_normal_response(0, E.curb.filename, id)
   end
 
+  # Waits for the user to press a key (or valid key combo) and returns it.
   def get_key(id : Int32) : String
     key = E.kbd.getkey
     return make_normal_response(key, "", id)
   end
 
+  # Gets the current paragraph fill column.
   def get_fillcol(id : Int32) : String
     return make_normal_response(Paragraph.fillcol, "", id)
   end
 
+  # Gets the current buffer's tab width.
   def get_tabsize(id : Int32) : String
     return make_normal_response(E.curb.tab_width, "", id)
   end
@@ -414,6 +426,7 @@ module RubyRPC
   # operations do more that setting a variable, e.g., inserting a
   # string
 
+  # Replaces the current line with the string *str*.
   def set_line(int id, str : String | Nil) : String
     w, b, dot, lp = E.get_context
     if str.nil?
@@ -425,12 +438,14 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  # Sets the 1-based current line number.
   def set_lineno(id : Int32, lineno : Int32) : String
     # Internally we use zero-based line numbers, hence the -1.
     E.curw.dot = Pos.new(E.curb.clamp(lineno - 1))
     return make_normal_response(0, "", id)
   end
 
+  # Binds the key *key* to the command named *str*.
   def set_bind(id : Int32, key : Int32, str : String | Nil) : String
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing command name for set_bind", id)
@@ -460,11 +475,14 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  # Sets the current buffer's flags to *int*.
   def set_bflag(id : Int32, int : Int32) : String
     E.curb.flags = Bflags.new(int)
     return make_normal_response(0, "", id)
   end
 
+  # Inserts the string *str* in the current buffer.  '\n' characters in the
+  # string are handled correctly by inserting new lines.
   def set_insert(id : Int32, str : String | Nil) : String
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing string for set_insert", id)
@@ -473,6 +491,7 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  # Sets the cursor (dot) position in the current line to the zero-based *offset*.
   def set_offset(id : Int32, offset : Int32) : String
     w, b, dot, lp = E.get_context
     if offset > lp.text.size
@@ -483,6 +502,9 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  # Sets the current buffer's mode name to *str*.  This allows
+  # future key bindings (`set_bind`) to be attached to the buffer's
+  # keymap instead of the global keymap.
   def set_mode(int id, str : String | Nil) : String
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing mode for set_mode", id)
@@ -496,6 +518,8 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  # Sets the current buffer's filename.  This has the side effect
+  # of setting some buffer variables based on matching .editorconfig values.
   def set_filename(int id, str : String | Nil) : String
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing filename for set_filename", id)
@@ -504,6 +528,8 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  # Pops up the system buffer with the contents *str*.  '\n' characters in the
+  # string are handled correctly by inserting new lines.
   def set_popup(int id, str : String | Nil) : String
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing string for set_popup", id)
@@ -520,6 +546,7 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
+  # Updates the physical display.
   def set_update(int id, str : String | Nil) : String
     E.disp.update
     return make_normal_response(0, "", id)
