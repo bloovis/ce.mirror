@@ -139,7 +139,7 @@ module Misc
     end
 
     # Adjust the indentation of the current line.
-    s = String.indent(nicol, b.use_tabs_to_indent ? b.tab_width : 0)
+    s = String.indent(nicol, b.indent_tab_width)
     return b_to_r(Line.insert(s))
   end
 
@@ -152,8 +152,8 @@ module Misc
     w, b, dot, lp = E.get_context
     text = lp.text
 
-    # Find indentation and the offset of the first non-whitespace
-    nicol, i = text.current_indent
+    # Find indentation and the offset of the first non-whitespace character.
+    nicol, i = text.current_indent(b.tab_width)
 
     # Look at the string following the whitespace in the
     # current line to determine the indentation of the next line.

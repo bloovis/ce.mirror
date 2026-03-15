@@ -100,7 +100,7 @@ class String
   # containing these two values:
   # * the on-screen column of that character (taking tabs into account)
   # * the index of that character in the string
-  def current_indent : Tuple(Int32, Int32)
+  def current_indent(tab_width : Int32) : Tuple(Int32, Int32)
     # Look for the first non-whitespace character.  If not found,
     # pretend that the non-whitespace character is just past
     # the end of the string.
@@ -110,7 +110,7 @@ class String
     end
 
     # Return the display size and the offset.
-    return {self.screen_width(i), i}
+    return {self.screen_width(i, tab_width), i}
   end
 
   # Returns a copy of the string with tabs replaced with the

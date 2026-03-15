@@ -178,7 +178,7 @@ class Region
       # If the line is empty, don't bother indenting it.
       text = lp.text
       if text.size != 0
-	col, offset = text.current_indent
+	col, offset = text.current_indent(b.tab_width)
 
 	# The new indentation is the old indentation + n, but
 	# cannot be less than zero.
@@ -187,7 +187,7 @@ class Region
 	# Replace the line text with the proper indentation prefix,
 	# plus the part of the line after the leading whitespace.
 	Line.delete(offset, false)
-	Line.insert(String.indent(new_indent))
+	Line.insert(String.indent(new_indent, b.indent_tab_width))
       end
 
       # Move to the next line.  Stop if we're at the last buffer line.

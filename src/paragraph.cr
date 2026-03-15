@@ -114,7 +114,7 @@ module Paragraph
     end
 
     # Get the indentation level of the first line in the paragraph.
-    indent, i = lp.text.current_indent
+    indent, i = lp.text.current_indent(b.tab_width)
 
     # Collect all the words in the region into a single array.
     a = [] of String

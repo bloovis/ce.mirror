@@ -244,6 +244,12 @@ class Buffer
     @spelling_language = cfg.getvalue(@filename, "spelling_language").downcase
   end
 
+  # Returns the tab width for indenting lines: 0 if use_tabs_to_indent
+  # is false, otherwise tab_width.
+  def indent_tab_width : Int32
+    return @use_tabs_to_indent ? @tab_width : 0
+  end
+
   # Sets the buffer filename, then reads .editorconfig information
   # for that filename.
   def filename=(fname : String)
