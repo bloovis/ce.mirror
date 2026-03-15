@@ -22,7 +22,6 @@ the relevant lines of code.  This is essentially a rewrite of
 the built-in **gcc-error** command:
 
 ```
-
 def gccerr(n)
   keepgoing = true
   while keepgoing

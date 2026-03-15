@@ -445,23 +445,31 @@ module RubyRPC
     return make_normal_response(0, "", id)
   end
 
-  # Binds the key *key* to the command named *str*.
+  # Binds the key *key* to the command named *str*.  As a hack,
+  # the first character of *str* is a mode indicator 'T' or 'F';
+  # the remainder of the string is the actual command name.
   def set_bind(id : Int32, key : Int32, str : String | Nil) : String
     if str.nil?
       return make_error_response(ERROR_PARAMS, "missing command name for set_bind", id)
     end
+
+    # The first character of the string is a "mode" boolean:
+    # 'T' if the key should be bound to the current buffer,
+    # or 'F' if the key should be globally bound.
     mode = str[0]
+
+    # The rest of the string is the command name.
     name = str[1..]
 
     # If this buffer has a mode, use its keymap;
     # otherwise use the global keymap.
     b = E.curb
-    if b.modename.size == 0
-      E.log("set_bind: using global keymap instead of buffer #{b.name} for key #{key.to_s(16)}")
-      k = E.keymap
-    else
+    if mode == 'T' && b.modename.size > 0
       E.log("set_bind: using buffer #{b.name} keymap for key #{key.to_s(16)}")
       k = b.keymap
+    else
+      E.log("set_bind: using global keymap instead of buffer #{b.name} for key #{key.to_s(16)}")
+      k = E.keymap
     end
 
     if !k.name_bound?(name)
@@ -470,7 +478,7 @@ module RubyRPC
       Echo.puts(message)
       return make_error_response(ERROR_METHOD, message, id)
     end
-    E.log("set_bind: binding #{key} to #{name}")
+    E.log("set_bind: binding #{key.to_s(16)} to #{name}")
     k.add_dup(key, name)
     return make_normal_response(0, "", id)
   end
