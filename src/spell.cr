@@ -273,20 +273,19 @@ module Spell
     region = Region.new
     return FALSE if region.start.l == -1	# invalid region
     w.dot = region.start
+    w.udot = region.finish
     status = TRUE
     while true
       # Abort if we're past the end of the region.
-      break if w.dot.cmp(region.finish) >= 0
+      break if w.dot.cmp(w.udot) >= 0
 
       # Scan forward to the next word.
       while !inword
-	# Abort if we're at the end of the buffer
-	break TRUE if Basic.forwchar(false, 1, Kbd::RANDOM) != TRUE
+	# Abort if we're at the end of the region or buffer.
+	break if w.dot.cmp(w.udot) >= 0
+	break if Basic.forwchar(false, 1, Kbd::RANDOM) != TRUE
       end
       break if !inword
-
-      # Abort if we're past the end of the region.
-      break if w.dot.cmp(region.finish) >= 0
 
       # Check this word, and abort if checkword says to abort.
       status = checkword(false)

@@ -20,7 +20,7 @@ class Window
   # The mark position in the buffer.
   property mark : Pos
 
-  # The special undo position in the buffer.
+  # The special undo/spell position in the buffer.
   property udot : Pos
 
   # The saved line position for searches.
