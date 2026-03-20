@@ -37,10 +37,8 @@ module RubyRPC
     return {(@@id - 1) // 2, @@nreceived, @@bytes_sent, @@bytes_received}
   end
 
-  # Loads the Ruby server (`server.rb`), and if that is successful,
-  # loads the Ruby file `.pe.rb`, which contains the directory-local
-  # Ruby extensions.  Returns true if the server initialized successfully,
-  # or false otherwise.
+  # Loads the Ruby server (`server.rb`).  Returns true if the server
+  # initialized successfully, or false otherwise.
   def load_server : Bool
     # Don't need to do anything if we've already loaded the server.
     if @@process
@@ -75,9 +73,11 @@ module RubyRPC
     return true
   end
 
-  # Initializes the Ruby server if there is a Ruby extension
-  # named `.pe.rb` in the current directory.  Returns true
-  # if .pe.rb doesn't exist, or if the server was loaded successfully.
+  # Iif there is a Ruby extension named `.pe.rb` in the current directory,
+  # loads the Ruby server, then loads `.pe.rb` .  Returns true if the extension
+  # doesn't exist, or if the extension was loaded successfully.  Returns
+  # false if the extension could not be loaded, possibly because the
+  # Ruby server (`server.rb`) could not be loaded first.
   def init_server : Bool
     if File.exists?(EXTENSION_FILENAME)
       return loadscript(EXTENSION_FILENAME) == TRUE
@@ -295,10 +295,12 @@ module RubyRPC
 
     # Send a response, unless it's a notification that expects no response,
     # as indicated by an id of 0 (i.e., the id was missing in the request).
-    message = "handle_cmd: ran #{name}, result #{result}"
-    E.log(message)
-    response = make_normal_response(result.to_i, message, id)
-    send_message(response)
+    if id != 0
+      message = "handle_cmd: ran #{name}, result #{result}"
+      E.log(message)
+      response = make_normal_response(result.to_i, message, id)
+      send_message(response)
+    end
     return true	# keep reading messages from the server
   end
 
