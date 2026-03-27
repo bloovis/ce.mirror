@@ -117,17 +117,27 @@ module Paragraph
     indent, i = lp.text.current_indent(b.tab_width)
 
     # Collect all the words in the region into a single array.
+    # Newlines and strings of spaces longer than one character
+    # are added as zero-length strings, to be handled specially
+    # when the words are put back into the buffer.
     a = [] of String
     l = start.l
     while true
+      text = lp.text.strip
       if l == finish.l
-	a.concat(lp.text[0,finish.o].split)
+	a.concat(text[0,finish.o].split(/\s/))
 	break
       else
-	a.concat(lp.text.split)
+	a.concat(text.split(/\s/))
+	a << ""
       end
       l += 1
       lp = lp.next
+    end
+
+    # Remove trailing blank strings from the array.
+    while a.size > 0 && a[-1] == ""
+      a.delete_at(-1)
     end
 
     # Move to the start of the paragraph and delete the entire
@@ -136,20 +146,32 @@ module Paragraph
     Line.delete(r.size, false)
 
     # This is a list of characters that, if found at the end of a word,
-    # require two spaces following them.
-    doubles = {'.', '?', '!'}
+    # may mark the end of sentence.
+    sentence_enders = {'.', '?', '!'}
 
     # Start adding words back to the buffer, making sure each line
-    # doesn't exceed the fill column size.
+    # doesn't exceed the fill column size.  The first line receives
+    # the same indentation as the original first line.
+    # 
+    # Zero-length strings get special treatment.  They mark the point where more
+    # than one space or a newline appeared in the original text. If the preceding
+    # word was an end-of-sentence word, append an extra space.
     buf = ""
+    end_of_sentence = false
+    first = true
     a.each do |s|
-      if buf == ""
+      if first
 	space = " " * indent
+	first = false
+      elsif s == ""
+	space = end_of_sentence ? " " : ""
+	end_of_sentence = false
       else
-	space = doubles.includes?(buf[-1]) ? "  " : " "
+	end_of_sentence = sentence_enders.includes?(s[-1])
+	space = " "
       end
       if buf.size + space.size + s.size > @@fillcol
-	Line.insert(buf)
+	Line.insert(buf.rstrip)
 	Line.newline
 	buf = s
       else
@@ -158,7 +180,7 @@ module Paragraph
       indent = 0
     end
     if buf != ""
-      Line.insert(buf)
+      Line.insert(buf.rstrip)
       Line.newline
     end
 
