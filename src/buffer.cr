@@ -290,7 +290,10 @@ class Buffer
     nline = 0
     begin
       File.open(@filename, "w") do |f|
-        f.set_encoding(@charset, invalid: :skip)
+        #STDERR.puts "set encoding to #{@charset}"
+	if @charset != "UTF-8"
+	  f.set_encoding(@charset, invalid: :skip)
+	end
         self.each do |lp|
 	  if @trim_trailing_whitespace
 	    text = lp.text.rstrip
@@ -298,6 +301,7 @@ class Buffer
 	    text = lp.text
 	  end
 	  if @@savetabs
+	    #STDERR.puts "Writing #{text.size} characters"
 	    f.print(text)
 	  else
 	    f.print(text.detab(@tab_width))
