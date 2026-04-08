@@ -234,14 +234,14 @@ class ConfigSection
     return false unless path.starts_with?(@dirname)
 
     if @glob_has_slash
-      # Use the fully expanded glob pattern and filename so that
+      # Use the fully expanded glob pattern and filename, so that
       # their directory paths must match.
+      dprint "matching expanded glob #{@fullglob} against full path #{path}"
       return do_match(@fullglob, path)
     else
       # Use the unexpanded glob and filename, so that they will match
       # files in any subdirectory.
-      filename = Path[filename].basename
-      dprint "matching glob #{@glob} against basename #{filename}"
+      dprint "matching unexpanded glob #{@glob} against filename #{filename}"
       return do_match(@glob, filename)
     end
   end
@@ -352,6 +352,7 @@ class Config
     @files.each do |f|
       f.sections.each do |s|
 	if s.match(filename)
+	  dprint("getvalue: section #{s.glob} matched #{filename}")
 	  s.pairs.each do |k, v|
 	    if key == k
 	      if v == "unset"
