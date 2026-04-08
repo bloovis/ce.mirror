@@ -116,7 +116,7 @@ module Misc
 
   # Inserts a newline followed by the correct number of
   # tabs and spaces to get the desired indentation *nicol*. If *nonwhitepos*
-  # (the offset of the first nonwhitepos in the current line) is
+  # (the offset of the first non-white character in the current line) is
   # the end of the line, the line is completely white, so zero it out;
   # then if an argument was specified to the command, instead of
   # inserting a new line, just readjust the newly blanked line's indentation.
@@ -145,8 +145,8 @@ module Misc
 
   # Indents according to Ruby conventions.  Inserts a newline, then enough tabs
   # and spaces to match the indentation of the previous line.  If the previous
-  # line starts with a block-start keyword, increase indentation by two spaces. If a
-  # two-C-U argument was specified, reduce indentation by two spaces.
+  # line starts with a block-start keyword, increases indentation by two spaces.
+  # If a two-C-U argument was specified, reduces indentation by two spaces.
   # Otherwise retain the same indentation.
   def rubyindent(f : Bool, n : Int32, k : Int32) : Result
     w, b, dot, lp = E.get_context
@@ -164,6 +164,35 @@ module Misc
        text =~ /^\s*(def|if|when|for|else|elsif|class|module)\b/
       nicol += b.indent_size
     elsif f && (n == 16)
+      nicol = {nicol - b.indent_size, 0}.max
+    end
+
+    # Insert a newline followed by the correct number of
+    # tabs and spaces to get the desired indentation.
+    return nlindent(nicol, i, f)
+  end
+
+  # Indents according to GNU conventions.  Inserts a newline, then enough tabs
+  # and spaces to match the indentation of the previous line.  If the previous
+  # line starts with a block-start keyword or {, increases indentation by two 
+  # spaces. If a two-C-U argument was specified, or the line starts with },
+  # reduces indentation by two spaces. Otherwise retains the same indentation.
+  def gnuindent(f : Bool, n : Int32, k : Int32) : Result
+    w, b, dot, lp = E.get_context
+    text = lp.text
+
+    # Find indentation and the offset of the first non-whitespace character.
+    nicol, i = text.current_indent(b.tab_width)
+
+    # Look at the string following the whitespace in the
+    # current line to determine the indentation of the next line.
+    # If any of certain magic tokens was found, or a single C-U argument
+    # was specified, indent by two spaces.  If a two-C-U argument was
+    # specified, unindent by two spaces.
+    if (f && (n == 4)) ||
+       text =~ /^\s*((if|case|for|else|while)\b|{)/
+      nicol += b.indent_size
+    elsif (f && (n == 16)) || text =~ /^\s*}/
       nicol = {nicol - b.indent_size, 0}.max
     end
 
@@ -326,6 +355,7 @@ module Misc
     k.add(Kbd.ctrl('o'), cmdptr(openline), "ins-nl-and-backup")
     k.add(Kbd.ctrl('t'), cmdptr(twiddle), "twiddle")
     k.add(Kbd.ctrl('j'), cmdptr(rubyindent), "ruby-indent")
+    k.add(Kbd::RANDOM, cmdptr(gnuindent), "gnu-indent")
     k.add(Kbd.ctrl('k'), cmdptr(killline), "kill-line")
     k.add(Kbd.ctrl('y'), cmdptr(yank), "yank")
     k.add(Kbd.ctrl('d'), cmdptr(forwdel), "forw-del-char")
