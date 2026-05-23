@@ -309,6 +309,12 @@ module RubyRPC
   # operations do more that getting a variable, e.g., testing
   # that a particular editor command exists.
 
+  # Gets the character at dot, as a single-character UTF-8 string.
+  # is not the last line in the buffer.
+  def get_char(id : Int32) : String
+    return make_normal_response(0, Line.getc.to_s, id)
+  end
+
   # Gets the current line, including a terminating newline if this
   # is not the last line in the buffer.
   def get_line(id : Int32) : String
@@ -405,6 +411,7 @@ module RubyRPC
     string = get_string(params, "string")
 
     response = case name
+    when "char"     then get_char(id)
     when "line"     then get_line(id)
     when "lineno"   then get_lineno(id)
     when "iscmd"    then get_iscmd(id, string)
@@ -427,6 +434,21 @@ module RubyRPC
   # "set" operations on virtual variables in the editor.  Some of these
   # operations do more that setting a variable, e.g., inserting a
   # string
+
+  # Replaces the character at dot with the string *str*.
+  def set_char(int id, str : String | Nil) : String
+    if str.nil?
+      return make_error_response(ERROR_PARAMS, "missing string for set_char", id)
+    end
+    if Basic.forwchar(false, 1, Kbd::RANDOM) == TRUE
+      # Not at end of buffer, replace the character.
+      Line.replace(1, str)
+    else
+      # At end of buffer, insert the character.
+      Line.insert(str)
+    end
+    return make_normal_response(0, "", id)
+  end
 
   # Replaces the current line with the string *str*.
   def set_line(int id, str : String | Nil) : String
@@ -578,6 +600,7 @@ module RubyRPC
       return false
     end
     response = case name
+    when "char"     then set_char(id, string)
     when "line"     then set_line(id, string)
     when "lineno"   then set_lineno(id, int)
     when "bind"     then set_bind(id, int, string)
