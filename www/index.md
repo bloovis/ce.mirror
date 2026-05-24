@@ -20,6 +20,7 @@ or hold down `Alt` while pressing a letter key.
 * [Keyboard Macros](macros.md)
 * [Buffer Management](buffer.md)
 * [Window Management](window.md)
+* [Key Binding Commands](key-binding.md)
 * [Undo](undo.md)
 * [Ruby Extensions](ruby.md)
 * [Modes](modes.md)

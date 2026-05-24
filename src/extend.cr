@@ -53,10 +53,36 @@ module Extend
     return TRUE
   end
 
-    # Creates key bindings for all Extend commands.
+  # Prompts the user for a command name, then a key to which
+  # to bind the command, and creates the binding.
+  def bindtokey(f : Bool, n : Int32, k : Int32) : Result
+    result, name = Echo.reply_with_completions("Command: ", nil, true) do |s|
+      # Find all command names that start with s.
+      E.keymap.n2p.keys.select {|key| key.starts_with?(s)}
+    end
+
+    # Return immediately on Ctrl-G abort.
+    return result if result != TRUE
+    
+    # Check that the command actually exists.
+    unless E.keymap.name_bound?(name)
+      Echo.puts("Unknown command #{name}")
+      return FALSE
+    end
+
+    # Prompt for a key.
+    Echo.puts("Key: ")
+    k = E.kbd.getkey
+    E.keymap.add_dup(k, name)
+    Echo.puts("#{name} bound to #{Kbd.keyname(k)}")
+    return TRUE
+  end
+
+  # Creates key bindings for all Extend commands.
   def bind_keys(k : KeyMap)
     k.add(Kbd.meta('x'), cmdptr(extendedcommand), "extended-command")
     k.add(Kbd::F1, cmdptr(help), "help")
+    k.add(Kbd::RANDOM, cmdptr(bindtokey), "bind-to-key")
   end
 
 end
