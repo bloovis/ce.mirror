@@ -5,8 +5,8 @@ module Paragraph
 
   # Compiled regular expression to match a line that is part
   # of a paragraph, i.e. a line that starts with zero or more
-  # spaces, followed by a "word" character.
-  @@regex = /^\s*\w/
+  # spaces, followed by a "word" character or opening bracket.
+  @@regex = /^\s*[\w([]/
 
   extend self
 
