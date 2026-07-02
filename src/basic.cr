@@ -314,7 +314,7 @@ module Basic
     if !f
       result, str = Echo.reply("Goto line: ", nil)
       return result if result != TRUE
-      n = str.to_i
+      n = str.to_i { -1 }
     end
     if n <= 0
       Echo.puts("Bad line number")
