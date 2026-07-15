@@ -225,6 +225,7 @@ begin
   k.add(Kbd::RANDOM, cmdptr(stats), "display-stats")
   k.add_dup(Kbd::F4, "quit")
   k.add_dup(Kbd.ctlx_ctrl('g'), "abort")
+  k.add_dup(Kbd.meta_ctrl('g'), "abort")
 
   # Create some key bindings for other modules.
   Basic.bind_keys(k)
