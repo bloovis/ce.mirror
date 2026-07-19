@@ -179,7 +179,7 @@ user didn't specify a numeric argument, the parameter will be `nil`.
 The function must return an EFALSE or ETRUE value to indicate
 failure or success, respectively.
 
-Then use **E.ruby_command** to inform
+Then use `E.ruby_command` to inform
 `ce` of the new command.
 
 Referring to the `gccerr.rb` example above, we can see that
