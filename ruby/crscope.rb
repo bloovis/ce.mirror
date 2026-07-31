@@ -2,10 +2,6 @@
 # for searching and browsing Crystal and Ruby code.  Crscope can be found
 # in the csup repository.
 
-F11    = 0x95	# FIXME: this should be moved to server.rb, along with the other F keys
-
-#search = ARGV[0]
-
 # Read and ignore the prompt from crscope.
 def get_prompt(io)
   c1 = io.getc
@@ -142,4 +138,4 @@ end
 
 E.ruby_command "crscope"
 E.ruby_command "visitfile"
-E.bind "crscope", F11
+E.bind "crscope", Key::F11
