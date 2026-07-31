@@ -73,7 +73,7 @@ module RubyRPC
     return true
   end
 
-  # Iif there is a Ruby extension named `.pe.rb` in the current directory,
+  # If there is a Ruby extension named `.pe.rb` in the current directory,
   # loads the Ruby server, then loads `.pe.rb` .  Returns true if the extension
   # doesn't exist, or if the extension was loaded successfully.  Returns
   # false if the extension could not be loaded, possibly because the
