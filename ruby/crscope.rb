@@ -2,11 +2,13 @@
 # for searching and browsing Crystal and Ruby code.  Crscope can be found
 # in the csup repository.
 
+$io = nil
+
 # Read and ignore the prompt from crscope.
-def get_prompt(io)
-  c1 = io.getc
-  c2 = io.getc
-  c3 = io.getc
+def get_prompt
+  c1 = $io.getc
+  c2 = $io.getc
+  c3 = $io.getc
   s = [c1, c2, c3].join("")
   if s == ">> "
     #puts "Got valid prompt"
@@ -18,12 +20,12 @@ end
 # Invoke crscope in a pipe to get the results of a search.
 # Return the results as an array of strings formatted to
 # display nicely.
-def do_search(io, search)
+def do_search(search)
   a = []
-  get_prompt(io)
+  get_prompt
   #E.echo "Sending #{search}"
-  io.puts search
-  s = io.gets
+  $io.puts search
+  s = $io.gets
   if s =~ /^cscope: (\d+)/
     hits = $1.to_i
     #puts "#{hits} hits"
@@ -34,7 +36,7 @@ def do_search(io, search)
     flen = 0
     slen = 0
     hits.times do |i|
-      s = io.gets.chomp
+      s = $io.gets.chomp
       E.echo "Got '#{s}'"
       if s =~ /^(\S+) (\S+) (\S+) (.+)$/
 	filenames << $1
@@ -62,13 +64,13 @@ end
 
 # Open crscope in a read/write pipe, and return the file handle.
 def open_crscope
-  return IO.popen(["crscope", "-l"], mode="r+")
+  $io = IO.popen(["crscope", "-l"], mode="r+") unless $io
 end
 
-# Close the crscope pipe handle.
-def close_crscope(io)
-  get_prompt(io)
-  io.close
+# Close the crscope pipe handle.  Not actually called any more.
+def close_crscope
+  get_prompt
+  $io.close
 end
 
 # Open the file indicated by the current line in the crscope results buffer,
@@ -98,9 +100,7 @@ end
 # hitting return will open the file indicated on that line.
 def showresults(str)
   # Get the results array.
-  io = open_crscope
-  a = do_search(io, str)
-  close_crscope(io)
+  a = do_search(str)
   nresults = a.size
   if nresults == 0
     E.echo "No results found"
@@ -153,6 +153,9 @@ end
 # This command prompts the user for a search type and string, then
 # displays the results of the search.
 def crscope(n)
+  # Open a pipe to crscope if it's not been opened previously.
+  open_crscope
+
   # Prompt for a string to search.  Use the word under the cursor
   # as the default
   word = getword
