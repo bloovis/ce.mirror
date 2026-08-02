@@ -21,7 +21,7 @@ end
 def do_search(io, search)
   a = []
   get_prompt(io)
-  E.echo "Sending #{search}"
+  #E.echo "Sending #{search}"
   io.puts search
   s = io.gets
   if s =~ /^cscope: (\d+)/
@@ -101,6 +101,11 @@ def showresults(str)
   io = open_crscope
   a = do_search(io, str)
   close_crscope(io)
+  nresults = a.size
+  if nresults == 0
+    E.echo "No results found"
+    return EFALSE
+  end
 
   # Write the results to the crscope buffer.
   E.only_window
@@ -118,21 +123,47 @@ def showresults(str)
   E.bflag = BFRO
   E.setmode "crscope"
   E.bind "visitfile", ctrl('m'), true
+  E.echo "#{nresults} result#{nresults == 1 ? '' : 's'} found"
 
   return ETRUE
+end
+
+# Return the word under the cursor, or an empty string if
+# there is no word under the cursor.
+def getword
+  line = E.line
+  len = line.length
+  offset = E.offset
+  while offset > 0 && line[offset - 1] =~ /\w/
+    offset -= 1
+  end
+  return "" unless line[offset] =~ /\w/
+  start = offset
+  while offset < len && line[offset] =~ /\w/
+    offset += 1
+  end
+  return line[start..offset - 1]
 end
 
 # This command prompts the user for a search type and string, then
 # displays the results of the search.
 def crscope(n)
+  # Prompt for a string to search.  Use the word under the cursor
+  # as the default
+  word = getword
+  str = E.reply "Search string [#{word}]: "
+  return EFALSE unless str
+  str = word if str.size == 0
+
   # Prompt for a search type.
   type = E.reply "Search type (0=symbol,1=def,2=calls by,3=calls to,4=text,6=grep,7=file,8=assign): "
-
-  # Prompt for a string to search.
-  str = E.reply "Search string: "
-  unless str
+  return EFALSE unless type
+  unless type =~ /^\d+$/
+    E.echo "Invalid search type"
     return EFALSE
   end
+
+  # Display the search results in a special popup window.
   return showresults type+str
 end
 
