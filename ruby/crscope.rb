@@ -128,18 +128,23 @@ def showresults(str)
   return ETRUE
 end
 
+# Returns true if *c* is a valid Crystal identifier character.
+def isword(c)
+  c =~ /[\w@?_]/
+end
+
 # Return the word under the cursor, or an empty string if
 # there is no word under the cursor.
 def getword
   line = E.line
   len = line.length
   offset = E.offset
-  while offset > 0 && line[offset - 1] =~ /\w/
+  while offset > 0 && isword(line[offset - 1])
     offset -= 1
   end
-  return "" unless line[offset] =~ /\w/
+  return "" unless isword(line[offset])
   start = offset
-  while offset < len && line[offset] =~ /\w/
+  while offset < len && isword(line[offset])
     offset += 1
   end
   return line[start..offset - 1]
