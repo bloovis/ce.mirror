@@ -191,6 +191,9 @@ class E
   # into its own buffer, creates windows for as many buffers as can fit
   # on the screen.
   def process_command_line
+    # Buffer read-only flag.
+    bflag = Bflags::None
+
     # Create a buffer, and read the file specified on the command line,
     # or just leave the buffer empty if no file was specified.
     if ARGV.size == 0
@@ -201,6 +204,9 @@ class E
         if arg =~ /^\+(\d+)/
 	  pos.l = $1.to_i - 1
 	  pos.o = 0
+	elsif arg == "-r"
+	  # Set the read-only flag for subsequent files.
+	  bflag = Bflags::ReadOnly
 	else
 	  filename = arg
 	  if filename =~ /^([^:]+):(\d+)(:(\d+))?$/
@@ -228,6 +234,9 @@ class E
 	      b.dot.o = pos.o
 	    end
 	  end
+
+	  # Set buffer to read-only if the -r option was seen.
+	  b.flags = bflag
 
 	  # Reset the position for the next file.
 	  pos.l = 0
