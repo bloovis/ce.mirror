@@ -3,6 +3,8 @@ require "./keyboard"
 # The `Macro` class records and plays back keyboard macros.
 class Macro
 
+  STRING_START = -1
+
   @buf : Array(Int32)
   @recording : Bool
   @read_index : Int32
@@ -37,6 +39,7 @@ class Macro
   # Writes the string *s* to the macro.
   def write_string(s : String)
     return unless @recording
+    @buf << STRING_START
     s.each_char {|c| @buf << c.ord}
     @buf << 0
   end
@@ -83,6 +86,8 @@ class Macro
     if @read_index < 0 || @read_index >= @buf.size
       return nil
     end
+    return nil if @buf[@read_index] != STRING_START
+    @read_index += 1
     str = String.build do |str|
       while @read_index < @buf.size
         ch = @buf[@read_index]
@@ -92,6 +97,12 @@ class Macro
       end
     end
     return str
+  end
+
+  # Return true if the next item in the buffer is a string
+  def is_string?
+    return false if @read_index >= @buf.size
+    return @buf[@read_index] == STRING_START
   end
 
   # Stops reading the macro.

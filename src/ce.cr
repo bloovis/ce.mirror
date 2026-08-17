@@ -198,6 +198,93 @@ def ctlxe(f : Bool, n : Int32, k : Int32) : Result
   return s
 end
 
+# Adds a Ruby command for inserting a string to the current buffer,
+# and returns a blank string.
+def insert_string(s : String) : String
+  Line.insertwithnl("E.insert " + s.inspect + "\n") if s.size > 0
+  return ""
+end
+
+# Inserts the macro into the current buffer, formatted as a Ruby extension.
+# This differs from the MicroEMACS implementation, which formats the macro
+# in a more literal representation, with strings in quotes and command names
+# in brackets.
+def insertmacro(f : Bool, n : Int32, k : Int32) : Result
+  # Can't do it if we're recording or already reading the macro.
+  m = E.macro
+  if m.recording? || m.reading?
+    Echo.puts("Not now")
+    return FALSE
+  end
+
+  m.start_reading
+  s = ""
+  while true
+    af = false
+    an = 1
+    c = m.read_int
+    break unless c
+
+    # Check for Ctrl-U numeric prefix.
+    if c == Kbd.ctrl('u')
+      af = true
+      an = m.read_int
+      break unless an
+
+      # Read the key for the command.
+      c = m.read_int
+      break unless c
+    end
+
+    # Stop if reached end of macro.
+    break if c == Kbd.ctlx(')')
+
+    # The next thing in the macro is a key code.  Look up the
+    # command bound to that key:
+    # * If it is an "ins-self" command, save up consecutive characters
+    #   in a string to be output
+    # * If it is an "ins-nl" command, output a statement that inserts a newline.
+    # * For all other commands, output the command name, followed by
+    #   the optional numeric argument and any strings that the command
+    #   will prompt for.
+    name = E.keymap.k2n[c]?
+    if name.nil?
+      Line.insertwithnl("# unknown function #{c.to_i}\n")
+    elsif name == "ins-self"
+      s = s + (c & 0x7f).chr.to_s
+    elsif name == "ins-nl"
+      s = insert_string(s + "\n")
+    else
+      # Insert the command name.
+      s = insert_string(s)
+      Line.insert("E." + name.gsub("-", "_"))
+
+      # Save optional numeric argument.
+      args = [] of String
+      args << an.to_s if af
+
+      # Save optional strings that the command prompts for.
+      while m.is_string?
+        s1 = m.read_string
+	args << s1.inspect if s1
+      end
+
+      # Output the saved arguments.
+      if args.size > 0
+	Line.insert(" ")
+	Line.insert(args.join(", "))
+      end
+
+      # Finallly terminate the Ruby statement with a newline.
+      Line.newline
+    end
+  end # while true
+
+  insert_string(s)
+  m.stop_reading
+  return TRUE
+end
+
 # This command displays the version of ce on the echo line.
 def showversion(f : Bool, n : Int32, k : Int32) : Result
   Echo.puts("CrystalEdit version #{VERSION}")
@@ -226,6 +313,7 @@ begin
   k.add_dup(Kbd::F4, "quit")
   k.add_dup(Kbd.ctlx_ctrl('g'), "abort")
   k.add_dup(Kbd.meta_ctrl('g'), "abort")
+  k.add(Kbd::RANDOM, cmdptr(insertmacro), "insert-macro")
 
   # Create some key bindings for other modules.
   Basic.bind_keys(k)

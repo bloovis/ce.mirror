@@ -63,7 +63,7 @@ module Extend
 
     # Return immediately on Ctrl-G abort.
     return result if result != TRUE
-    
+
     # Check that the command actually exists.
     unless E.keymap.name_bound?(name)
       Echo.puts("Unknown command #{name}")
