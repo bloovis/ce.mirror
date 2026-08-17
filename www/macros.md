@@ -23,3 +23,12 @@ macro. If an argument is present, it specifies the number of times the macro
 should be executed. If no argument is present, it runs the macro once.
 Execution of the macro stops if an error occurs (such as a failed
 search).
+
+**[unbound]** (**ins-macro**)
+
+This command inserts the macro in the current buffer, in a form
+that can be used in a Ruby extension.
+
+This differs from the **ins-macro** command in MicroEMACS, which inserts
+the macro in a more literal textual representation that can be used in
+profiles (profiles are not supported in `ce`).

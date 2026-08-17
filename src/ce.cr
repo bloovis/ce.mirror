@@ -198,7 +198,7 @@ def ctlxe(f : Bool, n : Int32, k : Int32) : Result
   return s
 end
 
-# Adds a Ruby command for inserting a string to the current buffer,
+# Adds a Ruby command for inserting a string into the current buffer,
 # and returns a blank string.
 def insert_string(s : String) : String
   Line.insertwithnl("E.insert " + s.inspect + "\n") if s.size > 0
@@ -251,7 +251,13 @@ def insertmacro(f : Bool, n : Int32, k : Int32) : Result
     if name.nil?
       Line.insertwithnl("# unknown function #{c.to_i}\n")
     elsif name == "ins-self"
-      s = s + (c & 0x7f).chr.to_s
+      # If the key is a control character, convert to an actual ASCII character.
+      # Otherwise just use the character as-is.
+      if (c & Kbd::CTRL) != 0
+	s = s + (c & 0x1f).chr.to_s
+      else
+	s = s + (c & 0x7f).chr.to_s
+      end
     elsif name == "ins-nl"
       s = insert_string(s + "\n")
     else
@@ -313,7 +319,7 @@ begin
   k.add_dup(Kbd::F4, "quit")
   k.add_dup(Kbd.ctlx_ctrl('g'), "abort")
   k.add_dup(Kbd.meta_ctrl('g'), "abort")
-  k.add(Kbd::RANDOM, cmdptr(insertmacro), "insert-macro")
+  k.add(Kbd::RANDOM, cmdptr(insertmacro), "ins-macro")
 
   # Create some key bindings for other modules.
   Basic.bind_keys(k)
