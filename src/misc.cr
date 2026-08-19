@@ -341,9 +341,22 @@ module Misc
     else
       c = E.kbd.getinp
     end
+
     return FALSE if n < 0
     return TRUE if n == 0
-    Line.insert(c.chr.to_s * n)
+
+    # If a macro is being recorded, record the key.
+    m.write_key(c)
+
+    # Convert the key code to the appropriate ASCII string.
+    if (c & Kbd::CTRL) != 0
+      s = (c & 0x1f).chr.to_s
+    else
+      s = (c & 0x7f).chr.to_s
+    end
+
+    # Insert N copies of the string.
+    Line.insert(s * n)
     return TRUE
   end
 

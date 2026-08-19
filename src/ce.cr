@@ -250,13 +250,20 @@ def insertmacro(f : Bool, n : Int32, k : Int32) : Result
     name = E.keymap.k2n[c]?
     if name.nil?
       Line.insertwithnl("# unknown function #{c.to_i}\n")
-    elsif name == "ins-self"
+    elsif name == "ins-self" || name == "quote"
+      # If this is a "quote" command, the next int32 in the macro
+      # is the key code to be inserted.
+      if name == "quote"
+	c = m.read_int
+	break unless c
+      end
+
       # If the key is a control character, convert to an actual ASCII character.
       # Otherwise just use the character as-is.
       if (c & Kbd::CTRL) != 0
-	s = s + (c & 0x1f).chr.to_s
+	s = s + ((c & 0x1f).chr.to_s * an)
       else
-	s = s + (c & 0x7f).chr.to_s
+	s = s + ((c & 0x7f).chr.to_s * an)
       end
     elsif name == "ins-nl"
       s = insert_string(s + "\n")
