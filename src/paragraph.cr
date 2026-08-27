@@ -162,7 +162,6 @@ module Paragraph
     a.each do |s|
       if first
 	space = " " * indent
-	first = false
       elsif s == ""
 	space = end_of_sentence ? " " : ""
 	end_of_sentence = false
@@ -175,9 +174,15 @@ module Paragraph
 	Line.newline
 	buf = s
       else
-	buf = buf + space + s
+	if buf.size == 0 && !first
+	  # Don't put leading spaces at the start of a line.
+	  buf = s
+	else
+	  buf = buf + space + s
+	end
       end
       indent = 0
+      first = false
     end
     if buf != ""
       Line.insert(buf.rstrip)
