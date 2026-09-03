@@ -209,6 +209,12 @@ class E
 	  bflag = Bflags::ReadOnly
 	else
 	  filename = arg
+
+	  # Strip leading file:// .
+	  if filename =~ /^file:\/\/(.*)$/
+	    filename = $1
+	  end
+
 	  if filename =~ /^([^:]+):(\d+)(:(\d+))?$/
 	    # Filename is followed by :line:column, where :column is optional.
 	    # Both line and column are 1-based, so subtract 1 to make them
