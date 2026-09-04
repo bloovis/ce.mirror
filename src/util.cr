@@ -120,11 +120,9 @@ class String
     s = String.build do |str|
       self.each_char do |c|
         if c == '\t'
-	  while true
-	    str << ' '
-	    col += 1
-	    break if (col % tabsize) == 0
-	  end
+	  n = tabsize - (col % tabsize)
+	  str << " " * n
+	  col += n
 	else
 	  str << c
 	  col += 1
