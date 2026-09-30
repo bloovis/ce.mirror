@@ -17,7 +17,7 @@ is like typing commands to the operating system.  More details later
 in the section [The Echo Line](#echo).
 
 The remainder of the screen is filled with text *windows* .
-When `ce` is first started, there will be one or two more windows,
+When `ce` is first started, there will be one or more windows,
 depending on how many files you specify on the invocation line.
 If there is only one window, it fills the screen.  If there are two
 or more windows, each window occupies an equal share of the screen.
