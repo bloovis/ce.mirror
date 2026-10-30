@@ -177,6 +177,7 @@ module Files
   def fileinsert(f : Bool, n : Int32, k : Int32) : Result
     result, fname = Echo.getfname("Insert file: ")
     return result if result != TRUE
+    fname = tilde_expand(fname)	# Get fully expanded filename
     begin
       File.open(fname) do |f|
 	nline = 0
